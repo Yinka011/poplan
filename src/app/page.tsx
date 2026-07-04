@@ -1,62 +1,73 @@
-import { LoginCard } from "@/components/LoginCard";
-import { PoplanLogo } from "@/components/PoplanLogo";
+"use client";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-export default function Home() {
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setError("Invalid email or password");
+      setLoading(false);
+    } else {
+      window.location.href = "/login/organizer/events";
+    }
+  };
+
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-16">
-      {/* Ambient background */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-nude-100 via-nude-50 to-nude-200"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-32 -top-32 h-[480px] w-[480px] rounded-full bg-brown-500/8 blur-3xl"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-24 -left-24 h-[360px] w-[360px] rounded-full bg-nude-300/40 blur-3xl"
-      />
-
-      <div className="relative z-10 flex w-full max-w-md flex-col items-center">
-        <PoplanLogo />
-
-        <p className="mt-4 text-center text-sm font-medium tracking-wide text-brown-600/80">
-          Pop-up planning, beautifully simple
-        </p>
-
-        <h2 className="mt-12 text-center font-[family-name:var(--font-display)] text-xl font-medium text-brown-700">
-          Welcome back
-        </h2>
-        <p className="mt-1 text-center text-sm text-brown-600/70">
-          Choose how you&apos;d like to sign in
-        </p>
-
-        <div className="mt-8 w-full space-y-4">
-          <LoginCard
-            href="/login/organizer"
-            title="Login as Pop-up Organizer"
-            description="Create and manage your pop-up events, vendors, and schedules."
-            icon="organizer"
-          />
-          <LoginCard
-            href="/login/brand"
-            title="Login as Brand"
-            description="Manage multiple pop-up locations, teams, and brand presence."
-            icon="brand"
-          />
+    <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: "100%", maxWidth: "420px", padding: "0 1.5rem" }}>
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#2c1810" }}>POPLAN</div>
+          <div style={{ width: "2rem", height: "1px", background: "#b87333", margin: "0.5rem auto" }}></div>
+          <p style={{ color: "#8b7355", fontSize: "0.9rem", marginTop: "0.5rem" }}>Pop-up planning, beautifully simple</p>
         </div>
 
-        <p className="mt-10 text-center text-xs text-brown-600/60">
-          New to POPLAN?{" "}
-          <a
-            href="#"
-            className="font-medium text-brown-600 underline-offset-4 transition-colors hover:text-brown-700 hover:underline"
-          >
-            Request access
-          </a>
-        </p>
+        <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e8e0d5" }}>
+          <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "1.5rem", textAlign: "center" }}>Welcome back</h2>
+
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ fontSize: "0.8rem", color: "#8b7355", display: "block", marginBottom: "0.4rem" }}>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                style={{ width: "100%", padding: "0.75rem", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#faf8f5", outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={{ fontSize: "0.8rem", color: "#8b7355", display: "block", marginBottom: "0.4rem" }}>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={{ width: "100%", padding: "0.75rem", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#faf8f5", outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+
+            {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "1rem", fontFamily: "Georgia, serif", cursor: "pointer", letterSpacing: "0.05em" }}
+            >
+              {loading ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
