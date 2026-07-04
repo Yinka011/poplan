@@ -72,6 +72,9 @@ export function EventDashboard({ event }: EventDashboardProps) {
         />
       </div>
 
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.5rem" }}>
+        <a href={`/login/organizer/events/${event.slug}/expenses`} style={{ padding: "8px 18px", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>💰 View Expenses</a>
+      </div>
       <PaymentTracker />
 
       <div className="grid gap-6 lg:grid-cols-2">
