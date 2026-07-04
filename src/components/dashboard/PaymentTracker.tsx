@@ -1,86 +1,94 @@
-import type { PaymentStatus } from "@/lib/organizer-data";
-import { formatCurrency } from "@/lib/events";
+"use client";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-const STATUS_STYLES = {
-  Paid: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
-  Partial: "bg-amber-50 text-amber-700 ring-amber-600/15",
-  Pending: "bg-nude-100 text-brown-600 ring-brown-500/10",
-  "N/A": "bg-nude-100 text-brown-500/70 ring-brown-500/10",
-} as const;
-
-type PaymentRow = {
-  brand: string;
-  feeOwed: number;
-  amountPaid: number;
+type Brand = {
+  id: number;
+  name: string;
+  fee_owed: number;
+  amount_paid: number;
   balance: number;
-  status: PaymentStatus;
+  status: string;
 };
 
-type PaymentTrackerProps = {
-  city: string;
-  payments: PaymentRow[];
-};
+export default function PaymentTracker() {
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [newAmount, setNewAmount] = useState("");
 
-export function PaymentTracker({ city, payments }: PaymentTrackerProps) {
+  useEffect(() => {
+    fetchBrands();
+  }, []);
+
+  const fetchBrands = async () => {
+    const { data } = await supabase.from("brands").select("*").eq("event", "Atlanta");
+    if (data) setBrands(data);
+  };
+
+  const updatePayment = async (brand: Brand) => {
+    const paid = parseFloat(newAmount);
+    const balance = brand.fee_owed - paid;
+    const status = balance <= 0 ? "Paid" : paid > 0 ? "Partial" : "Unpaid";
+    await supabase.from("brands").update({ amount_paid: paid, balance, status }).eq("id", brand.id);
+    setEditing(null);
+    setNewAmount("");
+    fetchBrands();
+  };
+
+  const statusColor = (s: string) => {
+    if (s === "Paid") return { background: "#4a7c5922", color: "#4a7c59" };
+    if (s === "Partial") return { background: "#b8733322", color: "#b87333" };
+    return { background: "#c0392b22", color: "#c0392b" };
+  };
+
   return (
-    <section className="rounded-2xl border border-nude-300/50 bg-white/70 shadow-sm backdrop-blur-sm">
-      <div className="border-b border-nude-200/80 px-6 py-4">
-        <h3 className="font-[family-name:var(--font-display)] text-xl font-medium text-brown-800">
-          Payment tracker
-        </h3>
-        <p className="mt-0.5 text-sm text-brown-600/60">
-          Brand fees for {city} pop-up
-        </p>
-      </div>
-
-      {payments.length === 0 ? (
-        <p className="px-6 py-10 text-center text-sm text-brown-600/60">
-          No brand payments yet. Payments will appear here once brands are
-          confirmed.
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-nude-200/80 text-xs uppercase tracking-wider text-brown-600/50">
-                <th className="px-6 py-3 font-medium">Brand</th>
-                <th className="px-4 py-3 font-medium">Fee owed</th>
-                <th className="px-4 py-3 font-medium">Amount paid</th>
-                <th className="px-4 py-3 font-medium">Balance</th>
-                <th className="px-6 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-nude-200/60">
-              {payments.map((row) => (
-                <tr
-                  key={row.brand}
-                  className="transition-colors hover:bg-nude-50/80"
-                >
-                  <td className="px-6 py-3.5 font-medium text-brown-800">
-                    {row.brand}
-                  </td>
-                  <td className="px-4 py-3.5 text-brown-700">
-                    {formatCurrency(row.feeOwed)}
-                  </td>
-                  <td className="px-4 py-3.5 text-brown-700">
-                    {formatCurrency(row.amountPaid)}
-                  </td>
-                  <td className="px-4 py-3.5 text-brown-700">
-                    {formatCurrency(row.balance)}
-                  </td>
-                  <td className="px-6 py-3.5">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${STATUS_STYLES[row.status]}`}
-                    >
-                      {row.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
+    <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
+      <div style={{ fontSize: "1.1rem", color: "#2c1810", marginBottom: "0.3rem" }}>Payment tracker</div>
+      <div style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Brand fees for Atlanta pop-up</div>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid #e8e0d5" }}>
+            {["Brand", "Fee Owed", "Amount Paid", "Balance", "Status", ""].map((h, i) => (
+              <th key={i} style={{ textAlign: "left", padding: "8px 10px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {brands.map((brand) => (
+            <tr key={brand.id} style={{ borderBottom: "1px solid #f0ebe4" }}>
+              <td style={{ padding: "10px", fontWeight: 500, color: "#2c1810" }}>{brand.name}</td>
+              <td style={{ padding: "10px", color: "#2c1810" }}>${brand.fee_owed}</td>
+              <td style={{ padding: "10px" }}>
+                {editing === brand.id ? (
+                  <input
+                    type="number"
+                    value={newAmount}
+                    onChange={(e) => setNewAmount(e.target.value)}
+                    style={{ width: "80px", padding: "4px", border: "1px solid #b87333", borderRadius: "4px", fontSize: "13px" }}
+                    autoFocus
+                  />
+                ) : (
+                  <span style={{ color: "#2c1810" }}>${brand.amount_paid}</span>
+                )}
+              </td>
+              <td style={{ padding: "10px", fontWeight: 500, color: brand.balance > 0 ? "#c0392b" : "#4a7c59" }}>${brand.balance}</td>
+              <td style={{ padding: "10px" }}>
+                <span style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "20px", ...statusColor(brand.status) }}>{brand.status}</span>
+              </td>
+              <td style={{ padding: "10px" }}>
+                {editing === brand.id ? (
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button onClick={() => updatePayment(brand)} style={{ fontSize: "11px", padding: "4px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}>Save</button>
+                    <button onClick={() => setEditing(null)} style={{ fontSize: "11px", padding: "4px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "4px", cursor: "pointer" }}>Cancel</button>
+                  </div>
+                ) : (
+                  <button onClick={() => { setEditing(brand.id); setNewAmount(String(brand.amount_paid)); }} style={{ fontSize: "11px", padding: "4px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "4px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Checklist } from "@/components/dashboard/Checklist";
 import { EventCountdown } from "@/components/dashboard/EventCountdown";
 import { MarketingDeadlines } from "@/components/dashboard/MarketingDeadlines";
-import { PaymentTracker } from "@/components/dashboard/PaymentTracker";
+import PaymentTracker from "@/components/dashboard/PaymentTracker";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { getEventDetail } from "@/lib/event-details";
 import {
