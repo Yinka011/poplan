@@ -1,73 +1,89 @@
+"use client";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+
 type ChecklistItem = {
   id: number;
-  label: string;
-  done: boolean;
+  task: string;
+  completed: boolean;
+  owner: string;
+  due_date: string;
 };
 
-type ChecklistProps = {
-  items: ChecklistItem[];
-};
+export default function Checklist() {
+  const [items, setItems] = useState<ChecklistItem[]>([]);
+  const [newTask, setNewTask] = useState("");
+  const [newOwner, setNewOwner] = useState("");
+  const [newDate, setNewDate] = useState("");
+  const [adding, setAdding] = useState(false);
 
-export function Checklist({ items }: ChecklistProps) {
-  const completed = items.filter((item) => item.done).length;
+  useEffect(() => { fetchItems(); }, []);
+
+  const fetchItems = async () => {
+    const { data } = await supabase.from("checklist").select("*").eq("event", "Atlanta").order("id");
+    if (data) setItems(data);
+  };
+
+  const toggleComplete = async (item: ChecklistItem) => {
+    await supabase.from("checklist").update({ completed: !item.completed }).eq("id", item.id);
+    fetchItems();
+  };
+
+  const addItem = async () => {
+    if (!newTask.trim()) return;
+    await supabase.from("checklist").insert({ task: newTask, owner: newOwner, due_date: newDate, completed: false, event: "Atlanta" });
+    setNewTask(""); setNewOwner(""); setNewDate(""); setAdding(false);
+    fetchItems();
+  };
+
+  const completed = items.filter(i => i.completed).length;
 
   return (
-    <section className="rounded-2xl border border-nude-300/50 bg-white/70 p-6 shadow-sm backdrop-blur-sm">
-      <div className="flex items-start justify-between gap-4">
+    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
         <div>
-          <h3 className="font-[family-name:var(--font-display)] text-xl font-medium text-brown-800">
-            Event checklist
-          </h3>
-          <p className="mt-0.5 text-sm text-brown-600/60">
-            {completed} of {items.length} complete
-          </p>
+          <div style={{ fontSize: "1.1rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>Event checklist</div>
+          <div style={{ fontSize: "0.8rem", color: "#8b7355", marginTop: "2px" }}>{completed} of {items.length} complete</div>
         </div>
-        {items.length > 0 && (
-          <div className="h-2 w-24 overflow-hidden rounded-full bg-nude-200">
-            <div
-              className="h-full rounded-full bg-brown-500 transition-all"
-              style={{ width: `${(completed / items.length) * 100}%` }}
-            />
-          </div>
-        )}
+        <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add task</button>
       </div>
 
-      <ul className="mt-5 space-y-3">
-        {items.map((item) => (
-          <li key={item.id} className="flex items-start gap-3">
-            <span
-              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
-                item.done
-                  ? "border-brown-500 bg-brown-500 text-white"
-                  : "border-nude-300 bg-white"
-              }`}
-              aria-hidden
-            >
-              {item.done && (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  className="h-3 w-3"
-                >
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
+      <div style={{ height: "4px", background: "#f0ebe4", borderRadius: "2px", marginBottom: "1.25rem", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${items.length ? (completed/items.length)*100 : 0}%`, background: "#b87333", borderRadius: "2px", transition: "width 0.3s" }} />
+      </div>
+
+      {adding && (
+        <div style={{ background: "#faf8f5", borderRadius: "12px", padding: "1rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
+          <input placeholder="Task description" value={newTask} onChange={e => setNewTask(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
+            <input placeholder="Owner" value={newOwner} onChange={e => setNewOwner(e.target.value)} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+            <input placeholder="Due date" value={newDate} onChange={e => setNewDate(e.target.value)} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button onClick={addItem} style={{ padding: "7px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
+            <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+        {items.map(item => (
+          <div key={item.id} onClick={() => toggleComplete(item)} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 8px", borderRadius: "8px", cursor: "pointer", transition: "background 0.15s" }} onMouseEnter={e => (e.currentTarget.style.background = "#faf8f5")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+            <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: item.completed ? "none" : "2px solid #d4c5b0", background: item.completed ? "#b87333" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
+              {item.completed && <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "0.9rem", color: item.completed ? "#b0a090" : "#2c1810", textDecoration: item.completed ? "line-through" : "none", fontFamily: "Georgia, serif", transition: "all 0.2s" }}>{item.task}</div>
+              {(item.owner || item.due_date) && (
+                <div style={{ display: "flex", gap: "12px", marginTop: "2px" }}>
+                  {item.owner && <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>👤 {item.owner}</span>}
+                  {item.due_date && <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>📅 {item.due_date}</span>}
+                </div>
               )}
-            </span>
-            <span
-              className={`text-sm leading-relaxed ${
-                item.done
-                  ? "text-brown-600/50 line-through"
-                  : "text-brown-800"
-              }`}
-            >
-              {item.label}
-            </span>
-          </li>
+            </div>
+          </div>
         ))}
-      </ul>
-    </section>
+      </div>
+    </div>
   );
 }
