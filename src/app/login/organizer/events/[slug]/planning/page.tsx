@@ -1,4 +1,4 @@
-cat > ~/poplan/src/app/login/organizer/events/\[slug\]/planning/page.tsx << 'ENDOFFILE'
+
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -321,4 +321,3 @@ export default function PlanningHub({ params }: { params: { slug: string } }) {
     </div>
   );
 }
-ENDOFFILE
