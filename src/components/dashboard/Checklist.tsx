@@ -1,7 +1,15 @@
-import { CHECKLIST } from "@/lib/organizer-data";
+type ChecklistItem = {
+  id: number;
+  label: string;
+  done: boolean;
+};
 
-export function Checklist() {
-  const completed = CHECKLIST.filter((item) => item.done).length;
+type ChecklistProps = {
+  items: ChecklistItem[];
+};
+
+export function Checklist({ items }: ChecklistProps) {
+  const completed = items.filter((item) => item.done).length;
 
   return (
     <section className="rounded-2xl border border-nude-300/50 bg-white/70 p-6 shadow-sm backdrop-blur-sm">
@@ -11,21 +19,21 @@ export function Checklist() {
             Event checklist
           </h3>
           <p className="mt-0.5 text-sm text-brown-600/60">
-            {completed} of {CHECKLIST.length} complete
+            {completed} of {items.length} complete
           </p>
         </div>
-        <div className="h-2 w-24 overflow-hidden rounded-full bg-nude-200">
-          <div
-            className="h-full rounded-full bg-brown-500 transition-all"
-            style={{
-              width: `${(completed / CHECKLIST.length) * 100}%`,
-            }}
-          />
-        </div>
+        {items.length > 0 && (
+          <div className="h-2 w-24 overflow-hidden rounded-full bg-nude-200">
+            <div
+              className="h-full rounded-full bg-brown-500 transition-all"
+              style={{ width: `${(completed / items.length) * 100}%` }}
+            />
+          </div>
+        )}
       </div>
 
       <ul className="mt-5 space-y-3">
-        {CHECKLIST.map((item) => (
+        {items.map((item) => (
           <li key={item.id} className="flex items-start gap-3">
             <span
               className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PoplanLogo } from "@/components/PoplanLogo";
+import { DashboardNav } from "@/components/dashboard/DashboardNav";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -10,9 +11,12 @@ export function DashboardShell({ children }: DashboardShellProps) {
     <div className="min-h-screen bg-nude-50">
       <header className="border-b border-nude-200/80 bg-white/60 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/login/organizer" className="scale-75 origin-left">
-            <PoplanLogo />
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/login/organizer/events" className="scale-75 origin-left">
+              <PoplanLogo />
+            </Link>
+            <DashboardNav />
+          </div>
           <div className="flex items-center gap-3">
             <span className="hidden text-sm text-brown-600/70 sm:inline">
               Organizer
