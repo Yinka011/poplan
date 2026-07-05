@@ -17,11 +17,14 @@ export default function LoginPage() {
       setError("Invalid email or password");
       setLoading(false);
     } else {
-      const { data: roleData } = await supabase
+      const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("email", email)
         .single();
+
+      console.log("Role data:", roleData);
+      console.log("Role error:", roleError);
 
       if (roleData?.role === "organizer") {
         window.location.href = "/login/organizer/events";
