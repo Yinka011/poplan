@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,29 +14,29 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (signInError) {
       setError("Invalid email or password");
       setLoading(false);
+      return;
+    }
+
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("email", email)
+      .single();
+
+    if (roleData?.role === "organizer") {
+      window.location.href = "/login/organizer/events";
+    } else if (roleData?.role === "brand") {
+      window.location.href = "/login/brand";
     } else {
-      const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("email", email)
-        .single();
-
-      console.log("Role data:", roleData);
-      console.log("Role error:", roleError);
-
-      if (roleData?.role === "organizer") {
-        window.location.href = "/login/organizer/events";
-      } else if (roleData?.role === "brand") {
-        window.location.href = "/login/brand";
-      } else {
-        setError("Account not recognised. Please contact your organizer.");
-        await supabase.auth.signOut();
-        setLoading(false);
-      }
+      setError("Account not recognised. Please contact your organizer.");
+      await supabase.auth.signOut();
+      setLoading(false);
     }
   };
 
@@ -46,40 +48,19 @@ export default function LoginPage() {
           <div style={{ width: "2rem", height: "1px", background: "#b87333", margin: "0.5rem auto" }}></div>
           <p style={{ color: "#8b7355", fontSize: "0.9rem", marginTop: "0.5rem" }}>Pop-up planning, beautifully simple</p>
         </div>
-
         <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e8e0d5" }}>
           <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "1.5rem", textAlign: "center" }}>Welcome back</h2>
-
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: "1rem" }}>
               <label style={{ fontSize: "0.8rem", color: "#8b7355", display: "block", marginBottom: "0.4rem" }}>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{ width: "100%", padding: "0.75rem", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#faf8f5", outline: "none", boxSizing: "border-box" }}
-              />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: "100%", padding: "0.75rem", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#faf8f5", outline: "none", boxSizing: "border-box" as const }} />
             </div>
-
             <div style={{ marginBottom: "1.5rem" }}>
               <label style={{ fontSize: "0.8rem", color: "#8b7355", display: "block", marginBottom: "0.4rem" }}>Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{ width: "100%", padding: "0.75rem", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#faf8f5", outline: "none", boxSizing: "border-box" }}
-              />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: "100%", padding: "0.75rem", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#faf8f5", outline: "none", boxSizing: "border-box" as const }} />
             </div>
-
             {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "1rem", fontFamily: "Georgia, serif", cursor: "pointer", letterSpacing: "0.05em" }}
-            >
+            <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "1rem", fontFamily: "Georgia, serif", cursor: "pointer", letterSpacing: "0.05em" }}>
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
@@ -87,4 +68,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}export const dynamic = 'force-dynamic'
+}
