@@ -26,7 +26,7 @@ const roleColors: Record<string, string> = {
   "Brand liaison": "#a0522d", Photographer: "#6b8e23",
 };
 
-export default function PlanningHub({ params }: { params: { slug: string } }) {
+export default function PlanningHub({ }: { params: any }) {
   const [tab, setTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
