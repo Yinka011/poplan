@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const brand = {
   name: "Ara Lagos",
@@ -15,15 +16,6 @@ const eventDate = new Date("2026-09-12");
 const today = new Date();
 const daysToEvent = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-const todos = [
-  { task: "Sign participation agreement", due: "Jul 15", category: "Admin" },
-  { task: "Upload logo and product photos", due: "Aug 1", category: "Marketing" },
-  { task: "Submit Instagram reel", due: "Aug 10", category: "Marketing" },
-  { task: "Collab post live", due: "Aug 15", category: "Marketing" },
-  { task: "Submit final inventory list", due: "Aug 20", category: "Operations" },
-  { task: "Share shipping tracking number", due: "Aug 25", category: "Logistics" },
-];
-
 const categoryColors: Record<string, string> = {
   Admin: "#b87333",
   Marketing: "#4a7c59",
@@ -31,23 +23,42 @@ const categoryColors: Record<string, string> = {
   Logistics: "#8b6ab0",
 };
 
+type Deadline = {
+  id: number;
+  task: string;
+  due_date: string;
+  category: string;
+};
+
 export default function BrandPortal() {
   const [checked, setChecked] = useState<number[]>([]);
+  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [uploads, setUploads] = useState<{ name: string; file: File }[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploaded, setUploaded] = useState<string[]>([]);
 
-  const toggle = (i: number) => {
-    setChecked(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
+  useEffect(() => {
+    const fetchDeadlines = async () => {
+      const { data } = await supabase
+        .from("event_deadlines")
+        .select("*")
+        .eq("event", "Atlanta")
+        .order("id");
+      if (data) setDeadlines(data);
+    };
+    fetchDeadlines();
+  }, []);
+
+  const toggle = (id: number) => {
+    setChecked(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setUploads(prev => [...prev, ...files.map(f => ({ name: f.name, file: f }))]);
   };
 
   const completed = checked.length;
-  const progress = Math.round((completed / todos.length) * 100);
+  const progress = deadlines.length ? Math.round((completed / deadlines.length) * 100) : 0;
+  const categories = ["Admin", "Marketing", "Operations", "Logistics"];
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif" }}>
@@ -88,28 +99,27 @@ export default function BrandPortal() {
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
             <div style={{ fontSize: "1rem", color: "#2c1810" }}>Your to-do list</div>
-            <div style={{ fontSize: "0.8rem", color: "#8b7355" }}>{completed} of {todos.length} complete</div>
+            <div style={{ fontSize: "0.8rem", color: "#8b7355" }}>{completed} of {deadlines.length} complete</div>
           </div>
           <div style={{ height: "5px", background: "#f0ebe4", borderRadius: "3px", marginBottom: "1.25rem", overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${progress}%`, background: "#b87333", borderRadius: "3px", transition: "width 0.3s" }} />
           </div>
-          {["Admin", "Marketing", "Operations", "Logistics"].map(cat => {
-            const items = todos.filter(t => t.category === cat);
+          {categories.map(cat => {
+            const items = deadlines.filter(d => d.category === cat);
             if (!items.length) return null;
             return (
-              <div key={cat} style={{ marginBottom: "0.75rem" }}>
+              <div key={cat} style={{ marginBottom: "1rem" }}>
                 <div style={{ fontSize: "0.7rem", color: categoryColors[cat], letterSpacing: "0.08em", marginBottom: "4px" }}>{cat.toUpperCase()}</div>
-                {items.map((todo, i) => {
-                  const idx = todos.indexOf(todo);
-                  const done = checked.includes(idx);
+                {items.map(deadline => {
+                  const done = checked.includes(deadline.id);
                   return (
-                    <div key={i} onClick={() => toggle(idx)} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 8px", borderRadius: "8px", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.background = "#faf8f5")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                    <div key={deadline.id} onClick={() => toggle(deadline.id)} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 8px", borderRadius: "8px", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.background = "#faf8f5")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                       <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: done ? "none" : "2px solid #d4c5b0", background: done ? "#b87333" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         {done && <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "0.9rem", color: done ? "#b0a090" : "#2c1810", textDecoration: done ? "line-through" : "none" }}>{todo.task}</div>
-                        <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Due {todo.due}</div>
+                        <div style={{ fontSize: "0.9rem", color: done ? "#b0a090" : "#2c1810", textDecoration: done ? "line-through" : "none" }}>{deadline.task}</div>
+                        <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Due {deadline.due_date}</div>
                       </div>
                     </div>
                   );
@@ -121,13 +131,11 @@ export default function BrandPortal() {
 
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>Upload documents</div>
-          <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1rem" }}>Upload your logo, product photos, inventory list and any other documents here.</p>
-
+          <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1rem" }}>Upload your logo, product photos, inventory list and marketing assets here. AO Curates will be notified.</p>
           <label style={{ display: "inline-block", padding: "8px 16px", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
             + Choose files
             <input type="file" multiple onChange={handleUpload} style={{ display: "none" }} />
           </label>
-
           {uploads.length > 0 && (
             <div style={{ marginTop: "1rem" }}>
               {uploads.map((u, i) => (
