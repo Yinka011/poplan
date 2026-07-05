@@ -1,69 +1,38 @@
-"use client";
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-
-export const dynamic = "force-dynamic";
-
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (signInError) {
-      setError("Invalid email or password");
-      setLoading(false);
-      return;
-    }
-
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("email", email)
-      .single();
-
-    if (roleData?.role === "organizer") {
-      window.location.href = "/login/organizer/events";
-    } else if (roleData?.role === "brand") {
-      window.location.href = "/login/brand";
-    } else {
-      setError("Account not recognised. Please contact your organizer.");
-      await supabase.auth.signOut();
-      setLoading(false);
-    }
-  };
-
+export default function BrandPortal() {
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: "100%", maxWidth: "420px", padding: "0 1.5rem" }}>
-        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#2c1810" }}>POPLAN</div>
-          <div style={{ width: "2rem", height: "1px", background: "#b87333", margin: "0.5rem auto" }}></div>
-          <p style={{ color: "#8b7355", fontSize: "0.9rem", marginTop: "0.5rem" }}>Pop-up planning, beautifully simple</p>
+    <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif" }}>
+      <div style={{ background: "#fff", borderBottom: "1px solid #e8e0d5", padding: "1rem 2rem" }}>
+        <div style={{ fontSize: "1.4rem", letterSpacing: "0.15em", color: "#2c1810" }}>POPLAN</div>
+        <div style={{ width: "2rem", height: "1px", background: "#b87333", marginTop: "2px" }}></div>
+      </div>
+      <div style={{ maxWidth: "860px", margin: "0 auto", padding: "2.5rem 1.5rem" }}>
+        <h1 style={{ fontSize: "2rem", color: "#2c1810", fontWeight: "normal", margin: 0 }}>Welcome to your Brand Portal</h1>
+        <p style={{ color: "#8b7355", marginTop: "0.4rem" }}>Atlanta Pop-up · Sep 12–13, 2026</p>
+
+        <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.75rem 2rem", marginTop: "1.5rem", color: "#fff" }}>
+          <div style={{ fontSize: "0.75rem", color: "#c8b89a", marginBottom: "1rem", letterSpacing: "0.1em" }}>PARTICIPATION FEE</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1rem" }}>
+            <div><div style={{ fontSize: "0.75rem", color: "#c8b89a" }}>FEE OWED</div><div style={{ fontSize: "1.4rem" }}>$400</div></div>
+            <div><div style={{ fontSize: "0.75rem", color: "#c8b89a" }}>AMOUNT PAID</div><div style={{ fontSize: "1.4rem" }}>$0</div></div>
+            <div><div style={{ fontSize: "0.75rem", color: "#c8b89a" }}>BALANCE</div><div style={{ fontSize: "1.4rem", color: "#e8c97a" }}>$400</div></div>
+          </div>
         </div>
-        <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e8e0d5" }}>
-          <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "1.5rem", textAlign: "center" }}>Welcome back</h2>
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: "1rem" }}>
-              <label style={{ fontSize: "0.8rem", color: "#8b7355", display: "block", marginBottom: "0.4rem" }}>Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: "100%", padding: "0.75rem", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#faf8f5", outline: "none", boxSizing: "border-box" as const }} />
+
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginTop: "1.5rem", border: "1px solid #e8e0d5" }}>
+          <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.1em", marginBottom: "1rem" }}>YOUR TO-DO LIST</div>
+          {[
+            { task: "Sign participation agreement", due: "Jul 15" },
+            { task: "Upload logo and product photos", due: "Aug 1" },
+            { task: "Submit Instagram reel", due: "Aug 10" },
+            { task: "Collab post live", due: "Aug 15" },
+            { task: "Submit final inventory list", due: "Aug 20" },
+            { task: "Share shipping tracking number", due: "Aug 25" },
+          ].map((item, i, arr) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "0.65rem 0", borderBottom: i < arr.length - 1 ? "1px solid #f0ebe4" : "none" }}>
+              <span style={{ fontSize: "0.9rem", color: "#2c1810" }}>{item.task}</span>
+              <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>Due {item.due}</span>
             </div>
-            <div style={{ marginBottom: "1.5rem" }}>
-              <label style={{ fontSize: "0.8rem", color: "#8b7355", display: "block", marginBottom: "0.4rem" }}>Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: "100%", padding: "0.75rem", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#faf8f5", outline: "none", boxSizing: "border-box" as const }} />
-            </div>
-            {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
-            <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "1rem", fontFamily: "Georgia, serif", cursor: "pointer", letterSpacing: "0.05em" }}>
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-          </form>
+          ))}
         </div>
       </div>
     </div>
