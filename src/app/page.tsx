@@ -23,11 +23,12 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("email", email)
-      .single();
+    const { data: roleDataArr } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("email", email);
+  
+  const roleData = roleDataArr?.[0];
 
     if (roleData?.role === "organizer") {
       window.location.href = "/login/organizer/events";
