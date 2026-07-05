@@ -17,7 +17,21 @@ export default function LoginPage() {
       setError("Invalid email or password");
       setLoading(false);
     } else {
-      window.location.href = "/login/organizer/events";
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("email", email)
+        .single();
+
+      if (roleData?.role === "organizer") {
+        window.location.href = "/login/organizer/events";
+      } else if (roleData?.role === "brand") {
+        window.location.href = "/login/brand";
+      } else {
+        setError("Account not recognised. Please contact your organizer.");
+        await supabase.auth.signOut();
+        setLoading(false);
+      }
     }
   };
 
