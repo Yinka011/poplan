@@ -93,7 +93,7 @@ export default function PlanningHub({ params }: { params: { slug: string } }) {
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <Link href={`/login/organizer/events/${params.slug}`} style={{ fontSize: "0.85rem", color: "#8b7355", textDecoration: "none" }}>← Back to Atlanta</Link>
+        <Link href="/login/organizer/events/atlanta" style={{ fontSize: "0.85rem", color: "#8b7355", textDecoration: "none" }}>← Back to Atlanta</Link>
           <h1 style={{ fontSize: "1.8rem", color: "#2c1810", fontWeight: "normal", marginTop: "0.5rem" }}>Planning Hub</h1>
           <p style={{ color: "#8b7355", fontSize: "0.9rem" }}>Decor, refreshments and staffing decisions for Atlanta</p>
         </div>
