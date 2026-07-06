@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -14,15 +15,12 @@ export default function BrandLogin() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
     if (error) {
       setError("Invalid email or password. Try a magic link instead.");
       setLoading(false);
       return;
     }
-
     window.location.href = "/brand";
   };
 
@@ -30,18 +28,15 @@ export default function BrandLogin() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: "https://poplan.vercel.app/brand" }
     });
-
     if (error) {
       setError(error.message);
       setLoading(false);
       return;
     }
-
     setSent(true);
     setLoading(false);
   };
@@ -89,7 +84,7 @@ export default function BrandLogin() {
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>📬</div>
               <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "0.75rem" }}>Check your email</h2>
-              <p style={{ fontSize: "0.85rem", color: "#8b7355", lineHeight: 1.7 }}>We sent a magic link to <strong>{email}</strong>. Click it to access your brand portal. No password needed</p>
+              <p style={{ fontSize: "0.85rem", color: "#8b7355", lineHeight: 1.7 }}>We sent a magic link to <strong>{email}</strong>. Click it to access your brand portal.</p>
             </div>
           ) : (
             <>
@@ -112,7 +107,7 @@ export default function BrandLogin() {
 
               {mode === "magic" && (
                 <form onSubmit={handleMagicLink}>
-                  <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1rem", lineHeight: 1.6 }}>Enter your email and we'll send you a link to sign in instantly. No password needed</p>
+                  <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1rem", lineHeight: 1.6 }}>Enter your email and we will send you a link to sign in instantly.</p>
                   <input type="email" placeholder="Your email address" value={email} onChange={e => setEmail(e.target.value)} required style={inp} />
                   {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
                   <button type="submit" disabled={loading} style={btn("#2c1810")}>{loading ? "Sending..." : "Send magic link"}</button>
@@ -120,7 +115,7 @@ export default function BrandLogin() {
               )}
 
               <div style={{ textAlign: "center", marginTop: "0.5rem" }}>
-                <Link href="/" style={{ fontSize: "0.8rem", color: "#8b7355", textDecoration: "none" }}>← Back to main login</Link>
+                <Link href="/" style={{ fontSize: "0.8rem", color: "#8b7355", textDecoration: "none" }}>Back to main login</Link>
               </div>
             </>
           )}
