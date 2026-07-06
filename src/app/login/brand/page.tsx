@@ -130,10 +130,22 @@ export default function BrandPortal() {
           })}
         </div>
 
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
+          <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>Inventory sheet</div>
+          <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Download the inventory template, fill it in with your products, then upload the completed sheet to your folder.</p>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <a href="https://docs.google.com/spreadsheets/d/1ruWERUAd7XQxRzh5rsKeOt_UwCBf9tRb/edit?usp=share_link" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 20px", background: "#5b7fa6", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>
+              📥 Download inventory template
+            </a>
+            <a href="https://drive.google.com/drive/folders/1WloEj6iDYNu41vaF0f1St5UAKx95SNgy?usp=share_link" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 20px", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>
+              📤 Upload completed sheet
+            </a>
+          </div>
+        </div>
+
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>Upload documents</div>
-          <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Upload your logo, product photos, inventory list and marketing assets to your dedicated folder. AO Curates will be notified when you add files.</p>
-
+          <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Upload your logo, product photos, marketing assets and any other documents to your dedicated folder.</p>
           <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "1.25rem", border: "1px solid #e8e0d5", marginBottom: "1.25rem" }}>
             <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>YOUR UPLOAD FOLDER</div>
             <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>Ara Lagos — AO Curates Atlanta 2026</div>
@@ -141,7 +153,6 @@ export default function BrandPortal() {
               📁 Open my upload folder
             </a>
           </div>
-
           <div style={{ fontSize: "0.85rem", color: "#8b7355" }}>
             <div style={{ marginBottom: "8px", color: "#2c1810" }}>Please upload the following:</div>
             {[
