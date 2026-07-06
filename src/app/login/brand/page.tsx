@@ -126,7 +126,7 @@ export default function BrandPortal() {
           <div style={{ fontSize: "0.75rem", letterSpacing: "0.12em", color: "#b87333", marginBottom: "0.75rem" }}>AO CURATES · ATLANTA 2026</div>
           <h1 style={{ fontSize: "1.8rem", color: "#2c1810", fontWeight: "normal", margin: 0, lineHeight: 1.3 }}>Hi {brand.name}, welcome to the<br />AO Curates Atlanta Pop-Up! 🖤</h1>
           <p style={{ color: "#8b7355", marginTop: "1rem", fontSize: "0.95rem", lineHeight: 1.7 }}>We are so excited to have you as part of this experience. Your brand brings something truly special to our curated space and we cannot wait to showcase what you have created. This portal is your home base — everything you need to prepare for Atlanta is right here.</p>
-          <p style={{ color: "#8b7355", marginTop: "0.75rem", fontSize: "0.95rem", lineHeight: 1.7 }}>Thank you for trusting AO Curates with your brand. Let's make Atlanta unforgettable. 🌟</p>
+          <p style={{ color: "#8b7355", marginTop: "0.75rem", fontSize: "0.95rem", lineHeight: 1.7 }}>Thank you for trusting AO Curates with your brand. Lets make Atlanta unforgettable. 🌟</p>
           <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #f0ebe4", fontSize: "0.85rem", color: "#b87333" }}>{brand.event} Pop-up · {brand.dates}</div>
         </div>
 
