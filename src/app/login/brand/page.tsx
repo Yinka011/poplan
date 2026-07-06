@@ -234,4 +234,22 @@ export default function BrandPortal() {
           </div>
         </div>
 
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
+          <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "1rem" }}>Frequently asked questions</div>
+          {faqs.map((faq, i) => (
+            <div key={i} style={{ borderBottom: i < faqs.length - 1 ? "1px solid #f0ebe4" : "none" }}>
+              <div onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.85rem 0", cursor: "pointer" }}>
+                <div style={{ fontSize: "0.9rem", color: "#2c1810", paddingRight: "1rem" }}>{faq.q}</div>
+                <div style={{ color: "#b87333", fontSize: "1.2rem", flexShrink: 0 }}>{openFaq === i ? "−" : "+"}</div>
+              </div>
+              {openFaq === i && (
+                <div style={{ fontSize: "0.85rem", color: "#8b7355", lineHeight: 1.7, paddingBottom: "0.85rem" }}>{faq.a}</div>
+              )}
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </div>
+  );
+}
