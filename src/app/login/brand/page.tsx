@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 
 const brand = {
   name: "Ara Lagos",
-  email: "aralago@example.com",
+  email: "b.ademowo@gmail.com",
   event: "Atlanta",
   dates: "Sep 11–13, 2026",
   feeOwed: 400,
