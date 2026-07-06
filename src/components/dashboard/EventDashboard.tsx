@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Checklist from "@/components/dashboard/Checklist";
-import BrandProgress from "@/components/dashboard/BrandProgress";
 import { EventCountdown } from "@/components/dashboard/EventCountdown";
 import { MarketingDeadlines } from "@/components/dashboard/MarketingDeadlines";
 import PaymentTracker from "@/components/dashboard/PaymentTracker";
@@ -83,7 +82,6 @@ export function EventDashboard({ event }: EventDashboardProps) {
       <div className="grid gap-6 lg:grid-cols-2">
         <Checklist />
         <MarketingDeadlines city={event.city} items={detail.marketingDeadlines} />
-        <BrandProgress />
       </div>
     </div>
   );
