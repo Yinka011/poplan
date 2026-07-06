@@ -69,6 +69,7 @@ export default function BrandPortal() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif" }}>
+
       <div style={{ background: "#fff", borderBottom: "1px solid #e8e0d5", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: "1.4rem", letterSpacing: "0.15em", color: "#2c1810" }}>POPLAN</div>
@@ -79,9 +80,20 @@ export default function BrandPortal() {
 
       <div style={{ maxWidth: "860px", margin: "0 auto", padding: "2.5rem 1.5rem" }}>
 
-        <div style={{ marginBottom: "2rem" }}>
-          <h1 style={{ fontSize: "2rem", color: "#2c1810", fontWeight: "normal", margin: 0 }}>Welcome, {brand.name}</h1>
-          <p style={{ color: "#8b7355", marginTop: "0.4rem" }}>{brand.event} Pop-up · {brand.dates}</p>
+        <div style={{ background: "#fff", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
+          <div style={{ fontSize: "0.75rem", letterSpacing: "0.12em", color: "#b87333", marginBottom: "0.75rem" }}>AO CURATES · ATLANTA 2026</div>
+          <h1 style={{ fontSize: "1.8rem", color: "#2c1810", fontWeight: "normal", margin: 0, lineHeight: 1.3 }}>
+            Hi {brand.name}, welcome to the<br />AO Curates Atlanta Pop-Up! 🖤
+          </h1>
+          <p style={{ color: "#8b7355", marginTop: "1rem", fontSize: "0.95rem", lineHeight: 1.7 }}>
+            We are so excited to have you as part of this experience. Your brand brings something truly special to our curated space and we cannot wait to showcase what you have created. This portal is your home base — everything you need to prepare for Atlanta is right here.
+          </p>
+          <p style={{ color: "#8b7355", marginTop: "0.75rem", fontSize: "0.95rem", lineHeight: 1.7 }}>
+            Thank you for trusting AO Curates with your brand. Let's make Atlanta unforgettable. 🌟
+          </p>
+          <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #f0ebe4", fontSize: "0.85rem", color: "#b87333" }}>
+            {brand.event} Pop-up · {brand.dates}
+          </div>
         </div>
 
         <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.5rem 2rem", marginBottom: "1.5rem", color: "#fff", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem", alignItems: "center" }}>
@@ -133,11 +145,11 @@ export default function BrandPortal() {
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>Inventory sheet</div>
           <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Download the inventory template, fill it in with your products, then upload the completed sheet to your folder.</p>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" as const }}>
             <a href="https://docs.google.com/spreadsheets/d/1ruWERUAd7XQxRzh5rsKeOt_UwCBf9tRb/edit?usp=share_link" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 20px", background: "#5b7fa6", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>
               📥 Download inventory template
             </a>
-            <a href="https://drive.google.com/drive/folders/1WloEj6iDYNu41vaF0f1St5UAKx95SNgy?usp=share_link" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 20px", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>
+            <a href="https://drive.google.com/drive/folders/1WloEj6iDYNu41vaF0f1St5UAKx95SNgy?usp=share_link" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 20px", background: "#4a7c59", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>
               📤 Upload completed sheet
             </a>
           </div>
@@ -145,7 +157,7 @@ export default function BrandPortal() {
 
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>Upload documents</div>
-          <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Upload your logo, product photos, marketing assets and any other documents to your dedicated folder.</p>
+          <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Upload your logo, product photos, marketing assets and any other documents to your dedicated folder. AO Curates will be notified when you add files.</p>
           <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "1.25rem", border: "1px solid #e8e0d5", marginBottom: "1.25rem" }}>
             <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>YOUR UPLOAD FOLDER</div>
             <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>Ara Lagos — AO Curates Atlanta 2026</div>
