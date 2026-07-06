@@ -75,6 +75,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.5rem" }}>
         <a href={`/login/organizer/events/${event.slug}/expenses`} style={{ padding: "8px 18px", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>💰 View Expenses</a>
+        <a href={`/login/organizer/events/${event.slug}/brands`} style={{ padding: "8px 18px", background: "#4a7c59", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif", marginRight: "8px" }}>👥 Brand Activity</a>
         <a href={`/login/organizer/events/${event.slug}/planning`} style={{ padding: "8px 18px", background: "#5b7fa6", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif", marginLeft: "8px" }}>🎨 Planning Hub</a>
       </div>
       <PaymentTracker />
