@@ -12,7 +12,7 @@ const brand = {
   status: "Paid",
 };
 
-const eventDate = new Date("2026-09-11");
+const eventDate = new Date("2026-09-12");
 const today = new Date();
 const daysToEvent = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -132,7 +132,6 @@ export default function BrandPortal() {
 
       <div style={{ maxWidth: "860px", margin: "0 auto", padding: "2.5rem 1.5rem" }}>
 
-        {/* Welcome */}
         <div style={{ background: "#fff", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "0.75rem", letterSpacing: "0.12em", color: "#b87333", marginBottom: "0.75rem" }}>AO CURATES · ATLANTA 2026</div>
           <h1 style={{ fontSize: "1.8rem", color: "#2c1810", fontWeight: "normal", margin: 0, lineHeight: 1.3 }}>
@@ -149,7 +148,6 @@ export default function BrandPortal() {
           </div>
         </div>
 
-        {/* Payment + Countdown */}
         <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.5rem 2rem", marginBottom: "1.5rem", color: "#fff", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem", alignItems: "center" }}>
           <div>
             <div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PARTICIPATION FEE</div>
@@ -169,7 +167,6 @@ export default function BrandPortal() {
           </div>
         </div>
 
-        {/* To-do list */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
             <div style={{ fontSize: "1rem", color: "#2c1810" }}>Your to-do list</div>
@@ -197,7 +194,6 @@ export default function BrandPortal() {
           })}
         </div>
 
-        {/* Inventory */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>Inventory sheet</div>
           <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Download the inventory template, fill it in with your approved products, then upload the completed sheet to your folder. Remember — only ship items approved by AO Curates.</p>
@@ -211,7 +207,6 @@ export default function BrandPortal() {
           </div>
         </div>
 
-        {/* Upload documents */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>Upload documents</div>
           <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Upload your logo, product photos, digital brand book and marketing assets to your dedicated folder. AO Curates will be notified when you add files.</p>
@@ -239,23 +234,4 @@ export default function BrandPortal() {
           </div>
         </div>
 
-        {/* FAQ */}
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "1rem" }}>Frequently asked questions</div>
-          {faqs.map((faq, i) => (
-            <div key={i} style={{ borderBottom: i < faqs.length - 1 ? "1px solid #f0ebe4" : "none" }}>
-              <div onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.85rem 0", cursor: "pointer" }}>
-                <div style={{ fontSize: "0.9rem", color: "#2c1810", paddingRight: "1rem" }}>{faq.q}</div>
-                <div style={{ color: "#b87333", fontSize: "1.2rem", flexShrink: 0 }}>{openFaq === i ? "−" : "+"}</div>
-              </div>
-              {openFaq === i && (
-                <div style={{ fontSize: "0.85rem", color: "#8b7355", lineHeight: 1.7, paddingBottom: "0.85rem" }}>{faq.a}</div>
-              )}
-            </div>
-          ))}
-        </div>
-
-      </div>
-    </div>
-  );
-}
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px
