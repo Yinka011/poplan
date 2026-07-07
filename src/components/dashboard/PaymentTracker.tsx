@@ -47,6 +47,7 @@ export default function PaymentTracker() {
     const balance = brand.fee_owed - paid;
     const status = balance <= 0 ? "Paid" : paid > 0 ? "Partial" : "Unpaid";
     await supabase.from("brands").update({ amount_paid: paid, balance, status }).eq("id", brand.id);
+    setBrands(prev => prev.map(b => b.id === brand.id ? { ...b, amount_paid: paid, balance, status } : b));
     setEditing(null);
     setNewAmount("");
   };
@@ -57,7 +58,8 @@ export default function PaymentTracker() {
     const paid = parseFloat(newBrand.amount_paid);
     const balance = fee - paid;
     const status = balance <= 0 ? "Paid" : paid > 0 ? "Partial" : "Unpaid";
-    await supabase.from("brands").insert({ name: newBrand.name, fee_owed: fee, amount_paid: paid, balance, status, event: "Atlanta" });
+    const { data } = await supabase.from("brands").insert({ name: newBrand.name, fee_owed: fee, amount_paid: paid, balance, status, event: "Atlanta" }).select().single();
+    if (data) setBrands(prev => [...prev, data]);
     setNewBrand({ name: "", fee_owed: "400", amount_paid: "0" });
     setAdding(false);
   };
@@ -65,6 +67,7 @@ export default function PaymentTracker() {
   const deleteBrand = async (id: number) => {
     if (!confirm("Remove this brand?")) return;
     await supabase.from("brands").delete().eq("id", id);
+    setBrands(prev => prev.filter(b => b.id !== id));
   };
 
   const statusColor = (s: string) => {
