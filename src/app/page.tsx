@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -38,6 +39,7 @@ export default function HomePage() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: "420px", padding: "0 1.5rem" }}>
+
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
           <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#2c1810" }}>POPLAN</div>
           <div style={{ width: "2rem", height: "1px", background: "#b87333", margin: "0.5rem auto" }}></div>
@@ -50,9 +52,9 @@ export default function HomePage() {
             <div>
               <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Welcome</h2>
               <p style={{ fontSize: "0.85rem", color: "#8b7355", textAlign: "center", marginBottom: "1.5rem" }}>How are you signing in today?</p>
-              <a href="/login/organizer/events" style={{ display: "block", padding: "0.85rem", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", textAlign: "center", textDecoration: "none", marginBottom: "10px" }}>
+              <Link href="/login/organizer/events" style={{ display: "block", padding: "0.85rem", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", textAlign: "center", textDecoration: "none", marginBottom: "10px" }}>
                 I am an Organizer
-              </a>
+              </Link>
               <button onClick={() => setMode("brand-login")} style={{ width: "100%", padding: "0.85rem", background: "#fff", color: "#2c1810", border: "1px solid #2c1810", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
                 I am a Brand
               </button>
