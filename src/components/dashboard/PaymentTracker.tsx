@@ -5,10 +5,12 @@ import { supabase } from "@/lib/supabase";
 type Brand = {
   id: number;
   name: string;
+  email: string;
   fee_owed: number;
   amount_paid: number;
   balance: number;
   status: string;
+  invited: boolean;
 };
 
 const brandLinks: Record<string, string> = {
@@ -22,7 +24,8 @@ export default function PaymentTracker() {
   const [editing, setEditing] = useState<number | null>(null);
   const [newAmount, setNewAmount] = useState("");
   const [adding, setAdding] = useState(false);
-  const [newBrand, setNewBrand] = useState({ name: "", fee_owed: "400", amount_paid: "0" });
+  const [inviting, setInviting] = useState<number | null>(null);
+  const [newBrand, setNewBrand] = useState({ name: "", email: "", fee_owed: "400", amount_paid: "0" });
 
   useEffect(() => {
     fetchBrands();
@@ -58,10 +61,33 @@ export default function PaymentTracker() {
     const paid = parseFloat(newBrand.amount_paid);
     const balance = fee - paid;
     const status = balance <= 0 ? "Paid" : paid > 0 ? "Partial" : "Unpaid";
-    const { data } = await supabase.from("brands").insert({ name: newBrand.name, fee_owed: fee, amount_paid: paid, balance, status, event: "Atlanta" }).select().single();
+    const { data } = await supabase.from("brands").insert({
+      name: newBrand.name,
+      email: newBrand.email,
+      fee_owed: fee,
+      amount_paid: paid,
+      balance,
+      status,
+      event: "Atlanta",
+      invited: false,
+    }).select().single();
     if (data) setBrands(prev => [...prev, data]);
-    setNewBrand({ name: "", fee_owed: "400", amount_paid: "0" });
+    setNewBrand({ name: "", email: "", fee_owed: "400", amount_paid: "0" });
     setAdding(false);
+  };
+
+  const inviteBrand = async (brand: Brand) => {
+    if (!brand.email) { alert("Please add an email for this brand first"); return; }
+    setInviting(brand.id);
+    const { error } = await supabase.auth.admin.inviteUserByEmail(brand.email);
+    if (error) {
+      alert("Could not send invite. Please check the email address.");
+    } else {
+      await supabase.from("brands").update({ invited: true }).eq("id", brand.id);
+      setBrands(prev => prev.map(b => b.id === brand.id ? { ...b, invited: true } : b));
+      alert(`Invitation sent to ${brand.email}`);
+    }
+    setInviting(null);
   };
 
   const deleteBrand = async (id: number) => {
@@ -102,6 +128,7 @@ export default function PaymentTracker() {
         <div style={{ background: "#faf8f5", borderRadius: "12px", padding: "1rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "0.85rem", color: "#2c1810", marginBottom: "8px", fontFamily: "Georgia, serif" }}>Add new brand</div>
           <input placeholder="Brand name" value={newBrand.name} onChange={e => setNewBrand({...newBrand, name: e.target.value})} style={{ width: "100%", padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
+          <input placeholder="Brand email (for portal access)" value={newBrand.email} onChange={e => setNewBrand({...newBrand, email: e.target.value})} style={{ width: "100%", padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
             <input placeholder="Fee owed" value={newBrand.fee_owed} onChange={e => setNewBrand({...newBrand, fee_owed: e.target.value})} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
             <input placeholder="Amount paid" value={newBrand.amount_paid} onChange={e => setNewBrand({...newBrand, amount_paid: e.target.value})} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
@@ -116,7 +143,7 @@ export default function PaymentTracker() {
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
         <thead>
           <tr style={{ borderBottom: "1px solid #e8e0d5" }}>
-            {["Brand", "Fee Owed", "Amount Paid", "Balance", "Status", ""].map((h, i) => (
+            {["Brand", "Fee Owed", "Amount Paid", "Balance", "Status", "Portal", ""].map((h, i) => (
               <th key={i} style={{ textAlign: "left", padding: "8px 10px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>{h}</th>
             ))}
           </tr>
@@ -144,6 +171,23 @@ export default function PaymentTracker() {
               <td style={{ padding: "10px", fontWeight: 500, color: Number(brand.balance) > 0 ? "#c0392b" : "#4a7c59" }}>${Number(brand.balance).toFixed(2)}</td>
               <td style={{ padding: "10px" }}>
                 <span style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "20px", ...statusColor(brand.status) }}>{brand.status}</span>
+              </td>
+              <td style={{ padding: "10px" }}>
+                {brand.email ? (
+                  brand.invited ? (
+                    <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "#4a7c5922", color: "#4a7c59" }}>✓ Invited</span>
+                  ) : (
+                    <button
+                      onClick={() => inviteBrand(brand)}
+                      disabled={inviting === brand.id}
+                      style={{ fontSize: "11px", padding: "3px 10px", background: "#b8733322", color: "#b87333", border: "1px solid #b8733344", borderRadius: "20px", cursor: "pointer" }}
+                    >
+                      {inviting === brand.id ? "Sending..." : "📧 Invite"}
+                    </button>
+                  )
+                ) : (
+                  <span style={{ fontSize: "11px", color: "#d4c5b0" }}>No email</span>
+                )}
               </td>
               <td style={{ padding: "10px" }}>
                 {editing === brand.id ? (
