@@ -11,6 +11,12 @@ type Brand = {
   status: string;
 };
 
+const brandLinks: Record<string, string> = {
+  "Ara Lagos": "/login/brand",
+  "Lola Signatures": "/login/brand/lola",
+  "Yinka MB": "/brand/portal",
+};
+
 export default function PaymentTracker() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
@@ -22,7 +28,7 @@ export default function PaymentTracker() {
     fetchBrands();
 
     const channel = supabase
-      .channel("brands-changes")
+      .channel("brands-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "brands" }, () => {
         fetchBrands();
       })
@@ -71,7 +77,7 @@ export default function PaymentTracker() {
     <button
       onClick={onClick}
       title={title}
-      style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "14px", padding: "4px 6px", borderRadius: "6px", color: danger ? "#c0392b" : "#8b7355", transition: "background 0.15s" }}
+      style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "14px", padding: "4px 6px", borderRadius: "6px", color: danger ? "#c0392b" : "#8b7355" }}
       onMouseEnter={e => (e.currentTarget.style.background = danger ? "#c0392b11" : "#f0ebe4")}
       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
     >
@@ -115,7 +121,15 @@ export default function PaymentTracker() {
         <tbody>
           {brands.map((brand) => (
             <tr key={brand.id} style={{ borderBottom: "1px solid #f0ebe4" }}>
-              <td style={{ padding: "10px", fontWeight: 500, color: "#2c1810", fontFamily: "Georgia, serif" }}>{brand.name}</td>
+              <td style={{ padding: "10px", fontWeight: 500, fontFamily: "Georgia, serif" }}>
+                {brandLinks[brand.name] ? (
+                  <a href={brandLinks[brand.name]} style={{ color: "#b87333", textDecoration: "none", borderBottom: "1px solid #b8733344" }} onMouseEnter={e => (e.currentTarget.style.color = "#2c1810")} onMouseLeave={e => (e.currentTarget.style.color = "#b87333")}>
+                    {brand.name}
+                  </a>
+                ) : (
+                  <span style={{ color: "#2c1810" }}>{brand.name}</span>
+                )}
+              </td>
               <td style={{ padding: "10px", color: "#2c1810" }}>${Number(brand.fee_owed).toFixed(2)}</td>
               <td style={{ padding: "10px" }}>
                 {editing === brand.id ? (
