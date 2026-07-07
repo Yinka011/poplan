@@ -18,7 +18,18 @@ export default function PaymentTracker() {
   const [adding, setAdding] = useState(false);
   const [newBrand, setNewBrand] = useState({ name: "", fee_owed: "400", amount_paid: "0" });
 
-  useEffect(() => { fetchBrands(); }, []);
+  useEffect(() => {
+    fetchBrands();
+
+    const channel = supabase
+      .channel("brands-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "brands" }, () => {
+        fetchBrands();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const fetchBrands = async () => {
     const { data } = await supabase.from("brands").select("*").eq("event", "Atlanta");
@@ -32,7 +43,6 @@ export default function PaymentTracker() {
     await supabase.from("brands").update({ amount_paid: paid, balance, status }).eq("id", brand.id);
     setEditing(null);
     setNewAmount("");
-    fetchBrands();
   };
 
   const addBrand = async () => {
@@ -44,12 +54,11 @@ export default function PaymentTracker() {
     await supabase.from("brands").insert({ name: newBrand.name, fee_owed: fee, amount_paid: paid, balance, status, event: "Atlanta" });
     setNewBrand({ name: "", fee_owed: "400", amount_paid: "0" });
     setAdding(false);
-    fetchBrands();
   };
 
   const deleteBrand = async (id: number) => {
+    if (!confirm("Remove this brand?")) return;
     await supabase.from("brands").delete().eq("id", id);
-    fetchBrands();
   };
 
   const statusColor = (s: string) => {
@@ -58,33 +67,26 @@ export default function PaymentTracker() {
     return { background: "#c0392b22", color: "#c0392b" };
   };
 
-  const total = brands.reduce((sum, b) => sum + Number(b.fee_owed), 0);
-  const collected = brands.reduce((sum, b) => sum + Number(b.amount_paid), 0);
-  const outstanding = total - collected;
+  const iconBtn = (onClick: () => void, icon: string, title: string, danger = false) => (
+    <button
+      onClick={onClick}
+      title={title}
+      style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "14px", padding: "4px 6px", borderRadius: "6px", color: danger ? "#c0392b" : "#8b7355", transition: "background 0.15s" }}
+      onMouseEnter={e => (e.currentTarget.style.background = danger ? "#c0392b11" : "#f0ebe4")}
+      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+    >
+      {icon}
+    </button>
+  );
 
   return (
     <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
         <div>
           <div style={{ fontSize: "1.1rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>Payment tracker</div>
           <div style={{ fontSize: "0.8rem", color: "#8b7355", marginTop: "2px" }}>Brand fees for Atlanta pop-up</div>
         </div>
         <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add brand</button>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "10px", marginBottom: "1.25rem" }}>
-        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "10px 14px" }}>
-          <div style={{ fontSize: "0.7rem", color: "#8b7355", marginBottom: "2px" }}>TOTAL FEES</div>
-          <div style={{ fontSize: "1.2rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>${total.toFixed(2)}</div>
-        </div>
-        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "10px 14px" }}>
-          <div style={{ fontSize: "0.7rem", color: "#8b7355", marginBottom: "2px" }}>COLLECTED</div>
-          <div style={{ fontSize: "1.2rem", color: "#4a7c59", fontFamily: "Georgia, serif" }}>${collected.toFixed(2)}</div>
-        </div>
-        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "10px 14px" }}>
-          <div style={{ fontSize: "0.7rem", color: "#8b7355", marginBottom: "2px" }}>OUTSTANDING</div>
-          <div style={{ fontSize: "1.2rem", color: "#c0392b", fontFamily: "Georgia, serif" }}>${outstanding.toFixed(2)}</div>
-        </div>
       </div>
 
       {adding && (
@@ -128,14 +130,14 @@ export default function PaymentTracker() {
               </td>
               <td style={{ padding: "10px" }}>
                 {editing === brand.id ? (
-                  <div style={{ display: "flex", gap: "6px" }}>
+                  <div style={{ display: "flex", gap: "4px" }}>
                     <button onClick={() => updatePayment(brand)} style={{ fontSize: "11px", padding: "4px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}>Save</button>
                     <button onClick={() => setEditing(null)} style={{ fontSize: "11px", padding: "4px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "4px", cursor: "pointer" }}>Cancel</button>
                   </div>
                 ) : (
-                  <div style={{ display: "flex", gap: "6px" }}>
-                    <button onClick={() => { setEditing(brand.id); setNewAmount(String(brand.amount_paid)); }} style={{ fontSize: "11px", padding: "4px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "4px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
-                    <button onClick={() => deleteBrand(brand.id)} style={{ fontSize: "11px", padding: "4px 10px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "4px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
+                  <div style={{ display: "flex", gap: "2px" }}>
+                    {iconBtn(() => { setEditing(brand.id); setNewAmount(String(brand.amount_paid)); }, "✏️", "Edit payment")}
+                    {iconBtn(() => deleteBrand(brand.id), "🗑️", "Remove brand", true)}
                   </div>
                 )}
               </td>
