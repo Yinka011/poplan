@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import Announcements from "@/components/brand/Announcements";
 
 type Brand = {
   id: number;
@@ -175,7 +176,9 @@ export default function BrandPortal() {
           </div>
         </div>
 
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
+        <Announcements event="Atlanta" />
+
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", marginTop: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
             <div style={{ fontSize: "1rem", color: "#2c1810" }}>Your to-do list</div>
             <div style={{ fontSize: "0.8rem", color: "#8b7355" }}>{completed} of {deadlines.length} complete</div>
