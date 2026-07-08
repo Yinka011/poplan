@@ -8,6 +8,7 @@ import PaymentTracker from "@/components/dashboard/PaymentTracker";
 import { getEventDetail } from "@/lib/event-details";
 import { type EventSummary, getDaysToEvent } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
+import AnnouncementManager from "@/components/dashboard/AnnouncementManager";
 
 type EventDashboardProps = {
   event: EventSummary;
@@ -131,6 +132,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
       <div className="grid gap-6 lg:grid-cols-2">
         <Checklist />
         <MarketingDeadlines city={event.city} items={detail.marketingDeadlines} />
+        <AnnouncementManager event={event.city} />
       </div>
     </div>
   );
