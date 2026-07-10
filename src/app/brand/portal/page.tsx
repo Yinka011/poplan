@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Announcements from "@/components/brand/Announcements";
+import FileUpload from "@/components/brand/FileUpload";
 
 type Brand = {
   id: number;
@@ -27,11 +28,6 @@ const categoryColors: Record<string, string> = {
 const months: Record<string, number> = {
   Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5,
   Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11
-};
-
-const driveLinks: Record<string, string> = {
-  "b.ademowo@gmail.com": "https://drive.google.com/drive/folders/1WloEj6iDYNu41vaF0f1St5UAKx95SNgy?usp=share_link",
-  "lolasignatures@gmail.com": "https://drive.google.com/drive/folders/1TlFJQaIxQAz57whz3DeuSgjUt5EteYY5?usp=share_link",
 };
 
 const faqs = [
@@ -133,8 +129,6 @@ export default function BrandPortal() {
     </div>
   );
 
-  const driveLink = driveLinks[userEmail] || "";
-
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif" }}>
       <div style={{ background: "#fff", borderBottom: "1px solid #e8e0d5", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -207,37 +201,9 @@ export default function BrandPortal() {
           })}
         </div>
 
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>Inventory sheet</div>
-          <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Download the inventory template, fill it in with your approved products, then upload the completed sheet to your folder.</p>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" as const }}>
-            <a href="https://docs.google.com/spreadsheets/d/1ruWERUAd7XQxRzh5rsKeOt_UwCBf9tRb/edit?usp=share_link" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 20px", background: "#5b7fa6", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>📥 Download inventory template</a>
-            {driveLink && <a href={driveLink} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 20px", background: "#4a7c59", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>📤 Upload completed sheet</a>}
-          </div>
-        </div>
+        <FileUpload brandName={brand.name} brandEmail={userEmail} />
 
-        {driveLink && (
-          <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
-            <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>Upload documents</div>
-            <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Upload your logo, product photos, digital brand book and marketing assets to your dedicated folder.</p>
-            <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "1.25rem", border: "1px solid #e8e0d5", marginBottom: "1.25rem" }}>
-              <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>YOUR UPLOAD FOLDER</div>
-              <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>{brand.name} — AO Curates Atlanta 2026</div>
-              <a href={driveLink} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 20px", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>📁 Open my upload folder</a>
-            </div>
-            <div style={{ fontSize: "0.85rem", color: "#8b7355" }}>
-              <div style={{ marginBottom: "8px", color: "#2c1810" }}>Please upload the following:</div>
-              {["Brand logo (high resolution)", "Product photos (clean neutral background preferred)", "Digital brand book (due 2 weeks before event)", "Completed inventory sheet", "Marketing assets (photos and videos)"].map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 0" }}>
-                  <span style={{ color: "#b87333" }}>→</span>
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginTop: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "1rem" }}>Frequently asked questions</div>
           {faqs.map((faq, i) => (
             <div key={i} style={{ borderBottom: i < faqs.length - 1 ? "1px solid #f0ebe4" : "none" }}>
