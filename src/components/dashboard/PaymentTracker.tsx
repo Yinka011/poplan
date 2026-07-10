@@ -14,9 +14,9 @@ type Brand = {
 };
 
 const brandLinks: Record<string, string> = {
-  "Ara Lagos": "/login/organizer/events/atlanta/brands?brand=Ara+Lagos",
-  "Lola Signatures": "/login/organizer/events/atlanta/brands?brand=Lola+Signatures",
-  "Yinka MB": "/login/organizer/events/atlanta/brands?brand=Yinka+MB",
+  "Ara Lagos": "/login/brand",
+  "Lola Signatures": "/login/brand/lola",
+  "Yinka MB": "/brand/portal",
 };
 
 export default function PaymentTracker() {
