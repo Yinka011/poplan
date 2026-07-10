@@ -4,11 +4,12 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function HomePage() {
-  const [mode, setMode] = useState<"home" | "brand-login">("home");
+  const [mode, setMode] = useState<"home" | "brand-login" | "forgot">("home");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const handleBrandLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +22,22 @@ export default function HomePage() {
       return;
     }
     window.location.href = "/brand/portal";
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://poplan.vercel.app/reset-password",
+    });
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+    setSent(true);
+    setLoading(false);
   };
 
   const inp = {
@@ -71,10 +88,39 @@ export default function HomePage() {
               <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer", marginBottom: "10px" }}>
                 {loading ? "Signing in..." : "Sign in"}
               </button>
-              <button type="button" onClick={() => setMode("home")} style={{ width: "100%", padding: "0.85rem", background: "transparent", color: "#8b7355", border: "none", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
-                Back
+              <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer", marginBottom: "6px" }}>
+                Forgot password?
+              </button>
+              <button type="button" onClick={() => setMode("home")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
+                ← Back
               </button>
             </form>
+          )}
+
+          {mode === "forgot" && (
+            sent ? (
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>📬</div>
+                <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "0.75rem" }}>Check your email</h2>
+                <p style={{ fontSize: "0.85rem", color: "#8b7355", lineHeight: 1.7, marginBottom: "1.5rem" }}>We sent a password reset link to <strong>{email}</strong>. Click it to set a new password.</p>
+                <button onClick={() => { setMode("brand-login"); setSent(false); setEmail(""); }} style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
+                  Back to sign in
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword}>
+                <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Reset password</h2>
+                <p style={{ fontSize: "0.85rem", color: "#8b7355", textAlign: "center", marginBottom: "1.5rem" }}>Enter your email and we will send you a reset link</p>
+                <input type="email" placeholder="Your email address" value={email} onChange={e => setEmail(e.target.value)} required style={inp} />
+                {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
+                <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer", marginBottom: "10px" }}>
+                  {loading ? "Sending..." : "Send reset link"}
+                </button>
+                <button type="button" onClick={() => setMode("brand-login")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
+                  ← Back to sign in
+                </button>
+              </form>
+            )
           )}
 
         </div>
