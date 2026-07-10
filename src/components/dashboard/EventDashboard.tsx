@@ -124,6 +124,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginBottom: "0.5rem" }}>
         <a href={`/login/organizer/events/${event.slug}/expenses`} style={{ padding: "8px 18px", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>💰 Expenses</a>
+        <a href={`/login/organizer/events/${event.slug}/uploads`} style={{ padding: "8px 18px", background: "#8b6ab0", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>📁 Brand Uploads</a>
         <a href={`/login/organizer/events/${event.slug}/planning`} style={{ padding: "8px 18px", background: "#5b7fa6", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>🎨 Planning Hub</a>
       </div>
 
