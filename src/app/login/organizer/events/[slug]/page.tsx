@@ -38,7 +38,7 @@ export default async function EventPage({ params }: EventPageProps) {
   };
 
   return (
-    <DashboardShell>
+    <DashboardShell event={{ name: event.name, slug: event.slug, city: event.city }}>
       <EventDashboard event={liveEvent} />
     </DashboardShell>
   );
