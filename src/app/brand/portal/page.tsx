@@ -13,6 +13,8 @@ type Brand = {
   balance: number;
   status: string;
   event: string;
+  shipped: boolean;
+  shipped_at: string;
 };
 
 type Deadline = { id: number; task: string; due_date: string; category: string; };
@@ -51,6 +53,7 @@ export default function BrandPortal() {
   const [userEmail, setUserEmail] = useState("");
   const [brandEmail, setBrandEmail] = useState("");
   const [venueAddress, setVenueAddress] = useState("5135 Peachtree Pkwy NW Ste 915, Peachtree Corners, GA 30092, United States");
+  const [markingShipped, setMarkingShipped] = useState(false);
 
   const eventDate = new Date("2026-09-12");
   const today = new Date();
@@ -109,6 +112,15 @@ export default function BrandPortal() {
     fetchAll();
   }, []);
 
+  const markShipped = async () => {
+    if (!brand) return;
+    setMarkingShipped(true);
+    const now = new Date().toISOString();
+    await supabase.from("brands").update({ shipped: true, shipped_at: now }).eq("id", brand.id);
+    setBrand(prev => prev ? { ...prev, shipped: true, shipped_at: now } : prev);
+    setMarkingShipped(false);
+  };
+
   const isCompleted = (deadlineId: number) =>
     tasks.find(t => t.deadline_id === deadlineId)?.completed || false;
 
@@ -148,6 +160,11 @@ export default function BrandPortal() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = "/";
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
   if (loading) return (
@@ -202,6 +219,30 @@ export default function BrandPortal() {
             <div style={{ fontSize: "2rem", color: "#2c1810", fontWeight: "normal", lineHeight: 1 }}>{daysToEvent}</div>
             <div style={{ fontSize: "0.7rem", color: "#8b7355", marginTop: "4px" }}>days to event</div>
           </div>
+        </div>
+
+        {/* Shipping status */}
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "4px" }}>SHIPMENT STATUS</div>
+            {brand.shipped ? (
+              <div>
+                <div style={{ fontSize: "0.95rem", color: "#4a7c59", fontFamily: "Georgia, serif" }}>Products marked as shipped ✓</div>
+                <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "2px" }}>Marked on {formatDate(brand.shipped_at)}</div>
+              </div>
+            ) : (
+              <div style={{ fontSize: "0.95rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>Not yet shipped</div>
+            )}
+          </div>
+          {!brand.shipped && (
+            <button
+              onClick={markShipped}
+              disabled={markingShipped}
+              style={{ padding: "10px 20px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const }}
+            >
+              {markingShipped ? "Saving..." : "Mark as shipped"}
+            </button>
+          )}
         </div>
 
         <Announcements event="Atlanta" />
