@@ -5,10 +5,10 @@ import Checklist from "@/components/dashboard/Checklist";
 import { EventCountdown } from "@/components/dashboard/EventCountdown";
 import { MarketingDeadlines } from "@/components/dashboard/MarketingDeadlines";
 import PaymentTracker from "@/components/dashboard/PaymentTracker";
+import AnnouncementManager from "@/components/dashboard/AnnouncementManager";
 import { getEventDetail } from "@/lib/event-details";
 import { type EventSummary, getDaysToEvent } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
-import AnnouncementManager from "@/components/dashboard/AnnouncementManager";
 
 type EventDashboardProps = {
   event: EventSummary;
@@ -16,13 +16,15 @@ type EventDashboardProps = {
 
 export function EventDashboard({ event }: EventDashboardProps) {
   const detail = getEventDetail(event.slug);
-  const daysToEvent = event.startDate ? getDaysToEvent(event.startDate) : null;
 
   const [brandsCount, setBrandsCount] = useState(0);
   const [outstandingTasks, setOutstandingTasks] = useState(0);
   const [spotsToFill, setSpotsToFill] = useState(10);
   const [editingSpots, setEditingSpots] = useState(false);
   const [newSpots, setNewSpots] = useState("10");
+  const [venueAddress, setVenueAddress] = useState("");
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -47,7 +49,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
     const [brandsRes, checklistRes, settingsRes] = await Promise.all([
       supabase.from("brands").select("id").eq("event", event.city),
       supabase.from("checklist").select("completed").eq("event", event.city),
-      supabase.from("event_settings").select("spots_to_fill").eq("event", event.city).single(),
+      supabase.from("event_settings").select("spots_to_fill, venue_address").eq("event", event.city).single(),
     ]);
 
     if (brandsRes.data) setBrandsCount(brandsRes.data.length);
@@ -55,6 +57,8 @@ export function EventDashboard({ event }: EventDashboardProps) {
     if (settingsRes.data) {
       setSpotsToFill(settingsRes.data.spots_to_fill);
       setNewSpots(String(settingsRes.data.spots_to_fill));
+      setVenueAddress(settingsRes.data.venue_address || "");
+      setNewAddress(settingsRes.data.venue_address || "");
     }
   };
 
@@ -64,16 +68,11 @@ export function EventDashboard({ event }: EventDashboardProps) {
     setEditingSpots(false);
   };
 
-  const statCard = (label: string, value: string, hint?: string, editable?: boolean, onEdit?: () => void) => (
-    <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5", position: "relative" as const }}>
-      <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>{label.toUpperCase()}</div>
-      <div style={{ fontSize: "1.8rem", color: "#2c1810", fontFamily: "Georgia, serif", fontWeight: "normal" }}>{value}</div>
-      {hint && <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "4px" }}>{hint}</div>}
-      {editable && (
-        <button onClick={onEdit} title="Edit" style={{ position: "absolute" as const, top: "10px", right: "10px", background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", color: "#8b7355" }}>✏️</button>
-      )}
-    </div>
-  );
+  const saveAddress = async () => {
+    await supabase.from("event_settings").update({ venue_address: newAddress }).eq("event", event.city);
+    setVenueAddress(newAddress);
+    setEditingAddress(false);
+  };
 
   return (
     <div className="space-y-8">
@@ -94,7 +93,6 @@ export function EventDashboard({ event }: EventDashboardProps) {
       <EventCountdown event={event} />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
-
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5", position: "relative" as const }}>
           <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>SPOTS TO FILL</div>
           {editingSpots ? (
@@ -112,14 +110,39 @@ export function EventDashboard({ event }: EventDashboardProps) {
           )}
         </div>
 
-        {statCard("Brands confirmed", String(brandsCount), `of ${spotsToFill} spots filled`)}
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5" }}>
+          <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>BRANDS CONFIRMED</div>
+          <div style={{ fontSize: "1.8rem", color: "#2c1810", fontFamily: "Georgia, serif", fontWeight: "normal" }}>{brandsCount}</div>
+          <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "4px" }}>of {spotsToFill} spots filled</div>
+        </div>
 
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>OUTSTANDING TASKS</div>
           <div style={{ fontSize: "1.8rem", color: outstandingTasks > 0 ? "#c0392b" : "#4a7c59", fontFamily: "Georgia, serif", fontWeight: "normal" }}>{outstandingTasks}</div>
           <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "4px" }}>tasks remaining on checklist</div>
         </div>
+      </div>
 
+      <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5", position: "relative" as const }}>
+        <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>VENUE ADDRESS</div>
+        {editingAddress ? (
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <input
+              type="text"
+              value={newAddress}
+              onChange={e => setNewAddress(e.target.value)}
+              style={{ flex: 1, padding: "6px 10px", border: "1px solid #b87333", borderRadius: "6px", fontSize: "0.9rem", fontFamily: "Georgia, serif" }}
+              autoFocus
+            />
+            <button onClick={saveAddress} style={{ padding: "6px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "12px", cursor: "pointer" }}>Save</button>
+            <button onClick={() => setEditingAddress(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "12px", cursor: "pointer" }}>Cancel</button>
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize: "0.95rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>{venueAddress || "No address set yet"}</div>
+            <button onClick={() => setEditingAddress(true)} title="Edit address" style={{ position: "absolute" as const, top: "10px", right: "10px", background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", color: "#8b7355" }}>✏️</button>
+          </>
+        )}
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginBottom: "0.5rem" }}>
@@ -133,8 +156,9 @@ export function EventDashboard({ event }: EventDashboardProps) {
       <div className="grid gap-6 lg:grid-cols-2">
         <Checklist />
         <MarketingDeadlines city={event.city} items={detail.marketingDeadlines} />
-        <AnnouncementManager event={event.city} />
       </div>
+
+      <AnnouncementManager event={event.city} />
     </div>
   );
 }

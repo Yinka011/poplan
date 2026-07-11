@@ -49,6 +49,7 @@ export default function BrandPortal() {
   const [saving, setSaving] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
+  const [venueAddress, setVenueAddress] = useState("5135 Peachtree Pkwy NW Ste 915, Peachtree Corners, GA 30092, United States");
 
   const eventDate = new Date("2026-09-12");
   const today = new Date();
@@ -60,15 +61,17 @@ export default function BrandPortal() {
       if (!user) { window.location.href = "/"; return; }
       setUserEmail(user.email || "");
 
-      const [brandRes, deadlineRes, taskRes] = await Promise.all([
+      const [brandRes, deadlineRes, taskRes, settingsRes] = await Promise.all([
         supabase.from("brands").select("*").eq("email", user.email).single(),
         supabase.from("event_deadlines").select("*").eq("event", "Atlanta").order("id"),
         supabase.from("brand_tasks").select("*").eq("brand_email", user.email).eq("event", "Atlanta"),
+        supabase.from("event_settings").select("venue_address").eq("event", "Atlanta").single(),
       ]);
 
       if (brandRes.data) setBrand(brandRes.data);
       if (deadlineRes.data) setDeadlines(deadlineRes.data);
       if (taskRes.data) setTasks(taskRes.data);
+      if (settingsRes.data?.venue_address) setVenueAddress(settingsRes.data.venue_address);
       setLoading(false);
     };
     fetchAll();
@@ -144,9 +147,10 @@ export default function BrandPortal() {
 
       <div style={{ maxWidth: "860px", margin: "0 auto", padding: "2.5rem 1.5rem" }}>
 
-      <div style={{ background: "#fff", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#2c1810", letterSpacing: "0.05em", marginBottom: "2px" }}>Atlanta Pop-Up · Sep 11–13, 2026</div>
-          <div style={{ fontSize: "0.75rem", letterSpacing: "0.12em", color: "#b87333", marginBottom: "0.75rem" }}>AO CURATES · ATLANTA 2026</div>
+        <div style={{ background: "#fff", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
+          <div style={{ fontSize: "0.75rem", letterSpacing: "0.15em", color: "#b87333", marginBottom: "4px" }}>AO CURATES</div>
+          <div style={{ fontSize: "1rem", fontWeight: 600, color: "#2c1810", marginBottom: "2px" }}>Atlanta Pop-Up · Sep 11–13, 2026</div>
+          <div style={{ fontSize: "0.8rem", color: "#8b7355", marginBottom: "1.25rem" }}>{venueAddress}</div>
           <h1 style={{ fontSize: "1.8rem", color: "#2c1810", fontWeight: "normal", margin: 0, lineHeight: 1.3 }}>
             Welcome, <span style={{ fontFamily: "Didot, 'Playfair Display', 'Times New Roman', serif", fontStyle: "italic" }}>{brand.name}</span> 🖤
           </h1>
