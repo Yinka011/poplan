@@ -49,6 +49,7 @@ export default function BrandPortal() {
   const [saving, setSaving] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
+  const [brandEmail, setBrandEmail] = useState("");
   const [venueAddress, setVenueAddress] = useState("5135 Peachtree Pkwy NW Ste 915, Peachtree Corners, GA 30092, United States");
 
   const eventDate = new Date("2026-09-12");
@@ -61,6 +62,8 @@ export default function BrandPortal() {
       if (!user) { window.location.href = "/"; return; }
       setUserEmail(user.email || "");
 
+      let resolvedBrandEmail = user.email || "";
+
       const [brandRes, deadlineRes, taskRes, settingsRes] = await Promise.all([
         supabase.from("brands").select("*").eq("email", user.email).single(),
         supabase.from("event_deadlines").select("*").eq("event", "Atlanta").order("id"),
@@ -68,9 +71,38 @@ export default function BrandPortal() {
         supabase.from("event_settings").select("venue_address").eq("event", "Atlanta").single(),
       ]);
 
-      if (brandRes.data) setBrand(brandRes.data);
+      if (brandRes.data) {
+        setBrand(brandRes.data);
+        resolvedBrandEmail = user.email || "";
+      } else {
+        const { data: memberRes } = await supabase
+          .from("brand_members")
+          .select("brand_email")
+          .eq("member_email", user.email)
+          .eq("event", "Atlanta")
+          .single();
+
+        if (memberRes?.brand_email) {
+          resolvedBrandEmail = memberRes.brand_email;
+          const { data: linkedBrand } = await supabase
+            .from("brands")
+            .select("*")
+            .eq("email", memberRes.brand_email)
+            .single();
+          if (linkedBrand) setBrand(linkedBrand);
+
+          const { data: linkedTasks } = await supabase
+            .from("brand_tasks")
+            .select("*")
+            .eq("brand_email", memberRes.brand_email)
+            .eq("event", "Atlanta");
+          if (linkedTasks) setTasks(linkedTasks);
+        }
+      }
+
+      setBrandEmail(resolvedBrandEmail);
       if (deadlineRes.data) setDeadlines(deadlineRes.data);
-      if (taskRes.data) setTasks(taskRes.data);
+      if (taskRes.data && brandRes.data) setTasks(taskRes.data);
       if (settingsRes.data?.venue_address) setVenueAddress(settingsRes.data.venue_address);
       setLoading(false);
     };
@@ -81,7 +113,7 @@ export default function BrandPortal() {
     tasks.find(t => t.deadline_id === deadlineId)?.completed || false;
 
   const toggleTask = async (deadline: Deadline) => {
-    if (!userEmail) return;
+    if (!brandEmail) return;
     setSaving(deadline.id);
     const existing = tasks.find(t => t.deadline_id === deadline.id);
     if (existing) {
@@ -92,7 +124,7 @@ export default function BrandPortal() {
         event: "Atlanta",
         task: deadline.task,
         due_date: deadline.due_date,
-        brand_email: userEmail,
+        brand_email: brandEmail,
         completed: true,
         deadline_id: deadline.id,
       }).select().single();
@@ -203,7 +235,7 @@ export default function BrandPortal() {
           })}
         </div>
 
-        <FileUpload brandName={brand.name} brandEmail={userEmail} />
+        <FileUpload brandName={brand.name} brandEmail={brandEmail} />
 
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginTop: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "1rem" }}>Frequently asked questions</div>
