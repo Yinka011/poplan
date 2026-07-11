@@ -136,9 +136,8 @@ export default function OrganizerBrandPage() {
     }
   };
 
-  const getApprovalStatus = (fileName: string) => {
-    return approvals.find(a => a.file_name === fileName)?.status || "pending";
-  };
+  const getApprovalStatus = (fileName: string) =>
+    approvals.find(a => a.file_name === fileName)?.status || "pending";
 
   const setApprovalStatus = async (fileName: string, status: string) => {
     if (!brand) return;
@@ -146,17 +145,9 @@ export default function OrganizerBrandPage() {
     if (existing) {
       await supabase.from("file_approvals").update({ status }).eq("brand_email", brand.email).eq("file_name", fileName);
     } else {
-      await supabase.from("file_approvals").insert({
-        brand_email: brand.email,
-        event: "Atlanta",
-        file_name: fileName,
-        status,
-      });
+      await supabase.from("file_approvals").insert({ brand_email: brand.email, event: "Atlanta", file_name: fileName, status });
     }
-    setApprovals(prev => {
-      const filtered = prev.filter(a => a.file_name !== fileName);
-      return [...filtered, { file_name: fileName, status }];
-    });
+    setApprovals(prev => [...prev.filter(a => a.file_name !== fileName), { file_name: fileName, status }]);
   };
 
   const inviteBrand = async () => {
@@ -250,9 +241,13 @@ export default function OrganizerBrandPage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const filteredFiles = selectedCategory === "All"
-    ? files
-    : files.filter(f => f.category === selectedCategory);
+  const filteredFiles = selectedCategory === "All" ? files : files.filter(f => f.category === selectedCategory);
+
+  const approvalBadge = (status: string) => {
+    if (status === "approved") return { background: "#4a7c5922", color: "#4a7c59", label: "Approved" };
+    if (status === "revision") return { background: "#c0392b22", color: "#c0392b", label: "Needs revision" };
+    return { background: "#f0ebe4", color: "#8b7355", label: "Pending" };
+  };
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#8b7355" }}>Loading...</div>
@@ -267,16 +262,11 @@ export default function OrganizerBrandPage() {
     </div>
   );
 
-  const approvalBadge = (status: string) => {
-    if (status === "approved") return { background: "#4a7c5922", color: "#4a7c59", label: "Approved" };
-    if (status === "revision") return { background: "#c0392b22", color: "#c0392b", label: "Needs revision" };
-    return { background: "#f0ebe4", color: "#8b7355", label: "Pending" };
-  };
-
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
 
+        {/* Header */}
         <div style={{ marginBottom: "1.5rem" }}>
           <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#8b7355", textDecoration: "none" }}>← Back to Atlanta</Link>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.5rem" }}>
@@ -331,9 +321,6 @@ export default function OrganizerBrandPage() {
             )}
           </div>
         </div>
-        )}
-          </div>
-        </div>
 
         {/* Shipping status */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -352,12 +339,6 @@ export default function OrganizerBrandPage() {
             {brand.shipped ? "Shipped" : "Pending"}
           </span>
         </div>
-
-        {/* Portal Access */}
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "0.9rem", color: "#2c1810", fontFamily: "Georgia, serif", marginBottom: "1rem" }}>Portal access</div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1rem" }}>
-            <div style={{ flex: 1 }}></div>
 
         {/* Portal Access */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
@@ -388,13 +369,7 @@ export default function OrganizerBrandPage() {
           )}
 
           <div style={{ display: "flex", gap: "8px", marginTop: "0.5rem" }}>
-            <input
-              type="email"
-              placeholder="Add team member email"
-              value={newMemberEmail}
-              onChange={e => setNewMemberEmail(e.target.value)}
-              style={{ flex: 1, padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}
-            />
+            <input type="email" placeholder="Add team member email" value={newMemberEmail} onChange={e => setNewMemberEmail(e.target.value)} style={{ flex: 1, padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
             <button onClick={addMember} disabled={addingMember} title="Send invite" style={{ background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", padding: "8px 12px", cursor: "pointer", color: "#8b7355", fontSize: "1rem" }}>
               {addingMember ? "..." : "✉"}
             </button>
@@ -427,7 +402,7 @@ export default function OrganizerBrandPage() {
           })}
         </div>
 
-        {/* Uploaded Files with Approval */}
+        {/* Uploaded Files */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
             <div style={{ fontSize: "0.9rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>Uploaded files</div>
@@ -436,7 +411,6 @@ export default function OrganizerBrandPage() {
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
-
           {filteredFiles.length === 0 ? (
             <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No files uploaded yet.</p>
           ) : (
@@ -447,9 +421,7 @@ export default function OrganizerBrandPage() {
                 <div key={i} style={{ padding: "10px 12px", borderRadius: "10px", background: "#faf8f5", marginBottom: "8px", border: "1px solid #f0ebe4" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <span style={{ fontSize: "0.85rem", color: "#c8bfb5" }}>
-                      {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "▣" :
-                       file.name.match(/\.pdf$/i) ? "▤" :
-                       file.name.match(/\.(xlsx|csv|xls)$/i) ? "▦" : "▢"}
+                      {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "▣" : file.name.match(/\.pdf$/i) ? "▤" : file.name.match(/\.(xlsx|csv|xls)$/i) ? "▦" : "▢"}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "0.85rem", color: "#2c1810", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
@@ -474,14 +446,7 @@ export default function OrganizerBrandPage() {
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "0.9rem", color: "#2c1810", fontFamily: "Georgia, serif", marginBottom: "1rem" }}>Private notes</div>
           <div style={{ display: "flex", gap: "8px", marginBottom: "1rem" }}>
-            <input
-              type="text"
-              placeholder="Add a note about this brand..."
-              value={newNote}
-              onChange={e => setNewNote(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && addNote()}
-              style={{ flex: 1, padding: "8px 12px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}
-            />
+            <input type="text" placeholder="Add a note about this brand..." value={newNote} onChange={e => setNewNote(e.target.value)} onKeyDown={e => e.key === "Enter" && addNote()} style={{ flex: 1, padding: "8px 12px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
             <button onClick={addNote} disabled={savingNote} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
               {savingNote ? "..." : "Add"}
             </button>
