@@ -111,9 +111,8 @@ export default function AnnouncementManager({ event }: { event: string }) {
                 <span style={{ fontSize: "0.8rem", color: "#8b7355" }}>{formatDate(a.created_at)}</span>
               </div>
               <div style={{ display: "flex", gap: "4px" }}>
-                <button onClick={() => togglePin(a)} title={a.pinned ? "Unpin" : "Pin"} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", padding: "2px 6px", borderRadius: "4px", color: "#8b7355" }}>📌</button>
-                <button onClick={() => deleteAnnouncement(a.id)} title="Delete" style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", padding: "2px 6px", borderRadius: "4px", color: "#c0392b" }}>🗑️</button>
-              </div>
+              <button onClick={() => togglePin(a)} title={a.pinned ? "Unpin" : "Pin"} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", padding: "2px 6px", borderRadius: "4px", color: "#8b7355" }}>📌</button>
+              <button onClick={() => deleteAnnouncement(a.id)} title="Delete" style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", padding: "2px 6px", borderRadius: "4px", color: "#8b7355" }}>🗑️</button>
             </div>
             <p style={{ fontSize: "0.875rem", color: "#2c1810", lineHeight: 1.7, margin: 0 }}>{a.message}</p>
           </div>
