@@ -10,6 +10,11 @@ type UploadedFile = {
   uploaded_at: string;
 };
 
+type FileApproval = {
+  file_name: string;
+  status: string;
+};
+
 const CATEGORIES = [
   "Brand logo",
   "Product photos",
@@ -31,6 +36,7 @@ const TEMPLATE_URL = "https://framesmhcepkdheoclsl.supabase.co/storage/v1/object
 
 export default function FileUpload({ brandName, brandEmail }: { brandName: string; brandEmail: string }) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [approvals, setApprovals] = useState<FileApproval[]>([]);
   const [uploading, setUploading] = useState(false);
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [dragOver, setDragOver] = useState(false);
@@ -38,6 +44,7 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
 
   useEffect(() => {
     fetchFiles();
+    fetchApprovals();
   }, []);
 
   const fetchFiles = async () => {
@@ -63,6 +70,25 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
       );
       setFiles(filesWithUrls);
     }
+  };
+
+  const fetchApprovals = async () => {
+    const { data } = await supabase
+      .from("file_approvals")
+      .select("file_name, status")
+      .eq("brand_email", brandEmail)
+      .eq("event", "Atlanta");
+    if (data) setApprovals(data);
+  };
+
+  const getApprovalStatus = (fileName: string) => {
+    return approvals.find(a => a.file_name === fileName)?.status || "pending";
+  };
+
+  const approvalBadge = (status: string) => {
+    if (status === "approved") return { background: "#4a7c5922", color: "#4a7c59", label: "Approved" };
+    if (status === "revision") return { background: "#c0392b22", color: "#c0392b", label: "Needs revision" };
+    return null;
   };
 
   const autoCheckTask = async (uploadCategory: string) => {
@@ -191,29 +217,36 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
             return (
               <div key={cat} style={{ marginBottom: "1rem" }}>
                 <div style={{ fontSize: "0.75rem", color: "#b87333", marginBottom: "6px", fontWeight: 500 }}>{cat.toUpperCase()}</div>
-                {catFiles.map((file, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", background: "#faf8f5", marginBottom: "4px" }}>
-                    <span style={{ fontSize: "0.85rem", color: "#c8bfb5" }}>
-                      {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "▣" :
-                       file.name.match(/\.pdf$/i) ? "▤" :
-                       file.name.match(/\.(xlsx|csv|xls)$/i) ? "▦" : "▢"}
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "0.85rem", color: "#2c1810", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
-                      <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>{formatSize(file.size)} · {formatDate(file.uploaded_at)}</div>
+                {catFiles.map((file, i) => {
+                  const approvalStatus = getApprovalStatus(file.name);
+                  const badge = approvalBadge(approvalStatus);
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", background: "#faf8f5", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "0.85rem", color: "#c8bfb5" }}>
+                        {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "▣" :
+                         file.name.match(/\.pdf$/i) ? "▤" :
+                         file.name.match(/\.(xlsx|csv|xls)$/i) ? "▦" : "▢"}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "0.85rem", color: "#2c1810", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>{formatSize(file.size)} · {formatDate(file.uploaded_at)}</div>
+                      </div>
+                      {badge && (
+                        <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: badge.background, color: badge.color, whiteSpace: "nowrap" as const }}>{badge.label}</span>
+                      )}
+                      <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", color: "#8b7355", textDecoration: "none" }}>View</a>
+                      <button
+                        onClick={() => deleteFile(file)}
+                        title="Delete"
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: "#c8bfb5", fontSize: "11px", lineHeight: 1 }}
+                        onMouseEnter={e => (e.currentTarget.style.color = "#8b7355")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}
+                      >
+                        &#x2715;
+                      </button>
                     </div>
-                    <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", color: "#8b7355", textDecoration: "none" }}>View</a>
-                    <button
-                      onClick={() => deleteFile(file)}
-                      title="Delete"
-                      style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: "#c8bfb5", fontSize: "11px", lineHeight: 1 }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "#8b7355")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}
-                    >
-                      &#x2715;
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             );
           })}
