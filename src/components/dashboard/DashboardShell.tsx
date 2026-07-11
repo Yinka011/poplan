@@ -17,6 +17,7 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
 
   const navItems = [
     { label: "Overview", href: `/login/organizer/events/${slug}` },
+    { label: "Brands", href: `/login/organizer/events/${slug}/brands` },
     { label: "Expenses", href: `/login/organizer/events/${slug}/expenses` },
     { label: "Planning Hub", href: `/login/organizer/events/${slug}/planning` },
   ];
