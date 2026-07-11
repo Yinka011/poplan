@@ -104,15 +104,16 @@ export default function AnnouncementManager({ event }: { event: string }) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {announcements.map(a => (
-          <div key={a.id} style={{ background: a.pinned ? "#fdf8f3" : "#faf8f5", borderRadius: "10px", padding: "1rem", border: `1px solid ${a.pinned ? "#b8733344" : "#f0ebe4"}` }}>
+          <div key={a.id} style={{ background: a.pinned ? "#fdf8f3" : "#faf8f5", borderRadius: "10px", padding: "1rem", border: `1px solid ${a.pinned ? "#e8e0d5" : "#f0ebe4"}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                {a.pinned && <span style={{ fontSize: "0.7rem", padding: "1px 6px", borderRadius: "10px", background: "#b8733322", color: "#b87333" }}>📌 Pinned</span>}
+                {a.pinned && <span style={{ fontSize: "0.7rem", padding: "1px 6px", borderRadius: "10px", background: "#f0ebe4", color: "#8b7355" }}>📌 Pinned</span>}
                 <span style={{ fontSize: "0.8rem", color: "#8b7355" }}>{formatDate(a.created_at)}</span>
               </div>
               <div style={{ display: "flex", gap: "4px" }}>
-              <button onClick={() => togglePin(a)} title={a.pinned ? "Unpin" : "Pin"} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", padding: "2px 6px", borderRadius: "4px", color: "#8b7355" }}>📌</button>
-              <button onClick={() => deleteAnnouncement(a.id)} title="Delete" style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", padding: "2px 6px", borderRadius: "4px", color: "#8b7355" }}>🗑️</button>
+                <button onClick={() => togglePin(a)} title={a.pinned ? "Unpin" : "Pin"} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", padding: "2px 6px", borderRadius: "4px", color: "#8b7355" }}>📌</button>
+                <button onClick={() => deleteAnnouncement(a.id)} title="Delete" style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", padding: "2px 6px", borderRadius: "4px", color: "#8b7355" }}>🗑️</button>
+              </div>
             </div>
             <p style={{ fontSize: "0.875rem", color: "#2c1810", lineHeight: 1.7, margin: 0 }}>{a.message}</p>
           </div>
