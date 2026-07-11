@@ -13,6 +13,8 @@ type Brand = {
   balance: number;
   status: string;
   invited: boolean;
+  shipped: boolean;
+  shipped_at: string;
 };
 
 type Deadline = { id: number; task: string; due_date: string; category: string; };
@@ -329,6 +331,33 @@ export default function OrganizerBrandPage() {
             )}
           </div>
         </div>
+        )}
+          </div>
+        </div>
+
+        {/* Shipping status */}
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "4px" }}>SHIPMENT STATUS</div>
+            {brand.shipped ? (
+              <div>
+                <div style={{ fontSize: "0.95rem", color: "#4a7c59", fontFamily: "Georgia, serif" }}>Products shipped ✓</div>
+                <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "2px" }}>Marked on {formatDate(brand.shipped_at)}</div>
+              </div>
+            ) : (
+              <div style={{ fontSize: "0.95rem", color: "#b87333", fontFamily: "Georgia, serif" }}>Not yet shipped</div>
+            )}
+          </div>
+          <span style={{ fontSize: "0.8rem", padding: "4px 12px", borderRadius: "20px", background: brand.shipped ? "#4a7c5922" : "#b8733322", color: brand.shipped ? "#4a7c59" : "#b87333" }}>
+            {brand.shipped ? "Shipped" : "Pending"}
+          </span>
+        </div>
+
+        {/* Portal Access */}
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
+          <div style={{ fontSize: "0.9rem", color: "#2c1810", fontFamily: "Georgia, serif", marginBottom: "1rem" }}>Portal access</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1rem" }}>
+            <div style={{ flex: 1 }}></div>
 
         {/* Portal Access */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
