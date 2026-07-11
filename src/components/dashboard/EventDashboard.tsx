@@ -5,7 +5,6 @@ import Checklist from "@/components/dashboard/Checklist";
 import { MarketingDeadlines } from "@/components/dashboard/MarketingDeadlines";
 import PaymentTracker from "@/components/dashboard/PaymentTracker";
 import AnnouncementManager from "@/components/dashboard/AnnouncementManager";
-import { getEventDetail } from "@/lib/event-details";
 import { type EventSummary } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 
@@ -21,8 +20,6 @@ const PencilIcon = () => (
 );
 
 export function EventDashboard({ event }: EventDashboardProps) {
-  const detail = getEventDetail(event.slug);
-
   const [brandsCount, setBrandsCount] = useState(0);
   const [outstandingTasks, setOutstandingTasks] = useState(0);
   const [spotsToFill, setSpotsToFill] = useState(10);
@@ -177,7 +174,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Checklist />
-        <MarketingDeadlines city={event.city} items={detail.marketingDeadlines} />
+        <MarketingDeadlines city={event.city} />
       </div>
 
       <AnnouncementManager event={event.city} />
