@@ -17,7 +17,6 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
 
   const navItems = [
     { label: "Overview", href: `/login/organizer/events/${slug}` },
-    { label: "Brands", href: `/login/organizer/events/${slug}/brands` },
     { label: "Expenses", href: `/login/organizer/events/${slug}/expenses` },
     { label: "Planning Hub", href: `/login/organizer/events/${slug}/planning` },
   ];
@@ -34,7 +33,6 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
         <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid #3d2415" }}>
           <div style={{ fontSize: "0.7rem", color: "#c8b89a", letterSpacing: "0.1em", marginBottom: "4px" }}>CURRENT EVENT</div>
           <div style={{ fontSize: "0.9rem", color: "#fff" }}>{event ? event.name : "Events"}</div>
-          <div style={{ fontSize: "0.75rem", color: "#b87333", marginTop: "2px" }}>Sep 11-13, 2026</div>
         </div>
         <nav style={{ flex: 1, padding: "1rem 0" }}>
           {navItems.map(item => (
