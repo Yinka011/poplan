@@ -4,12 +4,25 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function HomePage() {
-  const [mode, setMode] = useState<"home" | "brand-login" | "forgot">("home");
+  const [mode, setMode] = useState<"home" | "organizer-login" | "brand-login" | "forgot">("home");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  const handleOrganizerLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setError("Invalid email or password");
+      setLoading(false);
+      return;
+    }
+    window.location.href = "/login/organizer/events";
+  };
 
   const handleBrandLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +66,20 @@ export default function HomePage() {
     marginBottom: "1rem",
   };
 
+  const btn = (bg: string, color: string = "#fff") => ({
+    width: "100%",
+    padding: "0.85rem",
+    background: bg,
+    color,
+    border: bg === "#fff" ? "1px solid #2c1810" : "none",
+    borderRadius: "8px",
+    fontSize: "0.95rem",
+    fontFamily: "Georgia, serif",
+    cursor: "pointer",
+    letterSpacing: "0.05em",
+    marginBottom: "10px",
+  });
+
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: "420px", padding: "0 1.5rem" }}>
@@ -69,13 +96,32 @@ export default function HomePage() {
             <div>
               <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Welcome</h2>
               <p style={{ fontSize: "0.85rem", color: "#8b7355", textAlign: "center", marginBottom: "1.5rem" }}>How are you signing in today?</p>
-              <Link href="/login/organizer/events" style={{ display: "block", padding: "0.85rem", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", textAlign: "center", textDecoration: "none", marginBottom: "10px" }}>
+              <button onClick={() => { setMode("organizer-login"); setError(""); setEmail(""); setPassword(""); }} style={btn("#2c1810")}>
                 I am an Organizer
-              </Link>
-              <button onClick={() => setMode("brand-login")} style={{ width: "100%", padding: "0.85rem", background: "#fff", color: "#2c1810", border: "1px solid #2c1810", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
+              </button>
+              <button onClick={() => { setMode("brand-login"); setError(""); setEmail(""); setPassword(""); }} style={btn("#fff", "#2c1810")}>
                 I am a Brand
               </button>
             </div>
+          )}
+
+          {mode === "organizer-login" && (
+            <form onSubmit={handleOrganizerLogin}>
+              <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Organizer sign in</h2>
+              <p style={{ fontSize: "0.85rem", color: "#8b7355", textAlign: "center", marginBottom: "1.5rem" }}>Sign in to manage your events</p>
+              <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={inp} />
+              <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={inp} />
+              {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
+              <button type="submit" disabled={loading} style={btn("#2c1810")}>
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+              <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer", marginBottom: "6px" }}>
+                Forgot password?
+              </button>
+              <button type="button" onClick={() => setMode("home")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
+                ← Back
+              </button>
+            </form>
           )}
 
           {mode === "brand-login" && (
@@ -85,7 +131,7 @@ export default function HomePage() {
               <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={inp} />
               <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={inp} />
               {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
-              <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer", marginBottom: "10px" }}>
+              <button type="submit" disabled={loading} style={btn("#2c1810")}>
                 {loading ? "Signing in..." : "Sign in"}
               </button>
               <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer", marginBottom: "6px" }}>
@@ -102,8 +148,8 @@ export default function HomePage() {
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>📬</div>
                 <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "0.75rem" }}>Check your email</h2>
-                <p style={{ fontSize: "0.85rem", color: "#8b7355", lineHeight: 1.7, marginBottom: "1.5rem" }}>We sent a password reset link to <strong>{email}</strong>. Click it to set a new password.</p>
-                <button onClick={() => { setMode("brand-login"); setSent(false); setEmail(""); }} style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
+                <p style={{ fontSize: "0.85rem", color: "#8b7355", lineHeight: 1.7, marginBottom: "1.5rem" }}>We sent a reset link to <strong>{email}</strong>. Click it to set a new password.</p>
+                <button onClick={() => { setMode("home"); setSent(false); setEmail(""); }} style={btn("#2c1810")}>
                   Back to sign in
                 </button>
               </div>
@@ -113,11 +159,11 @@ export default function HomePage() {
                 <p style={{ fontSize: "0.85rem", color: "#8b7355", textAlign: "center", marginBottom: "1.5rem" }}>Enter your email and we will send you a reset link</p>
                 <input type="email" placeholder="Your email address" value={email} onChange={e => setEmail(e.target.value)} required style={inp} />
                 {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
-                <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer", marginBottom: "10px" }}>
+                <button type="submit" disabled={loading} style={btn("#2c1810")}>
                   {loading ? "Sending..." : "Send reset link"}
                 </button>
-                <button type="button" onClick={() => setMode("brand-login")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
-                  ← Back to sign in
+                <button type="button" onClick={() => setMode("home")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
+                  ← Back
                 </button>
               </form>
             )
