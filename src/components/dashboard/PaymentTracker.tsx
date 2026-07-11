@@ -13,16 +13,27 @@ type Brand = {
   invited: boolean;
 };
 
-const brandLinks: Record<string, string> = {
-  "Ara Lagos": "/login/brand",
-  "Lola Signatures": "/login/brand/lola",
-  "Yinka MB": "/brand/portal",
-};
+const PencilIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6"/>
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+    <path d="M10 11v6M14 11v6"/>
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+  </svg>
+);
 
 export default function PaymentTracker() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [newAmount, setNewAmount] = useState("");
+  const [newFee, setNewFee] = useState("");
   const [adding, setAdding] = useState(false);
   const [inviting, setInviting] = useState<number | null>(null);
   const [newBrand, setNewBrand] = useState({ name: "", email: "", fee_owed: "400", amount_paid: "0" });
@@ -45,12 +56,14 @@ export default function PaymentTracker() {
 
   const updatePayment = async (brand: Brand) => {
     const paid = parseFloat(newAmount);
-    const balance = brand.fee_owed - paid;
+    const fee = parseFloat(newFee);
+    const balance = fee - paid;
     const status = balance <= 0 ? "Paid" : paid > 0 ? "Partial" : "Unpaid";
-    await supabase.from("brands").update({ amount_paid: paid, balance, status }).eq("id", brand.id);
-    setBrands(prev => prev.map(b => b.id === brand.id ? { ...b, amount_paid: paid, balance, status } : b));
+    await supabase.from("brands").update({ amount_paid: paid, fee_owed: fee, balance, status }).eq("id", brand.id);
+    setBrands(prev => prev.map(b => b.id === brand.id ? { ...b, amount_paid: paid, fee_owed: fee, balance, status } : b));
     setEditing(null);
     setNewAmount("");
+    setNewFee("");
   };
 
   const addBrand = async () => {
@@ -105,12 +118,16 @@ export default function PaymentTracker() {
     return { background: "#c0392b22", color: "#c0392b" };
   };
 
-  const iconBtn = (onClick: () => void, icon: string, title: string, danger = false) => (
+  const totalFees = brands.reduce((sum, b) => sum + Number(b.fee_owed), 0);
+  const totalReceived = brands.reduce((sum, b) => sum + Number(b.amount_paid), 0);
+  const totalOutstanding = brands.reduce((sum, b) => sum + Number(b.balance), 0);
+
+  const iconBtn = (onClick: () => void, icon: React.ReactNode, title: string, danger = false) => (
     <button
       onClick={onClick}
       title={title}
-      style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "14px", padding: "4px 6px", borderRadius: "6px", color: danger ? "#c0392b" : "#8b7355" }}
-      onMouseEnter={e => (e.currentTarget.style.background = danger ? "#c0392b11" : "#f0ebe4")}
+      style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px 5px", borderRadius: "5px", color: danger ? "#b87333" : "#b87333", display: "flex", alignItems: "center" }}
+      onMouseEnter={e => (e.currentTarget.style.background = "#f0ebe4")}
       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
     >
       {icon}
@@ -125,6 +142,22 @@ export default function PaymentTracker() {
           <div style={{ fontSize: "0.8rem", color: "#8b7355", marginTop: "2px" }}>Brand fees for Atlanta pop-up</div>
         </div>
         <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add brand</button>
+      </div>
+
+      {/* Summary row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "1.25rem" }}>
+        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "0.75rem 1rem", border: "1px solid #f0ebe4" }}>
+          <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "2px" }}>TOTAL FEES</div>
+          <div style={{ fontSize: "1.1rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>${totalFees.toFixed(2)}</div>
+        </div>
+        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "0.75rem 1rem", border: "1px solid #f0ebe4" }}>
+          <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "2px" }}>RECEIVED</div>
+          <div style={{ fontSize: "1.1rem", color: "#4a7c59", fontFamily: "Georgia, serif" }}>${totalReceived.toFixed(2)}</div>
+        </div>
+        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "0.75rem 1rem", border: "1px solid #f0ebe4" }}>
+          <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "2px" }}>OUTSTANDING</div>
+          <div style={{ fontSize: "1.1rem", color: totalOutstanding > 0 ? "#c0392b" : "#4a7c59", fontFamily: "Georgia, serif" }}>${totalOutstanding.toFixed(2)}</div>
+        </div>
       </div>
 
       {adding && (
@@ -155,18 +188,20 @@ export default function PaymentTracker() {
           {brands.map((brand) => (
             <tr key={brand.id} style={{ borderBottom: "1px solid #f0ebe4" }}>
               <td style={{ padding: "10px", fontWeight: 500, fontFamily: "Georgia, serif" }}>
-                {brandLinks[brand.name] ? (
-                  <a href={brandLinks[brand.name]} style={{ color: "#b87333", textDecoration: "none", borderBottom: "1px solid #b8733344" }} onMouseEnter={e => (e.currentTarget.style.color = "#2c1810")} onMouseLeave={e => (e.currentTarget.style.color = "#b87333")}>
-                    {brand.name}
-                  </a>
+                <a href={`/login/organizer/events/atlanta/brands/${encodeURIComponent(brand.name)}`} style={{ color: "#b87333", textDecoration: "none", borderBottom: "1px solid #b8733344" }} onMouseEnter={e => (e.currentTarget.style.color = "#2c1810")} onMouseLeave={e => (e.currentTarget.style.color = "#b87333")}>
+                  {brand.name}
+                </a>
+              </td>
+              <td style={{ padding: "10px", color: "#2c1810" }}>
+                {editing === brand.id ? (
+                  <input type="number" value={newFee} onChange={e => setNewFee(e.target.value)} style={{ width: "70px", padding: "4px", border: "1px solid #b87333", borderRadius: "4px", fontSize: "13px" }} autoFocus />
                 ) : (
-                  <span style={{ color: "#2c1810" }}>{brand.name}</span>
+                  <span>${Number(brand.fee_owed).toFixed(2)}</span>
                 )}
               </td>
-              <td style={{ padding: "10px", color: "#2c1810" }}>${Number(brand.fee_owed).toFixed(2)}</td>
               <td style={{ padding: "10px" }}>
                 {editing === brand.id ? (
-                  <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} style={{ width: "80px", padding: "4px", border: "1px solid #b87333", borderRadius: "4px", fontSize: "13px" }} autoFocus />
+                  <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} style={{ width: "70px", padding: "4px", border: "1px solid #b87333", borderRadius: "4px", fontSize: "13px" }} />
                 ) : (
                   <span style={{ color: "#2c1810" }}>${Number(brand.amount_paid).toFixed(2)}</span>
                 )}
@@ -181,7 +216,7 @@ export default function PaymentTracker() {
                     <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "#4a7c5922", color: "#4a7c59" }}>✓ Invited</span>
                   ) : (
                     <button onClick={() => inviteBrand(brand)} disabled={inviting === brand.id} style={{ fontSize: "11px", padding: "3px 10px", background: "#b8733322", color: "#b87333", border: "1px solid #b8733344", borderRadius: "20px", cursor: "pointer" }}>
-                      {inviting === brand.id ? "Sending..." : "📧 Invite"}
+                      {inviting === brand.id ? "..." : "✉"}
                     </button>
                   )
                 ) : (
@@ -196,8 +231,8 @@ export default function PaymentTracker() {
                   </div>
                 ) : (
                   <div style={{ display: "flex", gap: "2px" }}>
-                    {iconBtn(() => { setEditing(brand.id); setNewAmount(String(brand.amount_paid)); }, "✏️", "Edit payment")}
-                    {iconBtn(() => deleteBrand(brand.id), "🗑️", "Remove brand", true)}
+                    {iconBtn(() => { setEditing(brand.id); setNewAmount(String(brand.amount_paid)); setNewFee(String(brand.fee_owed)); }, <PencilIcon />, "Edit payment")}
+                    {iconBtn(() => deleteBrand(brand.id), <TrashIcon />, "Remove brand", true)}
                   </div>
                 )}
               </td>
