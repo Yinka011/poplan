@@ -10,6 +10,15 @@ type ChecklistItem = {
   due_date: string;
 };
 
+const TrashIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6"/>
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+    <path d="M10 11v6M14 11v6"/>
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+  </svg>
+);
+
 export default function Checklist() {
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [newTask, setNewTask] = useState("");
@@ -19,14 +28,12 @@ export default function Checklist() {
 
   useEffect(() => {
     fetchItems();
-
     const channel = supabase
       .channel("checklist-changes")
       .on("postgres_changes", { event: "*", schema: "public", table: "checklist" }, () => {
         fetchItems();
       })
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, []);
 
@@ -64,21 +71,10 @@ export default function Checklist() {
   const deleteItem = async (id: number) => {
     if (!confirm("Remove this task?")) return;
     await supabase.from("checklist").delete().eq("id", id);
+    setItems(prev => prev.filter(i => i.id !== id));
   };
 
   const completed = items.filter(i => i.completed).length;
-
-  const iconBtn = (onClick: () => void, icon: string, title: string, danger = false) => (
-    <button
-      onClick={onClick}
-      title={title}
-      style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "14px", padding: "4px 6px", borderRadius: "6px", color: danger ? "#c0392b" : "#8b7355" }}
-      onMouseEnter={e => (e.currentTarget.style.background = danger ? "#c0392b11" : "#f0ebe4")}
-      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-    >
-      {icon}
-    </button>
-  );
 
   return (
     <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
@@ -91,30 +87,15 @@ export default function Checklist() {
       </div>
 
       <div style={{ height: "4px", background: "#f0ebe4", borderRadius: "2px", marginBottom: "1.25rem", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${items.length ? (completed / items.length) * 100 : 0}%`, background: "#b87333", borderRadius: "2px", transition: "width 0.3s" }} />
+        <div style={{ height: "100%", width: `${items.length ? (completed/items.length)*100 : 0}%`, background: "#b87333", borderRadius: "2px", transition: "width 0.3s" }} />
       </div>
 
       {adding && (
         <div style={{ background: "#faf8f5", borderRadius: "12px", padding: "1rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
-          <input
-            placeholder="Task description"
-            value={newTask}
-            onChange={e => setNewTask(e.target.value)}
-            style={{ width: "100%", padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }}
-          />
+          <input placeholder="Task description" value={newTask} onChange={e => setNewTask(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
-            <input
-              placeholder="Owner"
-              value={newOwner}
-              onChange={e => setNewOwner(e.target.value)}
-              style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}
-            />
-            <input
-              type="date"
-              value={newDate}
-              onChange={e => setNewDate(e.target.value)}
-              style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}
-            />
+            <input placeholder="Owner" value={newOwner} onChange={e => setNewOwner(e.target.value)} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+            <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
             <button onClick={addItem} style={{ padding: "7px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
@@ -138,7 +119,15 @@ export default function Checklist() {
                 </div>
               )}
             </div>
-            {iconBtn(() => deleteItem(item.id), "🗑️", "Remove task", true)}
+            <button
+              onClick={() => deleteItem(item.id)}
+              title="Remove task"
+              style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px 5px", borderRadius: "5px", color: "#b87333", display: "flex", alignItems: "center", opacity: 0.6 }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#f0ebe4"; e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.opacity = "0.6"; }}
+            >
+              <TrashIcon />
+            </button>
           </div>
         ))}
       </div>
