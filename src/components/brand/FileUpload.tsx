@@ -13,11 +13,21 @@ type UploadedFile = {
 const CATEGORIES = [
   "Brand logo",
   "Product photos",
-  "Digital brand book",
-  "Inventory sheet",
   "Marketing assets",
+  "Inventory sheet",
+  "Digital brand book",
   "Other",
 ];
+
+const CATEGORY_TASK_MAP: Record<string, number> = {
+  "Brand logo": 20,
+  "Product photos": 21,
+  "Marketing assets": 13,
+  "Inventory sheet": 15,
+  "Digital brand book": 22,
+};
+
+const INVENTORY_TEMPLATE_URL = "https://framesmhcepkdheoclsl.supabase.co/storage/v1/object/public/Templates/Brand%20Inventory%20Sheet%20-%20Template.xlsx";
 
 export default function FileUpload({ brandName, brandEmail }: { brandName: string; brandEmail: string }) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -55,6 +65,41 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
     }
   };
 
+  const autoCheckTask = async (uploadCategory: string) => {
+    const deadlineId = CATEGORY_TASK_MAP[uploadCategory];
+    if (!deadlineId) return;
+
+    const { data: existing } = await supabase
+      .from("brand_tasks")
+      .select("*")
+      .eq("brand_email", brandEmail)
+      .eq("deadline_id", deadlineId)
+      .single();
+
+    if (existing) {
+      if (!existing.completed) {
+        await supabase.from("brand_tasks").update({ completed: true }).eq("id", existing.id);
+      }
+    } else {
+      const { data: deadline } = await supabase
+        .from("event_deadlines")
+        .select("task, due_date")
+        .eq("id", deadlineId)
+        .single();
+
+      if (deadline) {
+        await supabase.from("brand_tasks").insert({
+          event: "Atlanta",
+          task: deadline.task,
+          due_date: deadline.due_date,
+          brand_email: brandEmail,
+          completed: true,
+          deadline_id: deadlineId,
+        });
+      }
+    }
+  };
+
   const handleUpload = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
     setUploading(true);
@@ -66,7 +111,11 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
       const { error } = await supabase.storage
         .from("brand-uploads")
         .upload(path, file, { upsert: true });
-      if (error) setError(`Failed to upload ${file.name}: ${error.message}`);
+      if (error) {
+        setError(`Failed to upload ${file.name}: ${error.message}`);
+      } else {
+        await autoCheckTask(category);
+      }
     }
 
     setUploading(false);
@@ -100,6 +149,20 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
     <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
       <div style={{ fontSize: "1rem", color: "#2c1810", fontFamily: "Georgia, serif", marginBottom: "0.5rem" }}>Upload documents</div>
       <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Upload your brand assets directly here. AO Curates will be notified and can access everything from their dashboard.</p>
+
+      <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "1rem", border: "1px solid #f0ebe4", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ fontSize: "0.85rem", color: "#2c1810", fontFamily: "Georgia, serif", marginBottom: "2px" }}>Inventory template</div>
+          <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Download, fill in your products, then upload below</div>
+        </div>
+        
+          href={INVENTORY_TEMPLATE_URL}
+          download
+          style={{ fontSize: "0.8rem", padding: "7px 14px", background: "#2c1810", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const }}
+        >
+          Download template
+        </a>
+      </div>
 
       <div style={{ marginBottom: "1rem" }}>
         <label style={{ fontSize: "0.8rem", color: "#8b7355", display: "block", marginBottom: "6px" }}>Category</label>
