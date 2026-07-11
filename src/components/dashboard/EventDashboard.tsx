@@ -76,23 +76,23 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <Link href="/login/organizer/events" className="text-sm font-medium text-brown-600/70 transition-colors hover:text-brown-800">
-            ← All events
-          </Link>
-          <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-medium text-brown-800 sm:text-4xl">
-            {event.name}
-          </h1>
-          <p className="mt-1 text-sm text-brown-600/70">
-            {event.status === "Planning" ? `${event.city} is in early planning.` : `Here's how ${event.city} is shaping up.`}
-          </p>
-        </div>
+
+      {/* Header */}
+      <div>
+        <Link href="/login/organizer/events" className="text-sm font-medium text-brown-600/70 transition-colors hover:text-brown-800">
+          ← All events
+        </Link>
+        <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-medium text-brown-800 sm:text-4xl">
+          {event.name}
+        </h1>
+        <p className="mt-1 text-sm text-brown-600/70">
+          {event.status === "Planning" ? `${event.city} is in early planning.` : `Here's how ${event.city} is shaping up.`}
+        </p>
       </div>
 
-      <EventCountdown event={event} />
-
+      {/* Stat tiles */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
+
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5", position: "relative" as const }}>
           <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>SPOTS TO FILL</div>
           {editingSpots ? (
@@ -105,7 +105,12 @@ export function EventDashboard({ event }: EventDashboardProps) {
             <>
               <div style={{ fontSize: "1.8rem", color: "#2c1810", fontFamily: "Georgia, serif", fontWeight: "normal" }}>{spotsToFill}</div>
               <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "4px" }}>{brandsCount} confirmed</div>
-              <button onClick={() => setEditingSpots(true)} title="Edit spots" style={{ position: "absolute" as const, top: "10px", right: "10px", background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", color: "#8b7355" }}>✏️</button>
+              <button onClick={() => setEditingSpots(true)} title="Edit spots" style={{ position: "absolute" as const, top: "10px", right: "10px", background: "transparent", border: "none", cursor: "pointer", color: "#b87333" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
             </>
           )}
         </div>
@@ -121,34 +126,35 @@ export function EventDashboard({ event }: EventDashboardProps) {
           <div style={{ fontSize: "1.8rem", color: outstandingTasks > 0 ? "#c0392b" : "#4a7c59", fontFamily: "Georgia, serif", fontWeight: "normal" }}>{outstandingTasks}</div>
           <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "4px" }}>tasks remaining on checklist</div>
         </div>
+
       </div>
 
+      {/* Venue address */}
       <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5", position: "relative" as const }}>
         <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>VENUE ADDRESS</div>
         {editingAddress ? (
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <input
-              type="text"
-              value={newAddress}
-              onChange={e => setNewAddress(e.target.value)}
-              style={{ flex: 1, padding: "6px 10px", border: "1px solid #b87333", borderRadius: "6px", fontSize: "0.9rem", fontFamily: "Georgia, serif" }}
-              autoFocus
-            />
+            <input type="text" value={newAddress} onChange={e => setNewAddress(e.target.value)} style={{ flex: 1, padding: "6px 10px", border: "1px solid #b87333", borderRadius: "6px", fontSize: "0.9rem", fontFamily: "Georgia, serif" }} autoFocus />
             <button onClick={saveAddress} style={{ padding: "6px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "12px", cursor: "pointer" }}>Save</button>
             <button onClick={() => setEditingAddress(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "12px", cursor: "pointer" }}>Cancel</button>
           </div>
         ) : (
           <>
             <div style={{ fontSize: "0.95rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>{venueAddress || "No address set yet"}</div>
-            <button onClick={() => setEditingAddress(true)} title="Edit address" style={{ position: "absolute" as const, top: "10px", right: "10px", background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", color: "#8b7355" }}>✏️</button>
+            <button onClick={() => setEditingAddress(true)} title="Edit address" style={{ position: "absolute" as const, top: "10px", right: "10px", background: "transparent", border: "none", cursor: "pointer", color: "#b87333" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
           </>
         )}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginBottom: "0.5rem" }}>
-        <a href={`/login/organizer/events/${event.slug}/expenses`} style={{ padding: "8px 18px", background: "#2c1810", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>💰 Expenses</a>
-        <a href={`/login/organizer/events/${event.slug}/uploads`} style={{ padding: "8px 18px", background: "#8b6ab0", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>📁 Brand Uploads</a>
-        <a href={`/login/organizer/events/${event.slug}/planning`} style={{ padding: "8px 18px", background: "#5b7fa6", color: "#fff", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>🎨 Planning Hub</a>
+      {/* Nav links */}
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" as const }}>
+        <a href={`/login/organizer/events/${event.slug}/expenses`} style={{ padding: "8px 18px", background: "#fff", color: "#2c1810", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>Expenses</a>
+        <a href={`/login/organizer/events/${event.slug}/planning`} style={{ padding: "8px 18px", background: "#fff", color: "#2c1810", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>Planning Hub</a>
       </div>
 
       <PaymentTracker />
@@ -159,6 +165,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
       </div>
 
       <AnnouncementManager event={event.city} />
+
     </div>
   );
 }
