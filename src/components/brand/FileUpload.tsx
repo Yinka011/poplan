@@ -63,14 +63,10 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
     for (const file of Array.from(fileList)) {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `${brandEmail}/${category.replace(/ /g, "-")}__${safeName}`;
-
       const { error } = await supabase.storage
         .from("brand-uploads")
         .upload(path, file, { upsert: true });
-
-      if (error) {
-        setError(`Failed to upload ${file.name}: ${error.message}`);
-      }
+      if (error) setError(`Failed to upload ${file.name}: ${error.message}`);
     }
 
     setUploading(false);
@@ -119,7 +115,7 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
         style={{ border: `2px dashed ${dragOver ? "#b87333" : "#e8e0d5"}`, borderRadius: "12px", padding: "2rem", textAlign: "center", background: dragOver ? "#fdf8f3" : "#faf8f5", transition: "all 0.2s", marginBottom: "1rem", cursor: "pointer" }}
         onClick={() => document.getElementById("file-input")?.click()}
       >
-        <div style={{ fontSize: "1.5rem", marginBottom: "8px" }}>📁</div>
+        <div style={{ fontSize: "1.2rem", marginBottom: "8px", color: "#c8bfb5" }}>&#8593;</div>
         <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "4px" }}>{uploading ? "Uploading..." : "Drop files here or click to browse"}</div>
         <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Supports images, PDFs, spreadsheets and documents</div>
         <input id="file-input" type="file" multiple onChange={e => handleUpload(e.target.files)} style={{ display: "none" }} />
@@ -138,17 +134,25 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
                 <div style={{ fontSize: "0.75rem", color: "#b87333", marginBottom: "6px", fontWeight: 500 }}>{cat.toUpperCase()}</div>
                 {catFiles.map((file, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", background: "#faf8f5", marginBottom: "4px" }}>
-                    <span style={{ fontSize: "1rem" }}>
-                      {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "🖼️" :
-                       file.name.match(/\.pdf$/i) ? "📄" :
-                       file.name.match(/\.(xlsx|csv|xls)$/i) ? "📊" : "📎"}
+                    <span style={{ fontSize: "0.85rem", color: "#c8bfb5" }}>
+                      {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "▣" :
+                       file.name.match(/\.pdf$/i) ? "▤" :
+                       file.name.match(/\.(xlsx|csv|xls)$/i) ? "▦" : "▢"}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "0.85rem", color: "#2c1810", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
                       <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>{formatSize(file.size)} · {formatDate(file.uploaded_at)}</div>
                     </div>
                     <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", color: "#8b7355", textDecoration: "none" }}>View</a>
-                    <button onClick={() => deleteFile(file)} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "13px", color: "#c0392b", padding: "2px 4px" }}>🗑️</button>
+                    <button
+                      onClick={() => deleteFile(file)}
+                      title="Delete"
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: "#c8bfb5", fontSize: "11px", lineHeight: 1 }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "#8b7355")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}
+                    >
+                      &#x2715;
+                    </button>
                   </div>
                 ))}
               </div>
