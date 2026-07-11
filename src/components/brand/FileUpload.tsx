@@ -157,7 +157,8 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
         </div>
         
           href={INVENTORY_TEMPLATE_URL}
-          download
+          target="_blank"
+          rel="noopener noreferrer"
           style={{ fontSize: "0.8rem", padding: "7px 14px", background: "#2c1810", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const }}
         >
           Download template
