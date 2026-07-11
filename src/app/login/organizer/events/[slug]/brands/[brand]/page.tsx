@@ -19,6 +19,7 @@ type Deadline = { id: number; task: string; due_date: string; category: string; 
 type BrandTask = { id: number; deadline_id: number; completed: boolean; task: string; };
 type Member = { id: number; member_email: string; };
 type Note = { id: number; content: string; created_at: string; };
+type FileApproval = { file_name: string; status: string; };
 
 type UploadedFile = {
   name: string;
@@ -43,6 +44,13 @@ const statusColor = (s: string) => {
   return { background: "#c0392b22", color: "#c0392b" };
 };
 
+const PencilIcon = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+);
+
 export default function OrganizerBrandPage() {
   const params = useParams();
   const brandSlug = decodeURIComponent(params.brand as string);
@@ -53,6 +61,7 @@ export default function OrganizerBrandPage() {
   const [tasks, setTasks] = useState<BrandTask[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [approvals, setApprovals] = useState<FileApproval[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [newNote, setNewNote] = useState("");
@@ -61,6 +70,7 @@ export default function OrganizerBrandPage() {
   const [savingNote, setSavingNote] = useState(false);
   const [editingPayment, setEditingPayment] = useState(false);
   const [newAmount, setNewAmount] = useState("");
+  const [newFee, setNewFee] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -81,17 +91,19 @@ export default function OrganizerBrandPage() {
     if (!brandData) { setLoading(false); return; }
     setBrand(brandData);
 
-    const [deadlineRes, taskRes, memberRes, noteRes] = await Promise.all([
+    const [deadlineRes, taskRes, memberRes, noteRes, approvalRes] = await Promise.all([
       supabase.from("event_deadlines").select("*").eq("event", "Atlanta").order("id"),
       supabase.from("brand_tasks").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta"),
       supabase.from("brand_members").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta"),
       supabase.from("brand_notes").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta").order("created_at", { ascending: false }),
+      supabase.from("file_approvals").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta"),
     ]);
 
     if (deadlineRes.data) setDeadlines(deadlineRes.data);
     if (taskRes.data) setTasks(taskRes.data);
     if (memberRes.data) setMembers(memberRes.data);
     if (noteRes.data) setNotes(noteRes.data);
+    if (approvalRes.data) setApprovals(approvalRes.data);
 
     await fetchFiles(brandData.email);
     setLoading(false);
@@ -120,6 +132,29 @@ export default function OrganizerBrandPage() {
       );
       setFiles(filesWithUrls);
     }
+  };
+
+  const getApprovalStatus = (fileName: string) => {
+    return approvals.find(a => a.file_name === fileName)?.status || "pending";
+  };
+
+  const setApprovalStatus = async (fileName: string, status: string) => {
+    if (!brand) return;
+    const existing = approvals.find(a => a.file_name === fileName);
+    if (existing) {
+      await supabase.from("file_approvals").update({ status }).eq("brand_email", brand.email).eq("file_name", fileName);
+    } else {
+      await supabase.from("file_approvals").insert({
+        brand_email: brand.email,
+        event: "Atlanta",
+        file_name: fileName,
+        status,
+      });
+    }
+    setApprovals(prev => {
+      const filtered = prev.filter(a => a.file_name !== fileName);
+      return [...filtered, { file_name: fileName, status }];
+    });
   };
 
   const inviteBrand = async () => {
@@ -168,12 +203,14 @@ export default function OrganizerBrandPage() {
   const updatePayment = async () => {
     if (!brand) return;
     const paid = parseFloat(newAmount);
-    const balance = brand.fee_owed - paid;
+    const fee = parseFloat(newFee);
+    const balance = fee - paid;
     const status = balance <= 0 ? "Paid" : paid > 0 ? "Partial" : "Unpaid";
-    await supabase.from("brands").update({ amount_paid: paid, balance, status }).eq("id", brand.id);
-    setBrand(prev => prev ? { ...prev, amount_paid: paid, balance, status } : prev);
+    await supabase.from("brands").update({ amount_paid: paid, fee_owed: fee, balance, status }).eq("id", brand.id);
+    setBrand(prev => prev ? { ...prev, amount_paid: paid, fee_owed: fee, balance, status } : prev);
     setEditingPayment(false);
     setNewAmount("");
+    setNewFee("");
   };
 
   const addNote = async () => {
@@ -223,16 +260,21 @@ export default function OrganizerBrandPage() {
     <div style={{ minHeight: "100vh", background: "#f5f0ea", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
       <div style={{ textAlign: "center" }}>
         <p style={{ color: "#8b7355" }}>Brand not found</p>
-        <Link href={`/login/organizer/events/${slug}`} style={{ color: "#b87333" }}>← Back to dashboard</Link>
+        <Link href={`/login/organizer/events/${slug}`} style={{ color: "#b87333" }}>Back to dashboard</Link>
       </div>
     </div>
   );
+
+  const approvalBadge = (status: string) => {
+    if (status === "approved") return { background: "#4a7c5922", color: "#4a7c59", label: "Approved" };
+    if (status === "revision") return { background: "#c0392b22", color: "#c0392b", label: "Needs revision" };
+    return { background: "#f0ebe4", color: "#8b7355", label: "Pending" };
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
 
-        {/* Header */}
         <div style={{ marginBottom: "1.5rem" }}>
           <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#8b7355", textDecoration: "none" }}>← Back to Atlanta</Link>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.5rem" }}>
@@ -254,24 +296,35 @@ export default function OrganizerBrandPage() {
 
         {/* Payment card */}
         <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.5rem 2rem", marginBottom: "1.5rem", color: "#fff", display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "1rem", alignItems: "center" }}>
-          <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PARTICIPATION FEE</div><div style={{ fontSize: "1.4rem" }}>${Number(brand.fee_owed).toFixed(2)}</div></div>
-          <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PAID</div>
+          <div>
+            <div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PARTICIPATION FEE</div>
             {editingPayment ? (
-              <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} style={{ width: "80px", padding: "4px", border: "1px solid #b87333", borderRadius: "4px", fontSize: "1rem", background: "#fff", color: "#2c1810" }} autoFocus />
+              <input type="number" value={newFee} onChange={e => setNewFee(e.target.value)} style={{ width: "80px", padding: "4px", border: "1px solid #b87333", borderRadius: "4px", fontSize: "1rem", background: "#fff", color: "#2c1810" }} placeholder="Fee" />
+            ) : (
+              <div style={{ fontSize: "1.4rem" }}>${Number(brand.fee_owed).toFixed(2)}</div>
+            )}
+          </div>
+          <div>
+            <div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PAID</div>
+            {editingPayment ? (
+              <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} style={{ width: "80px", padding: "4px", border: "1px solid #b87333", borderRadius: "4px", fontSize: "1rem", background: "#fff", color: "#2c1810" }} placeholder="Paid" autoFocus />
             ) : (
               <div style={{ fontSize: "1.4rem" }}>${Number(brand.amount_paid).toFixed(2)}</div>
             )}
           </div>
-          <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>BALANCE</div><div style={{ fontSize: "1.4rem", color: Number(brand.balance) > 0 ? "#e8c97a" : "#90c9a0" }}>${Number(brand.balance).toFixed(2)}</div></div>
+          <div>
+            <div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>BALANCE</div>
+            <div style={{ fontSize: "1.4rem", color: Number(brand.balance) > 0 ? "#e8c97a" : "#90c9a0" }}>${Number(brand.balance).toFixed(2)}</div>
+          </div>
           <div style={{ display: "flex", gap: "6px" }}>
             {editingPayment ? (
               <>
                 <button onClick={updatePayment} style={{ padding: "6px 12px", background: "#b87333", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>Save</button>
-                <button onClick={() => setEditingPayment(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #c8b89a", color: "#c8b89a", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>Cancel</button>
+                <button onClick={() => setEditingPayment(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #c8b89a44", color: "#c8b89a", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>Cancel</button>
               </>
             ) : (
-              <button onClick={() => { setEditingPayment(true); setNewAmount(String(brand.amount_paid)); }} title="Edit payment" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#c8b89a", fontSize: "14px", padding: "4px" }}>
-                ✎
+              <button onClick={() => { setEditingPayment(true); setNewAmount(String(brand.amount_paid)); setNewFee(String(brand.fee_owed)); }} title="Edit payment" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#c8b89a", padding: "4px" }}>
+                <PencilIcon />
               </button>
             )}
           </div>
@@ -345,7 +398,7 @@ export default function OrganizerBrandPage() {
           })}
         </div>
 
-        {/* Uploaded Files */}
+        {/* Uploaded Files with Approval */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
             <div style={{ fontSize: "0.9rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>Uploaded files</div>
@@ -358,21 +411,33 @@ export default function OrganizerBrandPage() {
           {filteredFiles.length === 0 ? (
             <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No files uploaded yet.</p>
           ) : (
-            filteredFiles.map((file, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", background: "#faf8f5", marginBottom: "6px" }}>
-                <span style={{ fontSize: "0.85rem", color: "#c8bfb5" }}>
-                  {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "▣" :
-                   file.name.match(/\.pdf$/i) ? "▤" :
-                   file.name.match(/\.(xlsx|csv|xls)$/i) ? "▦" : "▢"}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "0.85rem", color: "#2c1810", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
-                  <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>{file.category} · {formatSize(file.size)} · {formatDate(file.uploaded_at)}</div>
+            filteredFiles.map((file, i) => {
+              const approval = getApprovalStatus(file.name);
+              const badge = approvalBadge(approval);
+              return (
+                <div key={i} style={{ padding: "10px 12px", borderRadius: "10px", background: "#faf8f5", marginBottom: "8px", border: "1px solid #f0ebe4" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "0.85rem", color: "#c8bfb5" }}>
+                      {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "▣" :
+                       file.name.match(/\.pdf$/i) ? "▤" :
+                       file.name.match(/\.(xlsx|csv|xls)$/i) ? "▦" : "▢"}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "0.85rem", color: "#2c1810", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
+                      <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>{file.category} · {formatSize(file.size)} · {formatDate(file.uploaded_at)}</div>
+                    </div>
+                    <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: badge.background, color: badge.color, whiteSpace: "nowrap" as const }}>{badge.label}</span>
+                    <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", color: "#8b7355", textDecoration: "none" }}>View</a>
+                    <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "#2c1810", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>↓</a>
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", marginTop: "8px", paddingLeft: "27px" }}>
+                    <button onClick={() => setApprovalStatus(file.name, "approved")} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "approved" ? "#4a7c59" : "transparent", color: approval === "approved" ? "#fff" : "#4a7c59", border: "1px solid #4a7c5944", borderRadius: "6px", cursor: "pointer" }}>✓ Approve</button>
+                    <button onClick={() => setApprovalStatus(file.name, "revision")} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "revision" ? "#c0392b" : "transparent", color: approval === "revision" ? "#fff" : "#c0392b", border: "1px solid #c0392b44", borderRadius: "6px", cursor: "pointer" }}>✗ Needs revision</button>
+                    <button onClick={() => setApprovalStatus(file.name, "pending")} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "pending" ? "#8b7355" : "transparent", color: approval === "pending" ? "#fff" : "#8b7355", border: "1px solid #8b735544", borderRadius: "6px", cursor: "pointer" }}>Reset</button>
+                  </div>
                 </div>
-                <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", color: "#8b7355", textDecoration: "none" }}>View</a>
-                <a href={file.url} download style={{ fontSize: "11px", padding: "3px 8px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", textDecoration: "none" }}>↓</a>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
@@ -393,7 +458,7 @@ export default function OrganizerBrandPage() {
             </button>
           </div>
           {notes.length === 0 ? (
-            <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No notes yet. Add your first note above.</p>
+            <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No notes yet.</p>
           ) : (
             notes.map(note => (
               <div key={note.id} style={{ display: "flex", gap: "10px", padding: "10px", borderRadius: "8px", background: "#faf8f5", marginBottom: "6px" }}>
