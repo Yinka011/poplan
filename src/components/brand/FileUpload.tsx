@@ -27,7 +27,7 @@ const CATEGORY_TASK_MAP: Record<string, number> = {
   "Digital brand book": 22,
 };
 
-const INVENTORY_TEMPLATE_URL = "https://framesmhcepkdheoclsl.supabase.co/storage/v1/object/public/Templates/Brand%20Inventory%20Sheet%20-%20Template.xlsx";
+const TEMPLATE_URL = "https://framesmhcepkdheoclsl.supabase.co/storage/v1/object/public/Templates/Brand%20Inventory%20Sheet%20-%20Template.xlsx";
 
 export default function FileUpload({ brandName, brandEmail }: { brandName: string; brandEmail: string }) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -155,12 +155,7 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
           <div style={{ fontSize: "0.85rem", color: "#2c1810", fontFamily: "Georgia, serif", marginBottom: "2px" }}>Inventory template</div>
           <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Download, fill in your products, then upload below</div>
         </div>
-        
-          href={INVENTORY_TEMPLATE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontSize: "0.8rem", padding: "7px 14px", background: "#2c1810", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const }}
-        >
+        <a href={TEMPLATE_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.8rem", padding: "7px 14px", background: "#2c1810", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif" }}>
           Download template
         </a>
       </div>
