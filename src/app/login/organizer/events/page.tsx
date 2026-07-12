@@ -162,11 +162,11 @@ export default function EventsPage() {
                   </div>
                   <div>
                     <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "2px" }}>COLLECTED</div>
-                    <div style={{ fontSize: "1.2rem", color: "#4a7c59" }}>${Number(event.feesCollected).toFixed(0)}</div>
+                    <div style={{ fontSize: "1.2rem", color: "#4a7c59" }}>${Number(event.feesCollected).toFixed(2)}</div>
                   </div>
                   <div>
                     <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "2px" }}>OUTSTANDING</div>
-                    <div style={{ fontSize: "1.2rem", color: "#c0392b" }}>${Number(event.outstandingBalance).toFixed(0)}</div>
+                    <div style={{ fontSize: "1.2rem", color: "#c0392b" }}>${Number(event.outstandingBalance).toFixed(2)}</div>
                   </div>
                 </div>
 
