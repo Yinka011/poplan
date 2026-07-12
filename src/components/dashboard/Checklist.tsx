@@ -47,21 +47,20 @@ export default function Checklist() {
   };
 
   const toggleComplete = async (item: ChecklistItem) => {
-    await supabase
-      .from("checklist")
-      .update({ completed: !item.completed })
-      .eq("id", item.id);
+    await supabase.from("checklist").update({ completed: !item.completed }).eq("id", item.id);
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, completed: !i.completed } : i));
   };
 
   const addItem = async () => {
     if (!newTask.trim()) return;
-    await supabase.from("checklist").insert({
+    const { data } = await supabase.from("checklist").insert({
       task: newTask,
       owner: newOwner,
       due_date: newDate,
       completed: false,
       event: "Atlanta"
-    });
+    }).select().single();
+    if (data) setItems(prev => [...prev, data]);
     setNewTask("");
     setNewOwner("");
     setNewDate("");
