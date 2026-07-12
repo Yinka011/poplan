@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
-type DecorItem = { id: number; category: string; item: string; decision: string; vendor: string; cost: number; status: string; notes: string; };
-type RefreshItem = { id: number; item: string; vendor: string; quantity: string; cost: number; notes: string; };
+type DecorItem = { id: number; category: string; item: string; decision: string; vendor: string; cost: number; quantity: number; status: string; notes: string; };
+type RefreshItem = { id: number; item: string; vendor: string; quantity: string; quantity_num: number; cost: number; notes: string; };
 type StaffItem = { id: number; name: string; role: string; hours: string; pay_rate: number; phone: string; email: string; instagram: string; notes: string; };
 
 const DECOR_CATEGORIES = ["Theme", "Furniture", "Florals", "Lighting", "Signage", "Props"];
@@ -33,8 +33,8 @@ export default function PlanningHub() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>({});
-  const [newDecor, setNewDecor] = useState({ category: "Theme", item: "", decision: "", vendor: "", cost: "", status: "Pending", notes: "" });
-  const [newRefresh, setNewRefresh] = useState({ item: "", vendor: "", quantity: "", cost: "", notes: "" });
+  const [newDecor, setNewDecor] = useState({ category: "Theme", item: "", decision: "", vendor: "", cost: "", quantity: "", status: "Pending", notes: "" });
+  const [newRefresh, setNewRefresh] = useState({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
   const [newStaff, setNewStaff] = useState({ name: "", role: "Cashier", hours: "", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
 
   useEffect(() => { fetchAll(); }, []);
@@ -52,21 +52,27 @@ export default function PlanningHub() {
 
   const addDecor = async () => {
     if (!newDecor.item.trim()) return;
+    const qty = parseFloat(newDecor.quantity) || 0;
+    const unitCost = parseFloat(newDecor.cost) || 0;
+    const totalCost = qty > 0 ? qty * unitCost : unitCost;
     const { data } = await supabase.from("planning_decor").insert({
-      ...newDecor, cost: parseFloat(newDecor.cost) || 0, event: "Atlanta"
+      ...newDecor, cost: totalCost, quantity: qty, event: "Atlanta"
     }).select().single();
     if (data) setDecor(prev => [...prev, data]);
-    setNewDecor({ category: "Theme", item: "", decision: "", vendor: "", cost: "", status: "Pending", notes: "" });
+    setNewDecor({ category: "Theme", item: "", decision: "", vendor: "", cost: "", quantity: "", status: "Pending", notes: "" });
     setAdding(false);
   };
 
   const addRefresh = async () => {
     if (!newRefresh.item.trim()) return;
+    const qty = parseFloat(newRefresh.quantity_num) || 0;
+    const unitCost = parseFloat(newRefresh.cost) || 0;
+    const totalCost = qty > 0 ? qty * unitCost : unitCost;
     const { data } = await supabase.from("planning_refreshments").insert({
-      ...newRefresh, cost: parseFloat(newRefresh.cost) || 0, event: "Atlanta"
+      ...newRefresh, cost: totalCost, quantity_num: qty, event: "Atlanta"
     }).select().single();
     if (data) setRefresh(prev => [...prev, data]);
-    setNewRefresh({ item: "", vendor: "", quantity: "", cost: "", notes: "" });
+    setNewRefresh({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
     setAdding(false);
   };
 
@@ -81,10 +87,23 @@ export default function PlanningHub() {
   };
 
   const saveEdit = async (table: string, id: number) => {
-    await supabase.from(table).update(editData).eq("id", id);
-    if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === id ? { ...i, ...editData } : i));
-    if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === id ? { ...i, ...editData } : i));
-    if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === id ? { ...i, ...editData } : i));
+    let dataToSave = { ...editData };
+    if (table === "planning_decor") {
+      const qty = parseFloat(editData.quantity) || 0;
+      const unitCost = parseFloat(editData.unit_cost || editData.cost) || 0;
+      if (qty > 0) dataToSave.cost = qty * unitCost;
+      dataToSave.quantity = qty;
+    }
+    if (table === "planning_refreshments") {
+      const qty = parseFloat(editData.quantity_num) || 0;
+      const unitCost = parseFloat(editData.unit_cost || editData.cost) || 0;
+      if (qty > 0) dataToSave.cost = qty * unitCost;
+      dataToSave.quantity_num = qty;
+    }
+    await supabase.from(table).update(dataToSave).eq("id", id);
+    if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
+    if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
+    if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
     setEditing(null);
   };
 
@@ -137,13 +156,16 @@ export default function PlanningHub() {
           <div>
             {adding && (
               <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 2fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
                   <select value={newDecor.category} onChange={e => setNewDecor({...newDecor, category: e.target.value})} style={inp()}>
                     {DECOR_CATEGORIES.map(c => <option key={c}>{c}</option>)}
                   </select>
                   <input placeholder="Item" value={newDecor.item} onChange={e => setNewDecor({...newDecor, item: e.target.value})} style={inp()} />
-                  <input placeholder="Decision" value={newDecor.decision} onChange={e => setNewDecor({...newDecor, decision: e.target.value})} style={inp()} />
-                  <input placeholder="Cost" value={newDecor.cost} onChange={e => setNewDecor({...newDecor, cost: e.target.value})} style={inp()} />
+                  <input placeholder="Qty" value={newDecor.quantity} onChange={e => setNewDecor({...newDecor, quantity: e.target.value})} style={inp()} />
+                  <input placeholder="Unit cost $" value={newDecor.cost} onChange={e => setNewDecor({...newDecor, cost: e.target.value})} style={inp()} />
+                  <div style={{ display: "flex", alignItems: "center", padding: "7px 10px", background: "#faf8f5", borderRadius: "8px", fontSize: "0.82rem", color: "#b87333", border: "1px solid #e8e0d5" }}>
+                    = ${((parseFloat(newDecor.quantity) || 0) * (parseFloat(newDecor.cost) || 0)).toFixed(2)}
+                  </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 2fr", gap: "8px", marginBottom: "8px" }}>
                   <input placeholder="Vendor" value={newDecor.vendor} onChange={e => setNewDecor({...newDecor, vendor: e.target.value})} style={inp()} />
@@ -181,9 +203,15 @@ export default function PlanningHub() {
                         </div>
                         {editing === item.id ? (
                           <div style={{ display: "flex", flexDirection: "column" as const, gap: "6px" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px" }}>
+                              <input placeholder="Qty" value={editData.quantity || ""} onChange={e => setEditData({...editData, quantity: e.target.value})} style={editInp()} />
+                              <input placeholder="Unit cost" value={editData.unit_cost || ""} onChange={e => setEditData({...editData, unit_cost: e.target.value})} style={editInp()} />
+                              <div style={{ padding: "4px 7px", background: "#faf8f5", borderRadius: "6px", fontSize: "12px", color: "#b87333" }}>
+                                = ${((parseFloat(editData.quantity) || 0) * (parseFloat(editData.unit_cost) || 0)).toFixed(2)}
+                              </div>
+                            </div>
                             <input placeholder="Decision" value={editData.decision || ""} onChange={e => setEditData({...editData, decision: e.target.value})} style={editInp({ width: "100%" })} />
                             <input placeholder="Vendor" value={editData.vendor || ""} onChange={e => setEditData({...editData, vendor: e.target.value})} style={editInp({ width: "100%" })} />
-                            <input placeholder="Cost" value={editData.cost || ""} onChange={e => setEditData({...editData, cost: e.target.value})} style={editInp({ width: "100%" })} />
                             <input placeholder="Notes" value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} style={editInp({ width: "100%" })} />
                             <div style={{ display: "flex", gap: "6px" }}>
                               <button onClick={() => saveEdit("planning_decor", item.id)} style={{ padding: "4px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
@@ -192,12 +220,13 @@ export default function PlanningHub() {
                           </div>
                         ) : (
                           <div>
+                            {item.quantity > 0 && <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Qty: {item.quantity}</div>}
                             {item.decision && item.decision !== "TBD" && <div style={{ fontSize: "0.8rem", color: "#2c1810", marginBottom: "4px" }}>→ {item.decision}</div>}
                             {item.vendor && <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Vendor: {item.vendor}</div>}
-                            {item.cost > 0 && <div style={{ fontSize: "0.75rem", color: "#b87333" }}>${Number(item.cost).toFixed(2)}</div>}
+                            {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#b87333", fontWeight: 500, marginTop: "4px" }}>${Number(item.cost).toFixed(2)}</div>}
                             {item.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", marginTop: "4px", fontStyle: "italic" }}>{item.notes}</div>}
                             <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
-                              <button onClick={() => { setEditing(item.id); setEditData({...item}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
+                              <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity > 0 ? (item.cost / item.quantity).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
                               <button onClick={() => deleteItem("planning_decor", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                             </div>
                           </div>
@@ -215,11 +244,14 @@ export default function PlanningHub() {
           <div>
             {adding && (
               <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
                   <input placeholder="Item" value={newRefresh.item} onChange={e => setNewRefresh({...newRefresh, item: e.target.value})} style={inp()} />
                   <input placeholder="Vendor" value={newRefresh.vendor} onChange={e => setNewRefresh({...newRefresh, vendor: e.target.value})} style={inp()} />
-                  <input placeholder="Quantity" value={newRefresh.quantity} onChange={e => setNewRefresh({...newRefresh, quantity: e.target.value})} style={inp()} />
-                  <input placeholder="Cost" value={newRefresh.cost} onChange={e => setNewRefresh({...newRefresh, cost: e.target.value})} style={inp()} />
+                  <input placeholder="Qty" value={newRefresh.quantity_num} onChange={e => setNewRefresh({...newRefresh, quantity_num: e.target.value})} style={inp()} />
+                  <input placeholder="Unit cost $" value={newRefresh.cost} onChange={e => setNewRefresh({...newRefresh, cost: e.target.value})} style={inp()} />
+                  <div style={{ display: "flex", alignItems: "center", padding: "7px 10px", background: "#faf8f5", borderRadius: "8px", fontSize: "0.82rem", color: "#4a7c59", border: "1px solid #e8e0d5" }}>
+                    = ${((parseFloat(newRefresh.quantity_num) || 0) * (parseFloat(newRefresh.cost) || 0)).toFixed(2)}
+                  </div>
                 </div>
                 <input placeholder="Notes" value={newRefresh.notes} onChange={e => setNewRefresh({...newRefresh, notes: e.target.value})} style={inp({ width: "100%", marginBottom: "8px", boxSizing: "border-box" })} />
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -237,9 +269,12 @@ export default function PlanningHub() {
                     <div style={{ display: "flex", gap: "6px", flex: 1, flexWrap: "wrap" as const }}>
                       <input value={editData.item || ""} onChange={e => setEditData({...editData, item: e.target.value})} style={editInp({ width: "120px" })} />
                       <input value={editData.vendor || ""} onChange={e => setEditData({...editData, vendor: e.target.value})} placeholder="Vendor" style={editInp({ width: "100px" })} />
-                      <input value={editData.quantity || ""} onChange={e => setEditData({...editData, quantity: e.target.value})} placeholder="Qty" style={editInp({ width: "60px" })} />
-                      <input value={editData.cost || ""} onChange={e => setEditData({...editData, cost: e.target.value})} placeholder="Cost" style={editInp({ width: "60px" })} />
-                      <input value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} placeholder="Notes" style={editInp({ width: "120px" })} />
+                      <input value={editData.quantity_num || ""} onChange={e => setEditData({...editData, quantity_num: e.target.value})} placeholder="Qty" style={editInp({ width: "50px" })} />
+                      <input value={editData.unit_cost || ""} onChange={e => setEditData({...editData, unit_cost: e.target.value})} placeholder="Unit $" style={editInp({ width: "60px" })} />
+                      <div style={{ padding: "4px 7px", background: "#faf8f5", borderRadius: "6px", fontSize: "12px", color: "#4a7c59" }}>
+                        = ${((parseFloat(editData.quantity_num) || 0) * (parseFloat(editData.unit_cost) || 0)).toFixed(2)}
+                      </div>
+                      <input value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} placeholder="Notes" style={editInp({ width: "100px" })} />
                       <button onClick={() => saveEdit("planning_refreshments", item.id)} style={{ padding: "3px 8px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
                       <button onClick={() => setEditing(null)} style={{ padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                     </div>
@@ -249,13 +284,13 @@ export default function PlanningHub() {
                         <div style={{ fontSize: "0.9rem", color: "#2c1810" }}>{item.item}</div>
                         <div style={{ display: "flex", gap: "12px", marginTop: "2px" }}>
                           {item.vendor && item.vendor !== "TBD" && <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>Vendor: {item.vendor}</span>}
-                          {item.quantity && item.quantity !== "TBD" && <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>Qty: {item.quantity}</span>}
-                          {item.cost > 0 && <span style={{ fontSize: "0.75rem", color: "#b87333" }}>${Number(item.cost).toFixed(2)}</span>}
+                          {item.quantity_num > 0 && <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>Qty: {item.quantity_num}</span>}
+                          {item.cost > 0 && <span style={{ fontSize: "0.85rem", color: "#4a7c59", fontWeight: 500 }}>${Number(item.cost).toFixed(2)}</span>}
                           {item.notes && <span style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic" }}>{item.notes}</span>}
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: "6px" }}>
-                        <button onClick={() => { setEditing(item.id); setEditData({...item}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
+                        <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity_num > 0 ? (item.cost / item.quantity_num).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
                         <button onClick={() => deleteItem("planning_refreshments", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                       </div>
                     </>
