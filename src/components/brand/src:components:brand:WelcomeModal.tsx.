@@ -1,0 +1,74 @@
+"use client";
+import { useState } from "react";
+
+const steps = [
+  {
+    number: "01",
+    title: "Complete your to-do list",
+    description: "Scroll down to your to-do list and check off each task as you complete it. This helps AO Curates track your progress and know you are ready for Atlanta.",
+  },
+  {
+    number: "02",
+    title: "Upload your documents",
+    description: "Upload your brand logo, product photos, inventory sheet and any other required files. You will see the status of each file once AO Curates reviews them.",
+  },
+  {
+    number: "03",
+    title: "Track your payment",
+    description: "Your participation fee, amount paid and outstanding balance are shown at the top of your portal. Contact AO Curates directly if you have any payment questions.",
+  },
+  {
+    number: "04",
+    title: "Ship your products",
+    description: "Once you have shipped your products to the venue, click the Mark as Shipped button on your portal. Products must arrive between August 3rd and August 28th, 2026.",
+  },
+];
+
+export default function WelcomeModal({ brandName, onClose }: { brandName: string; onClose: () => void }) {
+  const [step, setStep] = useState(0);
+  const current = steps[step];
+  const isLast = step === steps.length - 1;
+
+  return (
+    <div style={{ position: "fixed" as const, inset: 0, background: "#00000066", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+      <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "480px", width: "100%", fontFamily: "Georgia, serif", position: "relative" as const }}>
+
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{ fontSize: "0.7rem", letterSpacing: "0.15em", color: "#b87333", marginBottom: "6px" }}>WELCOME TO POPLAN</div>
+          <h2 style={{ fontSize: "1.4rem", color: "#2c1810", fontWeight: "normal", margin: 0 }}>
+            Hi <span style={{ fontStyle: "italic" }}>{brandName}</span> 🖤
+          </h2>
+          <p style={{ fontSize: "0.85rem", color: "#8b7355", marginTop: "6px", lineHeight: 1.6 }}>Here is everything you need to know to get started.</p>
+        </div>
+
+        <div style={{ display: "flex", gap: "6px", marginBottom: "2rem" }}>
+          {steps.map((_, i) => (
+            <div key={i} style={{ height: "3px", flex: 1, borderRadius: "2px", background: i <= step ? "#2c1810" : "#e8e0d5", transition: "background 0.3s" }} />
+          ))}
+        </div>
+
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{ fontSize: "2.5rem", color: "#f0ebe4", fontFamily: "Georgia, serif", lineHeight: 1, marginBottom: "0.5rem" }}>{current.number}</div>
+          <h3 style={{ fontSize: "1.1rem", color: "#2c1810", fontWeight: "normal", margin: "0 0 0.75rem 0" }}>{current.title}</h3>
+          <p style={{ fontSize: "0.88rem", color: "#8b7355", lineHeight: 1.75, margin: 0 }}>{current.description}</p>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <button onClick={() => setStep(s => s - 1)} style={{ fontSize: "0.85rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer", padding: "8px 0", visibility: step === 0 ? "hidden" : "visible" as const }}>
+            ← Back
+          </button>
+          <button onClick={() => isLast ? onClose() : setStep(s => s + 1)} style={{ padding: "10px 24px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.9rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+            {isLast ? "Let's go →" : "Next →"}
+          </button>
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: "1.25rem" }}>
+          <button onClick={onClose} style={{ fontSize: "0.78rem", color: "#c8bfb5", background: "transparent", border: "none", cursor: "pointer" }}>
+            Skip for now
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}

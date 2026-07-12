@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Announcements from "@/components/brand/Announcements";
 import FileUpload from "@/components/brand/FileUpload";
+import WelcomeModal from "@/components/brand/WelcomeModal";
 
 type Brand = {
   id: number;
@@ -54,6 +55,7 @@ export default function BrandPortal() {
   const [brandEmail, setBrandEmail] = useState("");
   const [venueAddress, setVenueAddress] = useState("5135 Peachtree Pkwy NW Ste 915, Peachtree Corners, GA 30092, United States");
   const [markingShipped, setMarkingShipped] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const eventDate = new Date("2026-09-12");
   const today = new Date();
@@ -108,10 +110,19 @@ export default function BrandPortal() {
       if (deadlineRes.data) setDeadlines(deadlineRes.data);
       if (taskRes.data && brandRes.data) setTasks(taskRes.data);
       if (settingsRes.data?.venue_address) setVenueAddress(settingsRes.data.venue_address);
+
+      const seen = localStorage.getItem(`welcome_seen_${user.email}`);
+      if (!seen) setShowWelcome(true);
+
       setLoading(false);
     };
     fetchAll();
   }, []);
+
+  const closeWelcome = () => {
+    setShowWelcome(false);
+    localStorage.setItem(`welcome_seen_${userEmail}`, "true");
+  };
 
   const markShipped = async () => {
     if (!brand) return;
@@ -184,6 +195,9 @@ export default function BrandPortal() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif" }}>
+
+      {showWelcome && <WelcomeModal brandName={brand.name} onClose={closeWelcome} />}
+
       <div style={{ background: "#fff", borderBottom: "1px solid #e8e0d5", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: "1.4rem", letterSpacing: "0.15em", color: "#2c1810" }}>POPLAN</div>
@@ -222,7 +236,6 @@ export default function BrandPortal() {
           </div>
         </div>
 
-        {/* Shipping status */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "4px" }}>SHIPMENT STATUS</div>
@@ -236,19 +249,15 @@ export default function BrandPortal() {
             )}
           </div>
           {!brand.shipped && (
-            <button
-              onClick={markShipped}
-              disabled={markingShipped}
-              style={{ padding: "10px 20px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const }}
-            >
+            <button onClick={markShipped} disabled={markingShipped} style={{ padding: "10px 20px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const }}>
               {markingShipped ? "Saving..." : "Mark as shipped"}
             </button>
           )}
         </div>
 
-        <Announcements event="Atlanta" />
+        <Announcements event="Atlanta" brandEmail={brandEmail} />
 
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", marginTop: "1.5rem", border: "1px solid #e8e0d5" }}>
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
             <div style={{ fontSize: "1rem", color: "#2c1810" }}>Your to-do list</div>
             <div style={{ fontSize: "0.8rem", color: "#8b7355" }}>{completed} of {deadlines.length} complete</div>
