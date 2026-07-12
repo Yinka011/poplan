@@ -14,27 +14,21 @@ type Expense = {
   notes: string;
 };
 
-const CATEGORIES = ["Venue", "Marketing", "Staffing", "Operations", "Logistics"];
-
-const tooltips: Record<string, string> = {
-  category: "The type of expense — e.g. Venue, Marketing, Staffing",
-  item: "The specific expense item — e.g. Venue rental fee",
-  cost: "The total cost of this item",
-  deposit: "How much you have already paid",
-  balance: "What you still owe — calculated automatically",
-  notes: "Any extra details — e.g. invoice number or payment deadline",
-};
+const MANUAL_CATEGORIES = ["Venue", "Marketing", "Ads", "Operations", "Logistics"];
 
 const categoryColors: Record<string, string> = {
   Venue: "#b87333",
   Marketing: "#4a7c59",
-  Staffing: "#5b7fa6",
+  Ads: "#5b7fa6",
   Operations: "#8b6ab0",
   Logistics: "#a0522d",
 };
 
 export default function ExpensesPage({ params }: { params: any }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [decorTotal, setDecorTotal] = useState(0);
+  const [refreshTotal, setRefreshTotal] = useState(0);
+  const [staffTotal, setStaffTotal] = useState(0);
   const [budget, setBudget] = useState(8000);
   const [editingBudget, setEditingBudget] = useState(false);
   const [newBudget, setNewBudget] = useState("8000");
@@ -42,70 +36,66 @@ export default function ExpensesPage({ params }: { params: any }) {
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<Expense>>({});
   const [newExpense, setNewExpense] = useState({ category: "Venue", item: "", cost: "", deposit: "", notes: "" });
-  const [tooltip, setTooltip] = useState("");
 
-  useEffect(() => { fetchExpenses(); }, []);
+  useEffect(() => { fetchAll(); }, []);
 
-  const fetchExpenses = async () => {
-    const { data } = await supabase.from("expenses").select("*").eq("event", "Atlanta").order("category");
-    if (data) setExpenses(data);
+  const fetchAll = async () => {
+    const [expRes, decorRes, refreshRes, staffRes] = await Promise.all([
+      supabase.from("expenses").select("*").eq("event", "Atlanta").order("category"),
+      supabase.from("planning_decor").select("cost").eq("event", "Atlanta"),
+      supabase.from("planning_refreshments").select("cost").eq("event", "Atlanta"),
+      supabase.from("planning_staff").select("pay_rate").eq("event", "Atlanta"),
+    ]);
+    if (expRes.data) setExpenses(expRes.data);
+    if (decorRes.data) setDecorTotal(decorRes.data.reduce((s, x) => s + Number(x.cost), 0));
+    if (refreshRes.data) setRefreshTotal(refreshRes.data.reduce((s, x) => s + Number(x.cost), 0));
+    if (staffRes.data) setStaffTotal(staffRes.data.reduce((s, x) => s + Number(x.pay_rate), 0));
   };
 
   const addExpense = async () => {
     if (!newExpense.item.trim()) return;
-    await supabase.from("expenses").insert({
+    const cost = parseFloat(newExpense.cost) || 0;
+    const deposit = parseFloat(newExpense.deposit) || 0;
+    const { data } = await supabase.from("expenses").insert({
       category: newExpense.category,
       item: newExpense.item,
-      cost: parseFloat(newExpense.cost) || 0,
-      deposit: parseFloat(newExpense.deposit) || 0,
+      cost,
+      deposit,
+      balance: cost - deposit,
       notes: newExpense.notes,
       event: "Atlanta"
-    });
+    }).select().single();
+    if (data) setExpenses(prev => [...prev, data]);
     setNewExpense({ category: "Venue", item: "", cost: "", deposit: "", notes: "" });
     setAdding(false);
-    fetchExpenses();
   };
 
   const saveEdit = async (id: number) => {
-    await supabase.from("expenses").update({
-      item: editData.item,
-      cost: editData.cost,
-      deposit: editData.deposit,
-      notes: editData.notes,
-    }).eq("id", id);
+    const cost = Number(editData.cost) || 0;
+    const deposit = Number(editData.deposit) || 0;
+    const balance = cost - deposit;
+    await supabase.from("expenses").update({ item: editData.item, cost, deposit, balance, notes: editData.notes }).eq("id", id);
+    setExpenses(prev => prev.map(e => e.id === id ? { ...e, item: editData.item || "", cost, deposit, balance, notes: editData.notes || "" } : e));
     setEditing(null);
-    fetchExpenses();
   };
 
   const deleteExpense = async (id: number) => {
+    if (!confirm("Remove this expense?")) return;
     await supabase.from("expenses").delete().eq("id", id);
-    fetchExpenses();
+    setExpenses(prev => prev.filter(e => e.id !== id));
   };
 
-  const totalCost = expenses.reduce((s, e) => s + Number(e.cost), 0);
+  const manualTotal = expenses.reduce((s, e) => s + Number(e.cost), 0);
+  const planningTotal = decorTotal + refreshTotal + staffTotal;
+  const totalCost = manualTotal + planningTotal;
   const totalDeposit = expenses.reduce((s, e) => s + Number(e.deposit), 0);
   const totalOutstanding = expenses.reduce((s, e) => s + Number(e.balance), 0);
   const remaining = budget - totalCost;
 
-  const grouped = CATEGORIES.reduce((acc, cat) => {
+  const grouped = MANUAL_CATEGORIES.reduce((acc, cat) => {
     acc[cat] = expenses.filter(e => e.category === cat);
     return acc;
   }, {} as Record<string, Expense[]>);
-
-  const Tooltip = ({ field }: { field: string }) => (
-    <span
-      onMouseEnter={() => setTooltip(field)}
-      onMouseLeave={() => setTooltip("")}
-      style={{ marginLeft: "4px", cursor: "help", color: "#b87333", fontSize: "11px", position: "relative" }}
-    >
-      ⓘ
-      {tooltip === field && (
-        <span style={{ position: "absolute", bottom: "120%", left: "50%", transform: "translateX(-50%)", background: "#2c1810", color: "#fff", padding: "6px 10px", borderRadius: "8px", fontSize: "11px", whiteSpace: "nowrap", zIndex: 100, fontFamily: "Calibri, sans-serif" }}>
-          {tooltips[field]}
-        </span>
-      )}
-    </span>
-  );
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
@@ -117,6 +107,7 @@ export default function ExpensesPage({ params }: { params: any }) {
           <p style={{ color: "#8b7355", fontSize: "0.9rem" }}>Track every cost for Atlanta Pop-up</p>
         </div>
 
+        {/* Summary tiles */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "12px", marginBottom: "1.5rem" }}>
           {[
             { label: "BUDGET", value: `$${budget.toLocaleString()}`, color: "#2c1810", clickable: true },
@@ -141,6 +132,31 @@ export default function ExpensesPage({ params }: { params: any }) {
           ))}
         </div>
 
+        {/* Planning Hub auto totals */}
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
+          <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>FROM PLANNING HUB — AUTO CALCULATED</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+            {[
+              { label: "Decor", value: decorTotal, color: "#c49a3c" },
+              { label: "Refreshments", value: refreshTotal, color: "#4a7c59" },
+              { label: "Staffing", value: staffTotal, color: "#5b7fa6" },
+            ].map((item, i) => (
+              <div key={i} style={{ background: "#faf8f5", borderRadius: "8px", padding: "0.75rem 1rem", border: "1px solid #f0ebe4" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: item.color }} />
+                  <div style={{ fontSize: "0.8rem", color: "#8b7355" }}>{item.label}</div>
+                </div>
+                <div style={{ fontSize: "1.1rem", color: item.color, fontWeight: 500 }}>${item.value.toFixed(2)}</div>
+                <div style={{ fontSize: "0.7rem", color: "#8b7355", marginTop: "2px" }}>Auto from Planning Hub</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid #f0ebe4", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: "0.8rem", color: "#8b7355" }}>Planning Hub subtotal</div>
+            <div style={{ fontSize: "1rem", color: "#2c1810", fontWeight: 500 }}>${planningTotal.toFixed(2)}</div>
+          </div>
+        </div>
+
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
           <button onClick={() => setAdding(!adding)} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add expense</button>
         </div>
@@ -150,7 +166,7 @@ export default function ExpensesPage({ params }: { params: any }) {
             <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>New expense</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
               <select value={newExpense.category} onChange={e => setNewExpense({...newExpense, category: e.target.value})} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
-                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                {MANUAL_CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
               <input placeholder="Item description" value={newExpense.item} onChange={e => setNewExpense({...newExpense, item: e.target.value})} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
               <input placeholder="Total cost" value={newExpense.cost} onChange={e => setNewExpense({...newExpense, cost: e.target.value})} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
@@ -164,7 +180,7 @@ export default function ExpensesPage({ params }: { params: any }) {
           </div>
         )}
 
-        {CATEGORIES.map(cat => {
+        {MANUAL_CATEGORIES.map(cat => {
           const items = grouped[cat];
           if (!items || items.length === 0) return null;
           const catTotal = items.reduce((s, e) => s + Number(e.cost), 0);
@@ -180,11 +196,11 @@ export default function ExpensesPage({ params }: { params: any }) {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #f0ebe4" }}>
-                    <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>Item <Tooltip field="item" /></th>
-                    <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>Cost <Tooltip field="cost" /></th>
-                    <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>Deposit <Tooltip field="deposit" /></th>
-                    <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>Balance <Tooltip field="balance" /></th>
-                    <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>Notes <Tooltip field="notes" /></th>
+                    <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>Item</th>
+                    <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>Cost</th>
+                    <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>Deposit</th>
+                    <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>Balance</th>
+                    <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>Notes</th>
                     <th style={{ padding: "6px 8px" }}></th>
                   </tr>
                 </thead>
@@ -225,10 +241,12 @@ export default function ExpensesPage({ params }: { params: any }) {
           );
         })}
 
-        <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.25rem 1.5rem", color: "#fff", display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1rem" }}>
-          <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>TOTAL COST</div><div style={{ fontSize: "1.3rem" }}>${totalCost.toFixed(2)}</div></div>
-          <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>TOTAL DEPOSITED</div><div style={{ fontSize: "1.3rem", color: "#90c9a0" }}>${totalDeposit.toFixed(2)}</div></div>
-          <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>TOTAL OUTSTANDING</div><div style={{ fontSize: "1.3rem", color: "#e8a090" }}>${totalOutstanding.toFixed(2)}</div></div>
+        {/* Grand total */}
+        <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.25rem 1.5rem", color: "#fff", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "1rem" }}>
+          <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PLANNING HUB</div><div style={{ fontSize: "1.1rem" }}>${planningTotal.toFixed(2)}</div></div>
+          <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>OTHER EXPENSES</div><div style={{ fontSize: "1.1rem" }}>${manualTotal.toFixed(2)}</div></div>
+          <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>TOTAL DEPOSITED</div><div style={{ fontSize: "1.1rem", color: "#90c9a0" }}>${totalDeposit.toFixed(2)}</div></div>
+          <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>GRAND TOTAL</div><div style={{ fontSize: "1.3rem", color: "#e8c97a" }}>${totalCost.toFixed(2)}</div></div>
         </div>
 
       </div>
