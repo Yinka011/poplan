@@ -61,6 +61,26 @@ const PencilIcon = () => (
   </svg>
 );
 
+const CheckIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const XIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+
+const ResetIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+    <path d="M3 3v5h5"/>
+  </svg>
+);
+
 export default function OrganizerBrandPage() {
   const params = useParams();
   const brandSlug = decodeURIComponent(params.brand as string);
@@ -455,10 +475,16 @@ export default function OrganizerBrandPage() {
                     <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", color: "#8b7355", textDecoration: "none" }}>View</a>
                     <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "#2c1810", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>↓</a>
                   </div>
-                  <div style={{ display: "flex", gap: "6px", marginTop: "8px", paddingLeft: "27px" }}>
-                    <button onClick={() => setApprovalStatus(file.name, "approved", file.category)} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "approved" ? "#4a7c59" : "transparent", color: approval === "approved" ? "#fff" : "#4a7c59", border: "1px solid #4a7c5944", borderRadius: "6px", cursor: "pointer" }}>✓ Approve</button>
-                    <button onClick={() => setApprovalStatus(file.name, "revision", file.category)} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "revision" ? "#c0392b" : "transparent", color: approval === "revision" ? "#fff" : "#c0392b", border: "1px solid #c0392b44", borderRadius: "6px", cursor: "pointer" }}>✗ Needs revision</button>
-                    <button onClick={() => setApprovalStatus(file.name, "pending", file.category)} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "pending" ? "#8b7355" : "transparent", color: approval === "pending" ? "#fff" : "#8b7355", border: "1px solid #8b735544", borderRadius: "6px", cursor: "pointer" }}>Reset</button>
+                  <div style={{ display: "flex", gap: "6px", marginTop: "8px", paddingLeft: "27px", alignItems: "center" }}>
+                    <button onClick={() => setApprovalStatus(file.name, "approved", file.category)} title="Approve" style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: approval === "approved" ? "#4a7c59" : "transparent", color: approval === "approved" ? "#fff" : "#4a7c59", border: "1px solid #4a7c5944", borderRadius: "6px", cursor: "pointer" }}>
+                      <CheckIcon />
+                    </button>
+                    <button onClick={() => setApprovalStatus(file.name, "revision", file.category)} title="Needs revision" style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: approval === "revision" ? "#c0392b" : "transparent", color: approval === "revision" ? "#fff" : "#c0392b", border: "1px solid #c0392b44", borderRadius: "6px", cursor: "pointer" }}>
+                      <XIcon />
+                    </button>
+                    <button onClick={() => setApprovalStatus(file.name, "pending", file.category)} title="Reset" style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", color: "#8b7355", border: "1px solid #8b735522", borderRadius: "6px", cursor: "pointer" }}>
+                      <ResetIcon />
+                    </button>
                   </div>
                 </div>
               );
