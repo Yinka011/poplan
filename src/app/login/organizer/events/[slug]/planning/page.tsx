@@ -87,7 +87,7 @@ export default function PlanningHub() {
   };
 
   const saveEdit = async (table: string, id: number) => {
-    let dataToSave = { ...editData };
+    const dataToSave = { ...editData };
     if (table === "planning_decor") {
       const qty = parseFloat(editData.quantity) || 0;
       const unitCost = parseFloat(editData.unit_cost || editData.cost) || 0;
