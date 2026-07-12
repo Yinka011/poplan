@@ -40,6 +40,14 @@ const CATEGORIES = [
   "Other",
 ];
 
+const CATEGORY_TASK_MAP: Record<string, number> = {
+  "Brand logo": 20,
+  "Product photos": 21,
+  "Marketing assets": 13,
+  "Inventory sheet": 15,
+  "Digital brand book": 22,
+};
+
 const statusColor = (s: string) => {
   if (s === "Paid") return { background: "#4a7c5922", color: "#4a7c59" };
   if (s === "Partial") return { background: "#b8733322", color: "#b87333" };
@@ -139,7 +147,7 @@ export default function OrganizerBrandPage() {
   const getApprovalStatus = (fileName: string) =>
     approvals.find(a => a.file_name === fileName)?.status || "pending";
 
-  const setApprovalStatus = async (fileName: string, status: string) => {
+  const setApprovalStatus = async (fileName: string, status: string, fileCategory: string) => {
     if (!brand) return;
     const existing = approvals.find(a => a.file_name === fileName);
     if (existing) {
@@ -148,6 +156,22 @@ export default function OrganizerBrandPage() {
       await supabase.from("file_approvals").insert({ brand_email: brand.email, event: "Atlanta", file_name: fileName, status });
     }
     setApprovals(prev => [...prev.filter(a => a.file_name !== fileName), { file_name: fileName, status }]);
+
+    const deadlineId = CATEGORY_TASK_MAP[fileCategory];
+    if (!deadlineId) return;
+
+    const { data: existingTask } = await supabase
+      .from("brand_tasks")
+      .select("*")
+      .eq("brand_email", brand.email)
+      .eq("deadline_id", deadlineId)
+      .maybeSingle();
+
+    if (existingTask) {
+      const completed = status === "approved";
+      await supabase.from("brand_tasks").update({ completed }).eq("id", existingTask.id);
+      setTasks(prev => prev.map(t => t.deadline_id === deadlineId ? { ...t, completed } : t));
+    }
   };
 
   const inviteBrand = async () => {
@@ -432,9 +456,9 @@ export default function OrganizerBrandPage() {
                     <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "#2c1810", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>↓</a>
                   </div>
                   <div style={{ display: "flex", gap: "6px", marginTop: "8px", paddingLeft: "27px" }}>
-                    <button onClick={() => setApprovalStatus(file.name, "approved")} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "approved" ? "#4a7c59" : "transparent", color: approval === "approved" ? "#fff" : "#4a7c59", border: "1px solid #4a7c5944", borderRadius: "6px", cursor: "pointer" }}>✓ Approve</button>
-                    <button onClick={() => setApprovalStatus(file.name, "revision")} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "revision" ? "#c0392b" : "transparent", color: approval === "revision" ? "#fff" : "#c0392b", border: "1px solid #c0392b44", borderRadius: "6px", cursor: "pointer" }}>✗ Needs revision</button>
-                    <button onClick={() => setApprovalStatus(file.name, "pending")} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "pending" ? "#8b7355" : "transparent", color: approval === "pending" ? "#fff" : "#8b7355", border: "1px solid #8b735544", borderRadius: "6px", cursor: "pointer" }}>Reset</button>
+                    <button onClick={() => setApprovalStatus(file.name, "approved", file.category)} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "approved" ? "#4a7c59" : "transparent", color: approval === "approved" ? "#fff" : "#4a7c59", border: "1px solid #4a7c5944", borderRadius: "6px", cursor: "pointer" }}>✓ Approve</button>
+                    <button onClick={() => setApprovalStatus(file.name, "revision", file.category)} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "revision" ? "#c0392b" : "transparent", color: approval === "revision" ? "#fff" : "#c0392b", border: "1px solid #c0392b44", borderRadius: "6px", cursor: "pointer" }}>✗ Needs revision</button>
+                    <button onClick={() => setApprovalStatus(file.name, "pending", file.category)} style={{ fontSize: "11px", padding: "3px 10px", background: approval === "pending" ? "#8b7355" : "transparent", color: approval === "pending" ? "#fff" : "#8b7355", border: "1px solid #8b735544", borderRadius: "6px", cursor: "pointer" }}>Reset</button>
                   </div>
                 </div>
               );
