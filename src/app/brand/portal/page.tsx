@@ -83,7 +83,8 @@ export default function BrandPortal() {
           .select("brand_email")
           .eq("member_email", user.email)
           .eq("event", "Atlanta")
-          .single();
+          .limit(1)
+          .maybeSingle();
 
         if (memberRes?.brand_email) {
           resolvedBrandEmail = memberRes.brand_email;
