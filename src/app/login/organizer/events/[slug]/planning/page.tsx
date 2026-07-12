@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -26,7 +25,7 @@ const roleColors: Record<string, string> = {
   "Brand liaison": "#a0522d", Photographer: "#6b8e23",
 };
 
-export default function PlanningHub({ }: { params: any }) {
+export default function PlanningHub() {
   const [tab, setTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
@@ -53,33 +52,48 @@ export default function PlanningHub({ }: { params: any }) {
 
   const addDecor = async () => {
     if (!newDecor.item.trim()) return;
-    await supabase.from("planning_decor").insert({ ...newDecor, cost: parseFloat(newDecor.cost) || 0, event: "Atlanta" });
+    const { data } = await supabase.from("planning_decor").insert({
+      ...newDecor, cost: parseFloat(newDecor.cost) || 0, event: "Atlanta"
+    }).select().single();
+    if (data) setDecor(prev => [...prev, data]);
     setNewDecor({ category: "Theme", item: "", decision: "", vendor: "", cost: "", status: "Pending", notes: "" });
-    setAdding(false); fetchAll();
+    setAdding(false);
   };
 
   const addRefresh = async () => {
     if (!newRefresh.item.trim()) return;
-    await supabase.from("planning_refreshments").insert({ ...newRefresh, cost: parseFloat(newRefresh.cost) || 0, event: "Atlanta" });
+    const { data } = await supabase.from("planning_refreshments").insert({
+      ...newRefresh, cost: parseFloat(newRefresh.cost) || 0, event: "Atlanta"
+    }).select().single();
+    if (data) setRefresh(prev => [...prev, data]);
     setNewRefresh({ item: "", vendor: "", quantity: "", cost: "", notes: "" });
-    setAdding(false); fetchAll();
+    setAdding(false);
   };
 
   const addStaff = async () => {
     if (!newStaff.name.trim()) return;
-    await supabase.from("planning_staff").insert({ ...newStaff, pay_rate: parseFloat(newStaff.pay_rate) || 0, event: "Atlanta" });
+    const { data } = await supabase.from("planning_staff").insert({
+      ...newStaff, pay_rate: parseFloat(newStaff.pay_rate) || 0, event: "Atlanta"
+    }).select().single();
+    if (data) setStaff(prev => [...prev, data]);
     setNewStaff({ name: "", role: "Cashier", hours: "", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
-    setAdding(false); fetchAll();
+    setAdding(false);
   };
 
   const saveEdit = async (table: string, id: number) => {
     await supabase.from(table).update(editData).eq("id", id);
-    setEditing(null); fetchAll();
+    if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === id ? { ...i, ...editData } : i));
+    if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === id ? { ...i, ...editData } : i));
+    if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === id ? { ...i, ...editData } : i));
+    setEditing(null);
   };
 
   const deleteItem = async (table: string, id: number) => {
+    if (!confirm("Remove this item?")) return;
     await supabase.from(table).delete().eq("id", id);
-    fetchAll();
+    if (table === "planning_decor") setDecor(prev => prev.filter(i => i.id !== id));
+    if (table === "planning_refreshments") setRefresh(prev => prev.filter(i => i.id !== id));
+    if (table === "planning_staff") setStaff(prev => prev.filter(i => i.id !== id));
   };
 
   const inp = (style?: any) => ({ padding: "7px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", ...style });
@@ -94,9 +108,9 @@ export default function PlanningHub({ }: { params: any }) {
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
 
         <div style={{ marginBottom: "1.5rem" }}>
-        <Link href="/login/organizer/events/atlanta" style={{ fontSize: "0.85rem", color: "#8b7355", textDecoration: "none" }}>← Back to Atlanta</Link>
+          <Link href="/login/organizer/events/atlanta" style={{ fontSize: "0.85rem", color: "#8b7355", textDecoration: "none" }}>← Back to Atlanta</Link>
           <h1 style={{ fontSize: "1.8rem", color: "#2c1810", fontWeight: "normal", marginTop: "0.5rem" }}>Planning Hub</h1>
-          <p style={{ color: "#8b7355", fontSize: "0.9rem" }}>Decor, refreshments and staffing decisions for Atlanta</p>
+          <p style={{ color: "#8b7355", fontSize: "0.9rem" }}>Decor, refreshments and staffing for Atlanta</p>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "12px", marginBottom: "1.5rem" }}>
@@ -114,7 +128,7 @@ export default function PlanningHub({ }: { params: any }) {
 
         <div style={{ display: "flex", gap: "8px", marginBottom: "1.5rem" }}>
           {(["decor", "refreshments", "staff"] as const).map(t => (
-            <button key={t} onClick={() => { setTab(t); setAdding(false); }} style={{ padding: "8px 20px", background: tab === t ? "#2c1810" : "#fff", color: tab === t ? "#fff" : "#8b7355", border: "1px solid " + (tab === t ? "#2c1810" : "#e8e0d5"), borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" }}>{t}</button>
+            <button key={t} onClick={() => { setTab(t); setAdding(false); setEditing(null); }} style={{ padding: "8px 20px", background: tab === t ? "#2c1810" : "#fff", color: tab === t ? "#fff" : "#8b7355", border: "1px solid " + (tab === t ? "#2c1810" : "#e8e0d5"), borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const }}>{t}</button>
           ))}
           <button onClick={() => setAdding(!adding)} style={{ marginLeft: "auto", padding: "8px 16px", background: "#b87333", color: "#fff", border: "none", borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add</button>
         </div>
@@ -154,17 +168,19 @@ export default function PlanningHub({ }: { params: any }) {
                     {items.map(item => (
                       <div key={item.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem", border: "1px solid #e8e0d5" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                          <div style={{ fontSize: "0.9rem", color: "#2c1810", fontWeight: 500 }}>{editing === item.id ? <input value={editData.item || ""} onChange={e => setEditData({...editData, item: e.target.value})} style={editInp({ width: "120px" })} /> : item.item}</div>
+                          <div style={{ fontSize: "0.9rem", color: "#2c1810", fontWeight: 500 }}>
+                            {editing === item.id ? <input value={editData.item || ""} onChange={e => setEditData({...editData, item: e.target.value})} style={editInp({ width: "120px" })} /> : item.item}
+                          </div>
                           {editing === item.id ? (
                             <select value={editData.status || ""} onChange={e => setEditData({...editData, status: e.target.value})} style={editInp()}>
                               {STATUSES.map(s => <option key={s}>{s}</option>)}
                             </select>
                           ) : (
-                            <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", ...statusColors[item.status] }}>{item.status}</span>
+                            <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: statusColors[item.status]?.bg, color: statusColors[item.status]?.color }}>{item.status}</span>
                           )}
                         </div>
                         {editing === item.id ? (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <div style={{ display: "flex", flexDirection: "column" as const, gap: "6px" }}>
                             <input placeholder="Decision" value={editData.decision || ""} onChange={e => setEditData({...editData, decision: e.target.value})} style={editInp({ width: "100%" })} />
                             <input placeholder="Vendor" value={editData.vendor || ""} onChange={e => setEditData({...editData, vendor: e.target.value})} style={editInp({ width: "100%" })} />
                             <input placeholder="Cost" value={editData.cost || ""} onChange={e => setEditData({...editData, cost: e.target.value})} style={editInp({ width: "100%" })} />
@@ -181,7 +197,7 @@ export default function PlanningHub({ }: { params: any }) {
                             {item.cost > 0 && <div style={{ fontSize: "0.75rem", color: "#b87333" }}>${Number(item.cost).toFixed(2)}</div>}
                             {item.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", marginTop: "4px", fontStyle: "italic" }}>{item.notes}</div>}
                             <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
-                              <button onClick={() => { setEditing(item.id); setEditData(item); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
+                              <button onClick={() => { setEditing(item.id); setEditData({...item}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
                               <button onClick={() => deleteItem("planning_decor", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                             </div>
                           </div>
@@ -213,11 +229,12 @@ export default function PlanningHub({ }: { params: any }) {
               </div>
             )}
             <div style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e8e0d5", overflow: "hidden" }}>
+              {refresh.length === 0 && <p style={{ padding: "1rem", fontSize: "0.85rem", color: "#8b7355" }}>No refreshments added yet.</p>}
               {refresh.map((item, i) => (
                 <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: i < refresh.length - 1 ? "1px solid #f0ebe4" : "none" }}>
                   <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#4a7c59", flexShrink: 0 }} />
                   {editing === item.id ? (
-                    <div style={{ display: "flex", gap: "6px", flex: 1, flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: "6px", flex: 1, flexWrap: "wrap" as const }}>
                       <input value={editData.item || ""} onChange={e => setEditData({...editData, item: e.target.value})} style={editInp({ width: "120px" })} />
                       <input value={editData.vendor || ""} onChange={e => setEditData({...editData, vendor: e.target.value})} placeholder="Vendor" style={editInp({ width: "100px" })} />
                       <input value={editData.quantity || ""} onChange={e => setEditData({...editData, quantity: e.target.value})} placeholder="Qty" style={editInp({ width: "60px" })} />
@@ -238,7 +255,7 @@ export default function PlanningHub({ }: { params: any }) {
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: "6px" }}>
-                        <button onClick={() => { setEditing(item.id); setEditData(item); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
+                        <button onClick={() => { setEditing(item.id); setEditData({...item}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
                         <button onClick={() => deleteItem("planning_refreshments", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                       </div>
                     </>
@@ -274,6 +291,7 @@ export default function PlanningHub({ }: { params: any }) {
               </div>
             )}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "10px" }}>
+              {staff.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No staff added yet.</p>}
               {staff.map(member => (
                 <div key={member.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", border: "1px solid #e8e0d5" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
@@ -284,7 +302,7 @@ export default function PlanningHub({ }: { params: any }) {
                     {member.pay_rate > 0 && <div style={{ fontSize: "1rem", color: "#b87333", fontWeight: 500 }}>${Number(member.pay_rate).toFixed(0)}</div>}
                   </div>
                   {editing === member.id ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <div style={{ display: "flex", flexDirection: "column" as const, gap: "6px" }}>
                       <select value={editData.role || ""} onChange={e => setEditData({...editData, role: e.target.value})} style={editInp({ width: "100%" })}>
                         {STAFF_ROLES.map(r => <option key={r}>{r}</option>)}
                       </select>
@@ -307,7 +325,7 @@ export default function PlanningHub({ }: { params: any }) {
                       {member.instagram && <div style={{ fontSize: "0.78rem", color: "#8b7355", marginBottom: "2px" }}>📸 {member.instagram}</div>}
                       {member.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic", marginTop: "6px" }}>{member.notes}</div>}
                       <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
-                        <button onClick={() => { setEditing(member.id); setEditData(member); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
+                        <button onClick={() => { setEditing(member.id); setEditData({...member}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
                         <button onClick={() => deleteItem("planning_staff", member.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                       </div>
                     </div>
