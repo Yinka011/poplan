@@ -134,7 +134,7 @@ export default function ExpensesPage({ params }: { params: any }) {
 
         {/* Planning Hub auto totals */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>FROM PLANNING HUB — AUTO CALCULATED</div>
+          <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>FROM PLANNING HUB</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
             {[
               { label: "Decor", value: decorTotal, color: "#c49a3c" },
@@ -147,7 +147,7 @@ export default function ExpensesPage({ params }: { params: any }) {
                   <div style={{ fontSize: "0.8rem", color: "#8b7355" }}>{item.label}</div>
                 </div>
                 <div style={{ fontSize: "1.1rem", color: item.color, fontWeight: 500 }}>${item.value.toFixed(2)}</div>
-                <div style={{ fontSize: "0.7rem", color: "#8b7355", marginTop: "2px" }}>Auto from Planning Hub</div>
+                
               </div>
             ))}
           </div>
