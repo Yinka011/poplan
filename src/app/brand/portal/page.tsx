@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Announcements from "@/components/brand/Announcements";
 import FileUpload from "@/components/brand/FileUpload";
-import WelcomeModal from "@/components/brand/WelcomeModal";
+import PortalTour from "@/components/brand/PortalTour";
 
 type Brand = {
   id: number;
@@ -55,7 +55,7 @@ export default function BrandPortal() {
   const [brandEmail, setBrandEmail] = useState("");
   const [venueAddress, setVenueAddress] = useState("5135 Peachtree Pkwy NW Ste 915, Peachtree Corners, GA 30092, United States");
   const [markingShipped, setMarkingShipped] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   const eventDate = new Date("2026-09-12");
   const today = new Date();
@@ -111,17 +111,17 @@ export default function BrandPortal() {
       if (taskRes.data && brandRes.data) setTasks(taskRes.data);
       if (settingsRes.data?.venue_address) setVenueAddress(settingsRes.data.venue_address);
 
-      const seen = localStorage.getItem(`welcome_seen_${user.email}`);
-      if (!seen) setShowWelcome(true);
+      const seen = localStorage.getItem(`tour_seen_${user.email}`);
+      if (!seen) setTimeout(() => setShowTour(true), 800);
 
       setLoading(false);
     };
     fetchAll();
   }, []);
 
-  const closeWelcome = () => {
-    setShowWelcome(false);
-    localStorage.setItem(`welcome_seen_${userEmail}`, "true");
+  const closeTour = () => {
+    setShowTour(false);
+    localStorage.setItem(`tour_seen_${userEmail}`, "true");
   };
 
   const markShipped = async () => {
@@ -196,7 +196,7 @@ export default function BrandPortal() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif" }}>
 
-      {showWelcome && <WelcomeModal brandName={brand.name} onClose={closeWelcome} />}
+      {showTour && <PortalTour onClose={closeTour} />}
 
       <div style={{ background: "#fff", borderBottom: "1px solid #e8e0d5", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
@@ -236,7 +236,7 @@ export default function BrandPortal() {
           </div>
         </div>
 
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div id="tour-shipping" style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "4px" }}>SHIPMENT STATUS</div>
             {brand.shipped ? (
@@ -255,9 +255,11 @@ export default function BrandPortal() {
           )}
         </div>
 
-        <Announcements event="Atlanta" brandEmail={brandEmail} />
+        <div id="tour-announcements">
+          <Announcements event="Atlanta" brandEmail={brandEmail} />
+        </div>
 
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
+        <div id="tour-todo" style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
             <div style={{ fontSize: "1rem", color: "#2c1810" }}>Your to-do list</div>
             <div style={{ fontSize: "0.8rem", color: "#8b7355" }}>{completed} of {deadlines.length} complete</div>
@@ -286,7 +288,9 @@ export default function BrandPortal() {
           })}
         </div>
 
-        <FileUpload brandName={brand.name} brandEmail={brandEmail} />
+        <div id="tour-upload">
+          <FileUpload brandName={brand.name} brandEmail={brandEmail} />
+        </div>
 
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginTop: "1.5rem", border: "1px solid #e8e0d5" }}>
           <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "1rem" }}>Frequently asked questions</div>
