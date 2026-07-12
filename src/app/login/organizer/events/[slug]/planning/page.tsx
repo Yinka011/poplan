@@ -104,11 +104,14 @@ export default function PlanningHub() {
     const qty = table === "planning_decor" ? parseFloat(editData.quantity) || 0 : parseFloat(editData.quantity_num) || 0;
     const unitCost = parseFloat(editData.unit_cost) || parseFloat(editData.cost) || 0;
     const totalCost = qty > 0 ? qty * unitCost : parseFloat(editData.cost) || 0;
-    const { unit_cost, id, created_at, ...cleanData } = editData;
-    const dataToSave = { ...cleanData };
-    if (table === "planning_decor") { dataToSave.cost = totalCost; dataToSave.quantity = qty; }
-    if (table === "planning_refreshments") { dataToSave.cost = totalCost; dataToSave.quantity_num = qty; }
-    await supabase.from(table).update(dataToSave).eq("id", id);
+    const saveId = editData.id;
+    if (table === "planning_decor") {
+      await supabase.from(table).update({ item: editData.item, decision: editData.decision, vendor: editData.vendor, cost: totalCost, quantity: qty, status: editData.status, notes: editData.notes }).eq("id", saveId);
+    } else if (table === "planning_refreshments") {
+      await supabase.from(table).update({ item: editData.item, vendor: editData.vendor, quantity: editData.quantity, quantity_num: qty, cost: totalCost, notes: editData.notes }).eq("id", saveId);
+    } else if (table === "planning_staff") {
+      await supabase.from(table).update({ name: editData.name, role: editData.role, hours: editData.hours, pay_rate: parseFloat(editData.pay_rate) || 0, phone: editData.phone, email: editData.email, instagram: editData.instagram, notes: editData.notes }).eq("id", saveId);
+    }
     if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
     if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
     if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
