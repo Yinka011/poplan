@@ -104,7 +104,7 @@ export default function PlanningHub() {
     const qty = table === "planning_decor" ? parseFloat(editData.quantity) || 0 : parseFloat(editData.quantity_num) || 0;
     const unitCost = parseFloat(editData.unit_cost) || parseFloat(editData.cost) || 0;
     const totalCost = qty > 0 ? qty * unitCost : parseFloat(editData.cost) || 0;
-    const { unit_cost, ...cleanData } = editData;
+    const { unit_cost, id, created_at, ...cleanData } = editData;
     const dataToSave = { ...cleanData };
     if (table === "planning_decor") { dataToSave.cost = totalCost; dataToSave.quantity = qty; }
     if (table === "planning_refreshments") { dataToSave.cost = totalCost; dataToSave.quantity_num = qty; }
