@@ -69,7 +69,13 @@ export default function PlanningHub() {
     const unitCost = parseFloat(newRefresh.cost) || 0;
     const totalCost = qty > 0 ? qty * unitCost : unitCost;
     const { data } = await supabase.from("planning_refreshments").insert({
-      ...newRefresh, cost: totalCost, quantity_num: qty, event: "Atlanta"
+      item: newRefresh.item,
+      vendor: newRefresh.vendor,
+      quantity: newRefresh.quantity,
+      quantity_num: qty,
+      cost: totalCost,
+      notes: newRefresh.notes,
+      event: "Atlanta"
     }).select().single();
     if (data) setRefresh(prev => [...prev, data]);
     setNewRefresh({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
@@ -79,7 +85,15 @@ export default function PlanningHub() {
   const addStaff = async () => {
     if (!newStaff.name.trim()) return;
     const { data } = await supabase.from("planning_staff").insert({
-      ...newStaff, pay_rate: parseFloat(newStaff.pay_rate) || 0, event: "Atlanta"
+      name: newStaff.name,
+      role: newStaff.role,
+      hours: newStaff.hours,
+      pay_rate: parseFloat(newStaff.pay_rate) || 0,
+      phone: newStaff.phone,
+      email: newStaff.email,
+      instagram: newStaff.instagram,
+      notes: newStaff.notes,
+      event: "Atlanta"
     }).select().single();
     if (data) setStaff(prev => [...prev, data]);
     setNewStaff({ name: "", role: "Cashier", hours: "", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
