@@ -112,9 +112,9 @@ export default function PlanningHub() {
     } else if (table === "planning_staff") {
       await supabase.from(table).update({ name: editData.name, role: editData.role, hours: editData.hours, pay_rate: parseFloat(editData.pay_rate) || 0, phone: editData.phone, email: editData.email, instagram: editData.instagram, notes: editData.notes }).eq("id", saveId);
     }
-    if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
-    if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
-    if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
+    if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === saveId ? { ...i, ...editData } : i));
+    if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === saveId ? { ...i, ...editData } : i));
+    if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === saveId ? { ...i, ...editData } : i));
     setEditing(null);
   };
 
