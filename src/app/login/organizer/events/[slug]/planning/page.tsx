@@ -101,19 +101,13 @@ export default function PlanningHub() {
   };
 
   const saveEdit = async (table: string, id: number) => {
-    const dataToSave = { ...editData };
-    if (table === "planning_decor") {
-      const qty = parseFloat(editData.quantity) || 0;
-      const unitCost = parseFloat(editData.unit_cost || editData.cost) || 0;
-      if (qty > 0) dataToSave.cost = qty * unitCost;
-      dataToSave.quantity = qty;
-    }
-    if (table === "planning_refreshments") {
-      const qty = parseFloat(editData.quantity_num) || 0;
-      const unitCost = parseFloat(editData.unit_cost || editData.cost) || 0;
-      if (qty > 0) dataToSave.cost = qty * unitCost;
-      dataToSave.quantity_num = qty;
-    }
+    const qty = table === "planning_decor" ? parseFloat(editData.quantity) || 0 : parseFloat(editData.quantity_num) || 0;
+    const unitCost = parseFloat(editData.unit_cost) || parseFloat(editData.cost) || 0;
+    const totalCost = qty > 0 ? qty * unitCost : parseFloat(editData.cost) || 0;
+    const { unit_cost, ...cleanData } = editData;
+    const dataToSave = { ...cleanData };
+    if (table === "planning_decor") { dataToSave.cost = totalCost; dataToSave.quantity = qty; }
+    if (table === "planning_refreshments") { dataToSave.cost = totalCost; dataToSave.quantity_num = qty; }
     await supabase.from(table).update(dataToSave).eq("id", id);
     if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
     if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === id ? { ...i, ...dataToSave } : i));
