@@ -473,7 +473,7 @@ export default function OrganizerBrandPage() {
                     </div>
                     <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: badge.background, color: badge.color, whiteSpace: "nowrap" as const }}>{badge.label}</span>
                     <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", color: "#8b7355", textDecoration: "none" }}>View</a>
-                    <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "#2c1810", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>↓</a>
+                    <a href={file.url} download target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "#2c1810", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>↓</a>
                   </div>
                   <div style={{ display: "flex", gap: "6px", marginTop: "8px", paddingLeft: "27px", alignItems: "center" }}>
                     <button onClick={() => setApprovalStatus(file.name, "approved", file.category)} title="Approve" style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: approval === "approved" ? "#4a7c59" : "transparent", color: approval === "approved" ? "#fff" : "#4a7c59", border: "1px solid #4a7c5944", borderRadius: "6px", cursor: "pointer" }}>
