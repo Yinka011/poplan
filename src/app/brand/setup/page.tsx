@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function BrandSetup() {
@@ -59,7 +60,7 @@ export default function BrandSetup() {
                 Invite links expire after 24 hours for security. Please contact AO Curates on WhatsApp to request a new invite link.
               </p>
               <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "1rem", border: "1px solid #f0ebe4", fontSize: "0.85rem", color: "#8b7355" }}>
-                Already have a password? <a href="/" style={{ color: "#b87333", textDecoration: "none" }}>Sign in here →</a>
+                Already have a password? <Link href="/" style={{ color: "#b87333", textDecoration: "none" }}>Sign in here →</Link>
               </div>
             </div>
           ) : (
