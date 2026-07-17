@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -21,7 +20,14 @@ export default function HomePage() {
       setLoading(false);
       return;
     }
-    window.location.href = "/login/organizer/events";
+    const { data: profile } = await supabase.from("profiles").select("organizer_mode").eq("email", email).single();
+    if (!profile) {
+      window.location.href = "/onboarding";
+    } else if (profile.organizer_mode === "own_brand") {
+      window.location.href = "/brand-organizer";
+    } else {
+      window.location.href = "/login/organizer/events";
+    }
   };
 
   const handleBrandLogin = async (e: React.FormEvent) => {
@@ -34,7 +40,12 @@ export default function HomePage() {
       setLoading(false);
       return;
     }
-    window.location.href = "/brand/portal";
+    const { data: ownEvents } = await supabase.from("events").select("id").eq("organizer_email", email).limit(1);
+    if (ownEvents && ownEvents.length > 0) {
+      window.location.href = "/brand-hub";
+    } else {
+      window.location.href = "/brand/portal";
+    }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -119,7 +130,7 @@ export default function HomePage() {
                 Forgot password?
               </button>
               <button type="button" onClick={() => setMode("home")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
-                ← Back
+                Back
               </button>
             </form>
           )}
@@ -138,7 +149,7 @@ export default function HomePage() {
                 Forgot password?
               </button>
               <button type="button" onClick={() => setMode("home")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
-                ← Back
+                Back
               </button>
             </form>
           )}
@@ -163,7 +174,7 @@ export default function HomePage() {
                   {loading ? "Sending..." : "Send reset link"}
                 </button>
                 <button type="button" onClick={() => setMode("home")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#8b7355", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
-                  ← Back
+                  Back
                 </button>
               </form>
             )
