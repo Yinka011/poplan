@@ -203,7 +203,7 @@ export default function PlannerDashboard() {
     { key: "receipts", label: "Receipts" },
   ];
 
-  const inp = (style?: any) => ({ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", ...style });
+  const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", ...style });
 
   if (loading) return <div style={{ minHeight: "100vh", background: "#f5f0ea", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#8b7355" }}>Loading...</div>;
 
@@ -256,7 +256,7 @@ export default function PlannerDashboard() {
         {/* Tabs */}
         <div style={{ display: "flex", gap: "6px", marginBottom: "1.5rem", flexWrap: "wrap" as const }}>
           {tabs.map(tab => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key as any)} style={{ padding: "7px 16px", background: activeTab === tab.key ? "#2c1810" : "#fff", color: activeTab === tab.key ? "#fff" : "#8b7355", border: "1px solid " + (activeTab === tab.key ? "#2c1810" : "#e8e0d5"), borderRadius: "20px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+            <button key={tab.key} onClick={() => setActiveTab(tab.key as "overview" | "planning" | "expenses" | "mytasks" | "brandtasks" | "chat" | "receipts")} style={{ padding: "7px 16px", background: activeTab === tab.key ? "#2c1810" : "#fff", color: activeTab === tab.key ? "#fff" : "#8b7355", border: "1px solid " + (activeTab === tab.key ? "#2c1810" : "#e8e0d5"), borderRadius: "20px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
               {tab.label}
             </button>
           ))}
@@ -310,7 +310,7 @@ export default function PlannerDashboard() {
         {activeTab === "planning" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
             <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>Planning Hub</div>
-            <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1rem" }}>Use the full Planning Hub for this event. All costs auto-populate to the Expenses tab and Wanni's portal.</p>
+            <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1rem" }}>Use the full Planning Hub for this event. All costs auto-populate to the Expenses tab and Wanni&apos;s portal.</p>
             <Link href={`/login/organizer/events/${slug}/planning`} style={{ display: "inline-block", padding: "10px 20px", background: "#2c1810", color: "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>Open Planning Hub →</Link>
           </div>
         )}
