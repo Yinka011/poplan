@@ -272,9 +272,7 @@ export default function EventsPage() {
                     </div>
                     <button onClick={() => deletePlannerEvent(pe.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "12px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                   </div>
-                  {pe.event && (
-                    <Link href={`/login/organizer/events/${pe.event.slug}`} style={{ fontSize: "0.78rem", color: "#b87333", textDecoration: "none" }}>Open planning dashboard →</Link>
-                  )}
+                  <Link href={`/login/organizer/planner/${pe.event_slug}`} style={{ fontSize: "0.78rem", color: "#b87333", textDecoration: "none" }}>Open planning dashboard →</Link>
                 </div>
               ))}
             </div>
