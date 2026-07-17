@@ -41,9 +41,9 @@ type Receipt = {
   created_at: string;
 };
 
-type DecorItem = { id: number; cost: number; };
-type RefreshItem = { id: number; cost: number; };
-type StaffItem = { id: number; pay_rate: number; shifts?: { hours: number }[]; };
+type DecorItem = { cost: number; };
+type RefreshItem = { cost: number; };
+type StaffItem = { id: number; pay_rate: number; shifts?: { staff_id: number; hours: number }[]; };
 
 export default function PlannerDashboard() {
   const params = useParams();
