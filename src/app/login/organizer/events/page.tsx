@@ -26,6 +26,9 @@ type PlannerEvent = {
   event_slug: string;
   brand_email: string;
   brand_name: string;
+  city?: string;
+  dates_label?: string;
+  start_date?: string;
   event?: Event;
 };
 
