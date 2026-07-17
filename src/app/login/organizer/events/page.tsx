@@ -44,7 +44,7 @@ export default function EventsPage() {
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [newEvent, setNewEvent] = useState({ name: "", city: "", dates_label: "", status: "Planning", start_date: "", end_date: "" });
-  const [newPlannerEvent, setNewPlannerEvent] = useState({ event_slug: "", brand_name: "", brand_email: "" });
+  const [newPlannerEvent, setNewPlannerEvent] = useState({ event_slug: "", brand_name: "", brand_email: "", city: "", dates_label: "", start_date: "" });
 
   useEffect(() => {
     fetchAll();
@@ -116,9 +116,12 @@ export default function EventsPage() {
       planner_email: userEmail,
       brand_email: newPlannerEvent.brand_email,
       brand_name: newPlannerEvent.brand_name,
+      city: newPlannerEvent.city,
+      dates_label: newPlannerEvent.dates_label,
+      start_date: newPlannerEvent.start_date,
     }).select().single();
     if (data) setPlannerEvents(prev => [...prev, data]);
-    setNewPlannerEvent({ event_slug: "", brand_name: "", brand_email: "" });
+    setNewPlannerEvent({ event_slug: "", brand_name: "", brand_email: "", city: "", dates_label: "", start_date: "" });
     setAdding(false);
   };
 
@@ -194,7 +197,10 @@ export default function EventsPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
               <input placeholder="Event name e.g. Wanni Fuga Houston" value={newPlannerEvent.event_slug} onChange={e => setNewPlannerEvent({...newPlannerEvent, event_slug: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
               <input placeholder="Brand name e.g. Wanni Fuga" value={newPlannerEvent.brand_name} onChange={e => setNewPlannerEvent({...newPlannerEvent, brand_name: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="City e.g. Houston" value={newPlannerEvent.city} onChange={e => setNewPlannerEvent({...newPlannerEvent, city: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="Dates e.g. Mar 5-7, 2027" value={newPlannerEvent.dates_label} onChange={e => setNewPlannerEvent({...newPlannerEvent, dates_label: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
               <input placeholder="Brand email (optional)" value={newPlannerEvent.brand_email} onChange={e => setNewPlannerEvent({...newPlannerEvent, brand_email: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input type="date" value={newPlannerEvent.start_date} onChange={e => setNewPlannerEvent({...newPlannerEvent, start_date: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
               <button onClick={addPlannerEvent} style={{ padding: "7px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
@@ -268,7 +274,8 @@ export default function EventsPage() {
                     <div>
                       <div style={{ fontSize: "0.65rem", color: "#b87333", letterSpacing: "0.08em", marginBottom: "4px" }}>PLANNING FOR</div>
                       <div style={{ fontSize: "1.1rem", color: "#2c1810" }}>{pe.brand_name}</div>
-                      <div style={{ fontSize: "0.8rem", color: "#8b7355", marginTop: "2px" }}>{pe.event_slug}</div>
+                      <div style={{ fontSize: "0.8rem", color: "#8b7355", marginTop: "2px" }}>{pe.city || pe.event_slug}</div>
+                      {pe.dates_label && <div style={{ fontSize: "0.78rem", color: "#b87333", marginTop: "2px" }}>{pe.dates_label}</div>}
                     </div>
                     <button onClick={() => deletePlannerEvent(pe.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "12px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                   </div>
