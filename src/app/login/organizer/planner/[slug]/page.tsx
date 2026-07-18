@@ -87,9 +87,9 @@ export default function PlannerDashboard() {
       supabase.from("planner_tasks").select("*").eq("event_slug", slug).eq("owner", "brand").order("created_at"),
       supabase.from("planner_messages").select("*").eq("event_slug", slug).order("created_at"),
       supabase.from("planner_receipts").select("*").eq("event_slug", slug).order("created_at", { ascending: false }),
-      supabase.from("planning_decor").select("cost").eq("event", slug),
-      supabase.from("planning_refreshments").select("cost").eq("event", slug),
-      supabase.from("planning_staff").select("id, pay_rate").eq("event", slug),
+      supabase.from("planning_decor").select("*").eq("event", slug).order("category"),
+      supabase.from("planning_refreshments").select("*").eq("event", slug),
+      supabase.from("planning_staff").select("*").eq("event", slug),
       supabase.from("planning_staff_shifts").select("staff_id, hours").eq("event", slug),
     ]);
 
