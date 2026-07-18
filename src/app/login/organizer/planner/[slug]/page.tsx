@@ -221,8 +221,8 @@ export default function PlannerDashboard() {
       <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: "220px", background: "#2c1810", zIndex: 16, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.25s ease", display: "flex", flexDirection: "column" as const, paddingTop: "60px" }}>
         <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid #3d2415" }}>
           <div style={{ fontSize: "0.7rem", color: "#c8b89a", letterSpacing: "0.1em", marginBottom: "4px" }}>PLANNING FOR</div>
-          <div style={{ fontSize: "0.9rem", color: "#fff" }}>{plannerEvent.brand_name}</div>
-          {plannerEvent.city && <div style={{ fontSize: "0.75rem", color: "#b87333", marginTop: "2px" }}>{plannerEvent.city}</div>}
+          <div style={{ fontSize: "0.9rem", color: "#fff" }}>{plannerEvent?.brand_name || "Loading..."}</div>
+          {plannerEvent?.city && <div style={{ fontSize: "0.75rem", color: "#b87333", marginTop: "2px" }}>{plannerEvent?.city}</div>}
         </div>
         <nav style={{ flex: 1, padding: "1rem 0" }}>
           {tabs.map(tab => (
@@ -243,7 +243,7 @@ export default function PlannerDashboard() {
           <span style={{ display: "block", width: "20px", height: "1.5px", background: sidebarOpen ? "transparent" : "#c8b89a", transition: "all 0.2s" }} />
           <span style={{ display: "block", width: "20px", height: "1.5px", background: sidebarOpen ? "#b87333" : "#c8b89a", transition: "all 0.2s", transform: sidebarOpen ? "rotate(-45deg) translate(4.5px, -4.5px)" : "none" }} />
         </button>
-        <div style={{ fontSize: "1rem", color: "#fff" }}>{plannerEvent.brand_name} — {plannerEvent.city || plannerEvent.event_slug}</div>
+        <div style={{ fontSize: "1rem", color: "#fff" }}>{plannerEvent?.brand_name || "Loading..."} — {plannerEvent?.city || slug}</div>
         <div style={{ marginLeft: "auto", fontSize: "0.8rem", color: "#c8b89a" }}>{tabs.find(t => t.key === activeTab)?.label}</div>
       </div>
 
@@ -253,7 +253,7 @@ export default function PlannerDashboard() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "12px", marginBottom: "1.5rem" }}>
           <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1rem 1.25rem", color: "#fff" }}>
             <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>CITY</div>
-            <div style={{ fontSize: "0.95rem" }}>{plannerEvent.city || plannerEvent.event_slug}</div>
+            <div style={{ fontSize: "0.95rem" }}>{plannerEvent?.city || slug}</div>
           </div>
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", border: "1px solid #e8e0d5" }}>
             <div style={{ fontSize: "0.65rem", color: "#8b7355", marginBottom: "4px" }}>TOTAL EXPENSES</div>
@@ -279,7 +279,7 @@ export default function PlannerDashboard() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
               <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "1rem" }}>EVENT DETAILS</div>
-              <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "4px" }}>{plannerEvent.brand_name}</div>
+              <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "4px" }}>{plannerEvent?.brand_name || "Loading..."}</div>
               <div style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "4px" }}>{plannerEvent.city || ""}</div>
               {plannerEvent.dates_label && <div style={{ fontSize: "0.85rem", color: "#b87333" }}>{plannerEvent.dates_label}</div>}
             </div>
@@ -291,7 +291,7 @@ export default function PlannerDashboard() {
                   <div style={{ fontSize: "1.3rem", color: "#2c1810" }}>{myCompleted}/{myTasks.length}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.72rem", color: "#8b7355", marginBottom: "4px" }}>{plannerEvent.brand_name} TASKS</div>
+                  <div style={{ fontSize: "0.72rem", color: "#8b7355", marginBottom: "4px" }}>{plannerEvent?.brand_name || "Loading..."} TASKS</div>
                   <div style={{ fontSize: "1.3rem", color: "#2c1810" }}>{brandCompleted}/{brandTasks.length}</div>
                 </div>
               </div>
@@ -379,9 +379,9 @@ export default function PlannerDashboard() {
         {activeTab === "brandtasks" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <div style={{ fontSize: "0.9rem", color: "#2c1810" }}>{plannerEvent.brand_name} Tasks ({brandCompleted}/{brandTasks.length})</div>
+              <div style={{ fontSize: "0.9rem", color: "#2c1810" }}>{plannerEvent?.brand_name || "Loading..."} Tasks ({brandCompleted}/{brandTasks.length})</div>
             </div>
-            <p style={{ fontSize: "0.8rem", color: "#8b7355", marginBottom: "1rem" }}>These tasks are visible to {plannerEvent.brand_name} on their portal. They can check them off from their end.</p>
+            <p style={{ fontSize: "0.8rem", color: "#8b7355", marginBottom: "1rem" }}>These tasks are visible to {plannerEvent?.brand_name || "Loading..."} on their portal. They can check them off from their end.</p>
             <div style={{ display: "flex", gap: "8px", marginBottom: "1rem" }}>
               <input placeholder="Add a task for the brand..." value={newBrandTask.task} onChange={e => setNewBrandTask({...newBrandTask, task: e.target.value})} onKeyDown={e => e.key === "Enter" && addBrandTask()} style={inp({ flex: 1 })} />
               <input type="date" value={newBrandTask.due_date} onChange={e => setNewBrandTask({...newBrandTask, due_date: e.target.value})} style={inp({ width: "140px" })} />
@@ -406,7 +406,7 @@ export default function PlannerDashboard() {
         {/* Chat */}
         {activeTab === "chat" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-            <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>Chat with {plannerEvent.brand_name}</div>
+            <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>Chat with {plannerEvent?.brand_name || "Loading..."}</div>
             <div style={{ height: "400px", overflowY: "auto", marginBottom: "1rem", display: "flex", flexDirection: "column" as const, gap: "10px" }}>
               {messages.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355", textAlign: "center", marginTop: "2rem" }}>No messages yet. Start the conversation.</p>}
               {messages.map(msg => {
@@ -433,7 +433,7 @@ export default function PlannerDashboard() {
         {activeTab === "receipts" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
             <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>Receipts & Invoices</div>
-            <p style={{ fontSize: "0.8rem", color: "#8b7355", marginBottom: "1rem" }}>Upload receipts and invoices. {plannerEvent.brand_name} can approve or delete them from their portal.</p>
+            <p style={{ fontSize: "0.8rem", color: "#8b7355", marginBottom: "1rem" }}>Upload receipts and invoices. {plannerEvent?.brand_name || "Loading..."} can approve or delete them from their portal.</p>
 
             <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "1rem", border: "1px solid #f0ebe4", marginBottom: "1.5rem" }}>
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "8px", marginBottom: "8px" }}>
