@@ -51,9 +51,9 @@ type Shipment = {
   shipped: boolean;
 };
 
-type DecorItem = { id: number; category: string; item: string; cost: number; quantity: number; notes: string; };
-type RefreshItem = { id: number; item: string; quantity: string; cost: number; notes: string; };
-type StaffItem = { id: number; name: string; role: string; pay_rate: number; notes: string; shifts?: { staff_id: number; hours: number }[]; };
+type DecorItem = { id: number; category: string; item: string; cost: number; quantity: number; notes: string; brand_status?: string; };
+type RefreshItem = { id: number; item: string; quantity: string; cost: number; notes: string; brand_status?: string; };
+type StaffItem = { id: number; name: string; role: string; pay_rate: number; notes: string; brand_status?: string; shifts?: { staff_id: number; hours: number }[]; };
 
 export default function BrandCityDashboard() {
   const params = useParams();
@@ -80,6 +80,9 @@ export default function BrandCityDashboard() {
   const [rejecting, setRejecting] = useState<number | null>(null);
   const [rejectionNote, setRejectionNote] = useState("");
   const [newMyTask, setNewMyTask] = useState({ task: "", due_date: "" });
+  const [comments, setComments] = useState<{id: number; item_name: string; sender_email: string; sender_name: string; message: string; created_at: string;}[]>([]);
+  const [activeComment, setActiveComment] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState("");
   const [budget, setBudget] = useState(0);
   const [editingBudget, setEditingBudget] = useState(false);
   const [newBudget, setNewBudget] = useState("");
@@ -95,7 +98,7 @@ export default function BrandCityDashboard() {
     const { data: profile } = await supabase.from("profiles").select("name").eq("email", user.email).single();
     if (profile?.name) setUserName(profile.name);
 
-    const [plannerRes, assignedTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes] = await Promise.all([
+    const [plannerRes, assignedTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes, commentsRes] = await Promise.all([
       supabase.from("event_planners").select("*").eq("event_slug", slug).maybeSingle(),
       supabase.from("planner_tasks").select("*").eq("event_slug", slug).eq("owner", "brand").order("created_at"),
       supabase.from("planner_messages").select("*").eq("event_slug", slug).order("created_at"),
@@ -106,6 +109,7 @@ export default function BrandCityDashboard() {
       supabase.from("planning_staff").select("*").eq("event", slug),
       supabase.from("planning_staff_shifts").select("*").eq("event", slug),
       supabase.from("expenses").select("*").eq("event", slug),
+      supabase.from("item_comments").select("*").eq("event_slug", slug).order("created_at"),
     ]);
 
     if (plannerRes.data) {
@@ -118,6 +122,7 @@ export default function BrandCityDashboard() {
     if (invoicesRes.data) setInvoices(invoicesRes.data);
     if (shipmentsRes.data) setShipments(shipmentsRes.data);
     if (expensesRes.data) setExpenses(expensesRes.data);
+    if (commentsRes.data) setComments(commentsRes.data);
     if (decorRes.data) setDecor(decorRes.data);
     if (refreshRes.data) setRefresh(refreshRes.data);
     if (staffRes.data && shiftsRes.data) {
@@ -126,6 +131,23 @@ export default function BrandCityDashboard() {
       })));
     }
     setLoading(false);
+  };
+
+  const sendComment = async (itemName: string) => {
+    if (!newComment.trim()) return;
+    const { data } = await supabase.from("item_comments").insert({
+      event_slug: slug, item_name: itemName,
+      sender_email: userEmail, sender_name: userName || userEmail, message: newComment,
+    }).select().single();
+    if (data) setComments(prev => [...prev, data]);
+    setNewComment("");
+  };
+
+  const updateBrandStatus = async (table: string, itemId: number, status: string) => {
+    await supabase.from(table).update({ brand_status: status }).eq("id", itemId);
+    if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
+    if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
+    if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
   };
 
   const toggleTask = async (task: Task, isMine: boolean) => {
@@ -204,6 +226,52 @@ export default function BrandCityDashboard() {
   const daysToEvent = planner?.start_date ? Math.ceil((new Date(planner.start_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
 
   const getItemInvoices = (itemName: string) => invoices.filter(inv => inv.item_name === itemName);
+
+  const CommentThread = ({ itemName, table, itemId }: { itemName: string; table: string; itemId: number }) => {
+    const itemComments = comments.filter(c => c.item_name === itemName);
+    const isActive = activeComment === itemName;
+    return (
+      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
+        <button onClick={() => setActiveComment(isActive ? null : itemName)} style={{ fontSize: "0.7rem", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>
+          💬 {itemComments.length > 0 ? `${itemComments.length} note${itemComments.length > 1 ? "s" : ""}` : "Add note"}
+        </button>
+        {isActive && (
+          <div style={{ marginTop: "6px", background: "#faf8f5", borderRadius: "8px", padding: "8px", border: "1px solid #f0ebe4" }}>
+            {itemComments.map(c => (
+              <div key={c.id} style={{ marginBottom: "6px", padding: "6px 8px", background: "#fff", borderRadius: "6px", borderLeft: c.sender_email === userEmail ? "2px solid #b87333" : "2px solid #e8e0d5" }}>
+                <div style={{ fontSize: "0.68rem", color: "#8b7355", marginBottom: "2px" }}>{c.sender_name} · {new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                <div style={{ fontSize: "0.82rem", color: "#2c1810" }}>{c.message}</div>
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
+              <input placeholder="Reply..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(itemName)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }} autoFocus />
+              <button onClick={() => sendComment(itemName)} style={{ padding: "5px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>Send</button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const BrandApproval = ({ itemName, table, itemId, brandStatus }: { itemName: string; table: string; itemId: number; brandStatus?: string }) => {
+    if (brandStatus !== "suggested" && brandStatus !== "approved" && brandStatus !== "rejected") return <CommentThread itemName={itemName} table={table} itemId={itemId} />;
+    return (
+      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
+        {brandStatus === "suggested" && (
+          <div style={{ background: "#b8733311", borderRadius: "8px", padding: "8px 10px", marginBottom: "6px" }}>
+            <div style={{ fontSize: "0.75rem", color: "#b87333", marginBottom: "6px" }}>Your planner has suggested this item. Do you want to include it?</div>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button onClick={() => updateBrandStatus(table, itemId, "approved")} style={{ fontSize: "0.75rem", padding: "4px 12px", background: "#4a7c59", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>✓ Yes, include it</button>
+              <button onClick={() => updateBrandStatus(table, itemId, "rejected")} style={{ fontSize: "0.75rem", padding: "4px 12px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>✗ No, remove it</button>
+            </div>
+          </div>
+        )}
+        {brandStatus === "approved" && <div style={{ fontSize: "0.72rem", color: "#4a7c59", background: "#4a7c5922", padding: "3px 8px", borderRadius: "6px", display: "inline-block", marginBottom: "6px" }}>✓ You approved this item</div>}
+        {brandStatus === "rejected" && <div style={{ fontSize: "0.72rem", color: "#c0392b", background: "#c0392b22", padding: "3px 8px", borderRadius: "6px", display: "inline-block", marginBottom: "6px" }}>✗ You removed this item</div>}
+        <CommentThread itemName={itemName} table={table} itemId={itemId} />
+      </div>
+    );
+  };
 
   const InvoiceApproval = ({ itemName }: { itemName: string }) => {
     const itemInvoices = getItemInvoices(itemName);
@@ -406,7 +474,7 @@ export default function BrandCityDashboard() {
                       </div>
                       {item.cost > 0 && <span style={{ fontSize: "0.9rem", color: "#4a7c59", fontWeight: 500 }}>${Number(item.cost).toFixed(2)}</span>}
                     </div>
-                    <InvoiceApproval itemName={item.item} />
+                    <BrandApproval itemName={item.item} table="planning_decor" itemId={item.id} brandStatus={item.brand_status} />
                   </div>
                 ))}
               </div>
@@ -426,7 +494,7 @@ export default function BrandCityDashboard() {
                       </div>
                       {member.notes && <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "2px" }}>{member.notes}</div>}
                       {totalHours > 0 && <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "2px" }}>{totalHours} hrs</div>}
-                      <InvoiceApproval itemName={member.name} />
+                      <BrandApproval itemName={member.name} table="planning_staff" itemId={member.id} brandStatus={member.brand_status} />
                     </div>
                   );
                 })}
