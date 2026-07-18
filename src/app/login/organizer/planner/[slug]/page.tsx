@@ -258,8 +258,8 @@ export default function PlannerDashboard() {
         {/* Stats row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "12px", marginBottom: "1.5rem" }}>
           <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1rem 1.25rem", color: "#fff" }}>
-            <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>EVENT</div>
-            <div style={{ fontSize: "0.95rem" }}>{plannerEvent.event_slug}</div>
+            <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>CITY</div>
+            <div style={{ fontSize: "0.95rem" }}>{plannerEvent.city || plannerEvent.event_slug}</div>
           </div>
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", border: "1px solid #e8e0d5" }}>
             <div style={{ fontSize: "0.65rem", color: "#8b7355", marginBottom: "4px" }}>TOTAL EXPENSES</div>
@@ -286,7 +286,7 @@ export default function PlannerDashboard() {
             <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
               <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "1rem" }}>EVENT DETAILS</div>
               <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "4px" }}>{plannerEvent.brand_name}</div>
-              <div style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "4px" }}>{plannerEvent.event_slug}</div>
+              <div style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "4px" }}>{plannerEvent.city || ""}</div>
               {plannerEvent.dates_label && <div style={{ fontSize: "0.85rem", color: "#b87333" }}>{plannerEvent.dates_label}</div>}
             </div>
             <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
@@ -329,7 +329,7 @@ export default function PlannerDashboard() {
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
             <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>Planning Hub</div>
             <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1rem" }}>Use the full Planning Hub for this event. All costs auto-populate to the Expenses tab and Wanni&apos;s portal.</p>
-            <Link href={`/login/organizer/events/${slug}/planning`} style={{ display: "inline-block", padding: "10px 20px", background: "#2c1810", color: "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>Open Planning Hub →</Link>
+            <Link href={`/login/organizer/planner/${slug}/planning`} style={{ display: "inline-block", padding: "10px 20px", background: "#2c1810", color: "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>Open Planning Hub →</Link>
           </div>
         )}
 
@@ -350,7 +350,7 @@ export default function PlannerDashboard() {
               <span style={{ fontSize: "1rem", color: "#2c1810", fontWeight: 500 }}>Grand Total</span>
               <span style={{ fontSize: "1.2rem", color: "#2c1810", fontWeight: 500 }}>${totalExpenses.toFixed(2)}</span>
             </div>
-            <Link href={`/login/organizer/events/${slug}/expenses`} style={{ display: "inline-block", marginTop: "1rem", padding: "8px 16px", background: "transparent", color: "#2c1810", border: "1px solid #e8e0d5", borderRadius: "8px", textDecoration: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>View full expenses →</Link>
+            <Link href={`/login/organizer/planner/${slug}/expenses`} style={{ display: "inline-block", marginTop: "1rem", padding: "8px 16px", background: "transparent", color: "#2c1810", border: "1px solid #e8e0d5", borderRadius: "8px", textDecoration: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>View full expenses →</Link>
           </div>
         )}
 
