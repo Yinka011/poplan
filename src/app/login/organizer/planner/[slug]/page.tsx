@@ -41,9 +41,9 @@ type Receipt = {
   created_at: string;
 };
 
-type DecorItem = { cost: number; };
-type RefreshItem = { cost: number; };
-type StaffItem = { id: number; pay_rate: number; shifts?: { staff_id: number; hours: number }[]; };
+type DecorItem = { id: number; category: string; item: string; cost: number; quantity: number; notes: string; };
+type RefreshItem = { id: number; item: string; quantity: string; cost: number; notes: string; };
+type StaffItem = { id: number; name: string; role: string; pay_rate: number; notes: string; shifts?: { staff_id: number; hours: number }[]; };
 
 export default function PlannerDashboard() {
   const params = useParams();
@@ -60,6 +60,7 @@ export default function PlannerDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "planning" | "expenses" | "mytasks" | "brandtasks" | "chat" | "receipts">("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [newMyTask, setNewMyTask] = useState({ task: "", due_date: "" });
