@@ -105,6 +105,7 @@ export default function BrandCityDashboard() {
       supabase.from("planning_refreshments").select("*").eq("event", slug),
       supabase.from("planning_staff").select("*").eq("event", slug),
       supabase.from("planning_staff_shifts").select("*").eq("event", slug),
+      supabase.from("expenses").select("*").eq("event", slug),
     ]);
 
     if (plannerRes.data) {
