@@ -194,7 +194,7 @@ export default function PlannerDashboard() {
     const deposit = parseFloat(newExpense.deposit) || 0;
     const { data } = await supabase.from("expenses").insert({
       event: slug, category: cat, item: newExpense.item,
-      cost, deposit, balance: cost - deposit, notes: ""
+      cost, deposit, notes: ""
     }).select().single();
     if (data) setManualExpenses(prev => [...prev, data]);
     setNewExpense({ item: "", cost: "", deposit: "" });
