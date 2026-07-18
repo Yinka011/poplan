@@ -280,8 +280,8 @@ export default function PlannerDashboard() {
             <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
               <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "1rem" }}>EVENT DETAILS</div>
               <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "4px" }}>{plannerEvent?.brand_name || "Loading..."}</div>
-              <div style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "4px" }}>{plannerEvent.city || ""}</div>
-              {plannerEvent.dates_label && <div style={{ fontSize: "0.85rem", color: "#b87333" }}>{plannerEvent.dates_label}</div>}
+              <div style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "4px" }}>{plannerEvent?.city || ""}</div>
+              {plannerEvent?.dates_label && <div style={{ fontSize: "0.85rem", color: "#b87333" }}>{plannerEvent?.dates_label}</div>}
             </div>
             <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
               <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "1rem" }}>TASK PROGRESS</div>
