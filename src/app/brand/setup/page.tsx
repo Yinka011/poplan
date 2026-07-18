@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-export default function BrandSetup() {
+function BrandSetupInner() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
   const [password, setPassword] = useState("");
@@ -102,5 +102,13 @@ export default function BrandSetup() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BrandSetup() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#f5f0ea", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#8b7355" }}>Loading...</div>}>
+      <BrandSetupInner />
+    </Suspense>
   );
 }
