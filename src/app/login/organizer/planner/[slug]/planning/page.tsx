@@ -205,7 +205,9 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
   };
 
   const updateBrandStatus = async (table: string, itemId: number, status: string) => {
-    await supabase.from(table).update({ brand_status: status }).eq("id", itemId);
+    const { error } = await supabase.from(table).update({ brand_status: status }).eq("id", itemId);
+    if (error) { console.error("updateBrandStatus error:", error, "table:", table, "id:", itemId); return; }
+    console.log("updated", table, itemId, status);
     if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
     if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
     if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
