@@ -70,7 +70,7 @@ export default function PlannerDashboard() {
   const [newReceipt, setNewReceipt] = useState({ description: "", amount: "" });
 
   useEffect(() => {
-    fetchAll();
+    if (slug) fetchAll();
   }, [slug]);
 
   const fetchAll = async () => {
@@ -82,7 +82,7 @@ export default function PlannerDashboard() {
     if (profile?.name) setUserName(profile.name);
 
     const [peRes, myTasksRes, brandTasksRes, messagesRes, receiptsRes, decorRes, refreshRes, staffRes, shiftsRes] = await Promise.all([
-      supabase.from("event_planners").select("*").eq("event_slug", slug).eq("planner_email", user.email).single(),
+      supabase.from("event_planners").select("*").eq("event_slug", slug).eq("planner_email", user.email).maybeSingle(),
       supabase.from("planner_tasks").select("*").eq("event_slug", slug).eq("owner", "planner").order("created_at"),
       supabase.from("planner_tasks").select("*").eq("event_slug", slug).eq("owner", "brand").order("created_at"),
       supabase.from("planner_messages").select("*").eq("event_slug", slug).order("created_at"),
