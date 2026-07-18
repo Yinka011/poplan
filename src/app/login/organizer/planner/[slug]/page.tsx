@@ -209,14 +209,7 @@ export default function PlannerDashboard() {
 
   if (loading) return <div style={{ minHeight: "100vh", background: "#f5f0ea", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#8b7355" }}>Loading...</div>;
 
-  if (!plannerEvent) return (
-    <div style={{ minHeight: "100vh", background: "#f5f0ea", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
-      <div style={{ textAlign: "center" }}>
-        <p style={{ color: "#8b7355" }}>Planning assignment not found.</p>
-        <Link href="/login/organizer/events" style={{ color: "#b87333" }}>← Back to events</Link>
-      </div>
-    </div>
-  );
+
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif" }}>
