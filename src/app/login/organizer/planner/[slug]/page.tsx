@@ -353,11 +353,12 @@ export default function PlannerDashboard() {
                     {catTotal > 0 && <div style={{ fontSize: "0.95rem", color: "#b87333", fontWeight: 500 }}>${catTotal.toFixed(2)}</div>}
                   </div>
                   {items.map(exp => (
-                    <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f0ebe4", fontSize: "0.85rem" }}>
+                    <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f0ebe4", fontSize: "0.85rem", alignItems: "center" }}>
                       <span style={{ color: "#2c1810" }}>{exp.item}</span>
                       <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                         {exp.deposit > 0 && <span style={{ fontSize: "0.75rem", color: "#4a7c59" }}>Deposit: ${Number(exp.deposit).toFixed(2)}</span>}
                         <span style={{ color: "#b87333", fontWeight: 500 }}>${Number(exp.cost).toFixed(2)}</span>
+                        <button onClick={async () => { if (!confirm("Remove this expense?")) return; await supabase.from("expenses").delete().eq("id", exp.id); setManualExpenses(prev => prev.filter(e => e.id !== exp.id)); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px", padding: "0 2px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✕</button>
                       </div>
                     </div>
                   ))}
