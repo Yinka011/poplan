@@ -59,6 +59,7 @@ export default function PlannerDashboard() {
   const [staff, setStaff] = useState<StaffItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "planning" | "expenses" | "mytasks" | "brandtasks" | "chat" | "receipts">("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [newMyTask, setNewMyTask] = useState({ task: "", due_date: "" });
@@ -219,16 +220,40 @@ export default function PlannerDashboard() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif" }}>
 
-      {/* Top bar */}
-      <div style={{ background: "#2c1810", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <div style={{ fontSize: "0.7rem", color: "#c8b89a", letterSpacing: "0.1em" }}>PLANNING FOR</div>
-          <div style={{ fontSize: "1.2rem", color: "#fff" }}>{plannerEvent.brand_name}</div>
+      {/* Hamburger sidebar */}
+      {sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "#00000044", zIndex: 15 }} />
+      )}
+      <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: "220px", background: "#2c1810", zIndex: 16, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.25s ease", display: "flex", flexDirection: "column" as const, paddingTop: "60px" }}>
+        <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid #3d2415" }}>
+          <div style={{ fontSize: "0.7rem", color: "#c8b89a", letterSpacing: "0.1em", marginBottom: "4px" }}>PLANNING FOR</div>
+          <div style={{ fontSize: "0.9rem", color: "#fff" }}>{plannerEvent.brand_name}</div>
+          {plannerEvent.city && <div style={{ fontSize: "0.75rem", color: "#b87333", marginTop: "2px" }}>{plannerEvent.city}</div>}
         </div>
-        <Link href="/login/organizer/events" style={{ fontSize: "0.8rem", color: "#c8b89a", textDecoration: "none" }}>← All events</Link>
+        <nav style={{ flex: 1, padding: "1rem 0" }}>
+          {tabs.map(tab => (
+            <a key={tab.key} onClick={() => { setActiveTab(tab.key as "overview" | "planning" | "expenses" | "mytasks" | "brandtasks" | "chat" | "receipts"); setSidebarOpen(false); }} style={{ display: "block", padding: "10px 1.25rem", fontSize: "0.85rem", color: activeTab === tab.key ? "#fff" : "#c8b89a", background: activeTab === tab.key ? "#3d2415" : "transparent", textDecoration: "none", borderLeft: activeTab === tab.key ? "2px solid #b87333" : "2px solid transparent", cursor: "pointer" }}>
+              {tab.label}
+            </a>
+          ))}
+        </nav>
+        <div style={{ padding: "1rem 1.25rem", borderTop: "1px solid #3d2415" }}>
+          <Link href="/login/organizer/events" style={{ fontSize: "0.8rem", color: "#c8b89a", textDecoration: "none", display: "block" }}>← All events</Link>
+        </div>
       </div>
 
-      <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem 1.5rem" }}>
+      {/* Top bar */}
+      <div style={{ background: "#2c1810", padding: "0.85rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem", position: "sticky" as const, top: 0, zIndex: 14 }}>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px", display: "flex", flexDirection: "column" as const, gap: "5px" }}>
+          <span style={{ display: "block", width: "20px", height: "1.5px", background: sidebarOpen ? "#b87333" : "#c8b89a", transition: "all 0.2s", transform: sidebarOpen ? "rotate(45deg) translate(4.5px, 4.5px)" : "none" }} />
+          <span style={{ display: "block", width: "20px", height: "1.5px", background: sidebarOpen ? "transparent" : "#c8b89a", transition: "all 0.2s" }} />
+          <span style={{ display: "block", width: "20px", height: "1.5px", background: sidebarOpen ? "#b87333" : "#c8b89a", transition: "all 0.2s", transform: sidebarOpen ? "rotate(-45deg) translate(4.5px, -4.5px)" : "none" }} />
+        </button>
+        <div style={{ fontSize: "1rem", color: "#fff" }}>{plannerEvent.brand_name} — {plannerEvent.city || plannerEvent.event_slug}</div>
+        <div style={{ marginLeft: "auto", fontSize: "0.8rem", color: "#c8b89a" }}>{tabs.find(t => t.key === activeTab)?.label}</div>
+      </div>
+
+      <div style={{ padding: "2rem 2.5rem", maxWidth: "1000px", margin: "0 auto" }}>
 
         {/* Stats row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "12px", marginBottom: "1.5rem" }}>
@@ -253,14 +278,7 @@ export default function PlannerDashboard() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: "flex", gap: "6px", marginBottom: "1.5rem", flexWrap: "wrap" as const }}>
-          {tabs.map(tab => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key as "overview" | "planning" | "expenses" | "mytasks" | "brandtasks" | "chat" | "receipts")} style={{ padding: "7px 16px", background: activeTab === tab.key ? "#2c1810" : "#fff", color: activeTab === tab.key ? "#fff" : "#8b7355", border: "1px solid " + (activeTab === tab.key ? "#2c1810" : "#e8e0d5"), borderRadius: "20px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
+
 
         {/* Overview */}
         {activeTab === "overview" && (
