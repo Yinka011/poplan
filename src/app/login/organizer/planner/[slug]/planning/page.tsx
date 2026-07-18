@@ -244,15 +244,17 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
           <div style={{ marginTop: "8px", background: "#faf8f5", borderRadius: "10px", padding: "1rem", border: "1px solid #e8e0d5" }}>
             <div style={{ fontSize: "0.8rem", color: "#2c1810", marginBottom: "10px", fontWeight: 500 }}>Add invoice for {itemName}</div>
             <input
+              key={`desc-${addingInvoice?.itemName}`}
               placeholder="Description e.g. Venue deposit invoice"
-              value={newInvoice.description}
-              onChange={e => setNewInvoice({...newInvoice, description: e.target.value})}
+              defaultValue={newInvoice.description}
+              onBlur={e => setNewInvoice(prev => ({...prev, description: e.target.value}))}
               style={{ width: "100%", padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }}
             />
             <input
+              key={`amount-${addingInvoice?.itemName}`}
               placeholder="Amount e.g. 5250"
-              value={newInvoice.amount}
-              onChange={e => setNewInvoice({...newInvoice, amount: e.target.value})}
+              defaultValue={newInvoice.amount}
+              onBlur={e => setNewInvoice(prev => ({...prev, amount: e.target.value}))}
               style={{ width: "100%", padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }}
             />
             <div
