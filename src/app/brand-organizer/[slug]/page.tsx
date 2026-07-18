@@ -439,17 +439,17 @@ export default function BrandCityDashboard() {
         {activeTab === "budget" && (
           <div>
             {/* Budget header */}
-            <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem" }}>
+            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <div style={{ fontSize: "0.75rem", color: "#c8b89a", letterSpacing: "0.1em" }}>YOUR BUDGET FOR {cityName.toUpperCase()}</div>
+                <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.1em" }}>YOUR BUDGET FOR {cityName.toUpperCase()}</div>
                 {editingBudget ? (
                   <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                     <input value={newBudget} onChange={e => setNewBudget(e.target.value)} placeholder="Enter budget" style={{ padding: "4px 8px", borderRadius: "6px", border: "none", fontSize: "0.85rem", width: "120px", fontFamily: "Georgia, serif" }} autoFocus />
                     <button onClick={saveBudget} style={{ padding: "4px 10px", background: "#b87333", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
-                    <button onClick={() => setEditingBudget(false)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #c8b89a44", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer", color: "#c8b89a" }}>Cancel</button>
+                    <button onClick={() => setEditingBudget(false)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer", color: "#8b7355" }}>Cancel</button>
                   </div>
                 ) : (
-                  <button onClick={() => setEditingBudget(true)} style={{ fontSize: "0.75rem", padding: "3px 10px", background: "transparent", border: "1px solid #c8b89a44", borderRadius: "6px", cursor: "pointer", color: "#c8b89a" }}>
+                  <button onClick={() => setEditingBudget(true)} style={{ fontSize: "0.75rem", padding: "3px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>
                     {budget > 0 ? "Edit budget" : "Set budget"}
                   </button>
                 )}
@@ -457,24 +457,24 @@ export default function BrandCityDashboard() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
                 <div>
                   <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>BUDGET</div>
-                  <div style={{ fontSize: "1.5rem", color: budget > 0 ? "#e8c97a" : "#8b7355" }}>{budget > 0 ? `$${budget.toFixed(2)}` : "Not set"}</div>
+                  <div style={{ fontSize: "1.5rem", color: budget > 0 ? "#2c1810" : "#8b7355" }}>{budget > 0 ? `$${budget.toFixed(2)}` : "Not set"}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>SPENT</div>
-                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#ff6b6b" : "#fff" }}>${totalSpent.toFixed(2)}</div>
+                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#c0392b" : "#2c1810" }}>${totalSpent.toFixed(2)}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>{isOverBudget ? "OVER BUDGET" : "REMAINING"}</div>
-                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#ff6b6b" : "#4a7c59" }}>{budget > 0 ? `$${Math.abs(budget - totalSpent).toFixed(2)}` : "—"}</div>
+                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#c0392b" : "#4a7c59" }}>{budget > 0 ? `$${Math.abs(budget - totalSpent).toFixed(2)}` : "—"}</div>
                 </div>
               </div>
               {budget > 0 && (
                 <div style={{ marginTop: "1rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "#c8b89a", marginBottom: "4px" }}>
-                    <span>{Math.round((totalSpent / budget) * 100)}% spent</span>
-                    {isOverBudget && <span style={{ color: "#ff6b6b" }}>⚠ Over budget by ${(totalSpent - budget).toFixed(2)}</span>}
+                    <span style={{ color: "#8b7355" }}>{Math.round((totalSpent / budget) * 100)}% spent</span>
+                    {isOverBudget && <span style={{ color: "#c0392b" }}>⚠ Over budget by ${(totalSpent - budget).toFixed(2)}</span>}
                   </div>
-                  <div style={{ height: "6px", background: "#3d2415", borderRadius: "3px" }}>
+                  <div style={{ height: "6px", background: "#f0ebe4", borderRadius: "3px" }}>
                     <div style={{ height: "100%", width: `${Math.min((totalSpent / budget) * 100, 100)}%`, background: isOverBudget ? "#ff6b6b" : totalSpent / budget > 0.8 ? "#b87333" : "#4a7c59", borderRadius: "3px", transition: "width 0.3s" }} />
                   </div>
                 </div>
