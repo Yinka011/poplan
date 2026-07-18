@@ -1,9 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function BrandSetup() {
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -36,7 +39,7 @@ export default function BrandSetup() {
       setLoading(false);
       return;
     }
-    window.location.href = "/brand/portal";
+    window.location.href = next === "onboarding" ? "/onboarding" : "/brand/portal";
   };
 
   return (
