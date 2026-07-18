@@ -44,6 +44,7 @@ export default function EventsPage() {
   const [plannerEvents, setPlannerEvents] = useState<PlannerEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [inviting, setInviting] = useState<number | null>(null);
   const [addingType, setAddingType] = useState<"my_event" | "planner_event">("my_event");
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
@@ -133,6 +134,20 @@ export default function EventsPage() {
     if (!confirm("Remove this event?")) return;
     await supabase.from("events").delete().eq("id", id);
     setMyEvents(prev => prev.filter(e => e.id !== id));
+  };
+
+  const invitePlannerBrand = async (email: string, id: number) => {
+    if (!email.trim()) { alert("No email on file for this brand. Edit the card to add one."); return; }
+    setInviting(id);
+    const res = await fetch("/api/invite-organizer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (data.error) { alert("Error: " + data.error); }
+    else { alert("Invite sent to " + email); }
+    setInviting(null);
   };
 
   const deletePlannerEvent = async (id: number) => {
