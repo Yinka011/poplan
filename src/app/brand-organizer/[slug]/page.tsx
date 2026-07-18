@@ -293,8 +293,8 @@ export default function BrandCityDashboard() {
 
       <div style={{ padding: "2rem 2.5rem", maxWidth: "1000px", margin: "0 auto" }}>
 
-        {/* Stats box */}
-        <div style={{ background: "#2c1810", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "#fff" }}>
+        {/* Stats box - only on overview */}
+        {activeTab === "overview" && <div style={{ background: "#2c1810", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "#fff" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1.5rem" }}>
             <div>
               <div style={{ fontSize: "0.65rem", color: "#c8b89a", letterSpacing: "0.1em", marginBottom: "6px" }}>CITY</div>
@@ -316,7 +316,7 @@ export default function BrandCityDashboard() {
               <div style={{ fontSize: "0.7rem", color: "#8b7355", marginTop: "6px" }}>DAYS TO EVENT</div>
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* Overview */}
         {activeTab === "overview" && (
