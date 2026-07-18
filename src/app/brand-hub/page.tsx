@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -124,7 +125,7 @@ export default function BrandHub() {
                         {brand.shipped ? "✓ Shipped" : "Not yet shipped"}
                       </div>
                     </div>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
@@ -135,7 +136,7 @@ export default function BrandHub() {
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
               <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.1em" }}>MY POP-UPS</div>
-              <a href="/brand-organizer" style={{ fontSize: "0.8rem", color: "#b87333", textDecoration: "none" }}>Manage all →</a>
+              <Link href="/brand-organizer" style={{ fontSize: "0.8rem", color: "#b87333", textDecoration: "none" }}>Manage all →</Link>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
               {ownEvents.map(event => {
@@ -152,7 +153,7 @@ export default function BrandHub() {
                       </div>
                       <div style={{ fontSize: "0.82rem", color: "#b87333" }}>{event.dates_label || "Dates TBD"}</div>
                     </div>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
