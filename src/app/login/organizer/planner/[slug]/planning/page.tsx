@@ -219,33 +219,72 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
   const totalRefreshCost = refresh.reduce((s, x) => s + Number(x.cost), 0);
   const totalDecorCost = decor.reduce((s, x) => s + Number(x.cost), 0);
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   const InvoiceSection = ({ itemName, category }: { itemName: string; category: string }) => {
     const itemInvoices = getItemInvoices(itemName);
+    const isActive = addingInvoice?.itemName === itemName;
     return (
       <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
         {itemInvoices.map(inv => (
-          <div key={inv.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0", fontSize: "0.78rem" }}>
-            <span style={{ padding: "1px 6px", borderRadius: "10px", background: inv.status === "approved" ? "#4a7c5922" : inv.status === "rejected" ? "#c0392b22" : "#f0ebe4", color: inv.status === "approved" ? "#4a7c59" : inv.status === "rejected" ? "#c0392b" : "#8b7355", fontSize: "0.68rem" }}>
-              {inv.status === "approved" ? "Approved" : inv.status === "rejected" ? "Rejected" : "Pending"}
-            </span>
-            <span style={{ color: "#2c1810", flex: 1 }}>{inv.description}</span>
-            <span style={{ color: "#b87333" }}>${Number(inv.amount).toFixed(2)}</span>
-            <a href={inv.file_url} target="_blank" rel="noopener noreferrer" style={{ color: "#8b7355", fontSize: "0.72rem", textDecoration: "none", border: "1px solid #e8e0d5", padding: "1px 6px", borderRadius: "4px" }}>View</a>
-            {inv.rejection_note && <span style={{ color: "#c0392b", fontSize: "0.68rem" }}>Note: {inv.rejection_note}</span>}
+          <div key={inv.id} style={{ background: "#faf8f5", borderRadius: "8px", padding: "8px 10px", marginBottom: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: inv.rejection_note ? "4px" : "0" }}>
+              <span style={{ padding: "1px 6px", borderRadius: "10px", background: inv.status === "approved" ? "#4a7c5922" : inv.status === "rejected" ? "#c0392b22" : "#f0ebe4", color: inv.status === "approved" ? "#4a7c59" : inv.status === "rejected" ? "#c0392b" : "#8b7355", fontSize: "0.68rem", flexShrink: 0 }}>
+                {inv.status === "approved" ? "Approved" : inv.status === "rejected" ? "Rejected" : "Pending approval"}
+              </span>
+              <span style={{ color: "#2c1810", flex: 1, fontSize: "0.82rem" }}>{inv.description}</span>
+              <span style={{ color: "#b87333", fontWeight: 500, fontSize: "0.85rem" }}>${Number(inv.amount).toFixed(2)}</span>
+              <a href={inv.file_url} download target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "0.72rem", textDecoration: "none", background: "#2c1810", padding: "3px 8px", borderRadius: "4px" }}>↓</a>
+            </div>
+            {inv.rejection_note && <div style={{ fontSize: "0.72rem", color: "#c0392b", marginTop: "4px" }}>Rejected: {inv.rejection_note}</div>}
           </div>
         ))}
-        {addingInvoice?.itemName === itemName ? (
-          <div style={{ marginTop: "6px", background: "#faf8f5", borderRadius: "8px", padding: "8px", border: "1px solid #f0ebe4" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "6px", marginBottom: "6px" }}>
-              <input placeholder="Description e.g. Venue deposit" value={newInvoice.description} onChange={e => setNewInvoice({...newInvoice, description: e.target.value})} style={editInp({ width: "100%" })} />
-              <input placeholder="Amount $" value={newInvoice.amount} onChange={e => setNewInvoice({...newInvoice, amount: e.target.value})} style={editInp()} />
+
+        {isActive ? (
+          <div style={{ marginTop: "8px", background: "#faf8f5", borderRadius: "10px", padding: "1rem", border: "1px solid #e8e0d5" }}>
+            <div style={{ fontSize: "0.8rem", color: "#2c1810", marginBottom: "10px", fontWeight: 500 }}>Add invoice for {itemName}</div>
+            <input
+              placeholder="Description e.g. Venue deposit invoice"
+              value={newInvoice.description}
+              onChange={e => setNewInvoice({...newInvoice, description: e.target.value})}
+              style={{ width: "100%", padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }}
+            />
+            <input
+              placeholder="Amount e.g. 5250"
+              value={newInvoice.amount}
+              onChange={e => setNewInvoice({...newInvoice, amount: e.target.value})}
+              style={{ width: "100%", padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }}
+            />
+            <div
+              onClick={() => document.getElementById(`file-upload-${itemName.replace(/\s/g, "-")}`)?.click()}
+              style={{ border: "2px dashed #e8e0d5", borderRadius: "8px", padding: "12px", textAlign: "center" as const, cursor: "pointer", marginBottom: "8px", background: selectedFile ? "#f0faf0" : "#fff" }}
+            >
+              <input
+                id={`file-upload-${itemName.replace(/\s/g, "-")}`}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                style={{ display: "none" }}
+                onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+              />
+              {selectedFile ? (
+                <div style={{ fontSize: "0.82rem", color: "#4a7c59" }}>✓ {selectedFile.name}</div>
+              ) : (
+                <div style={{ fontSize: "0.82rem", color: "#8b7355" }}>Click to select invoice file (PDF or image)</div>
+              )}
             </div>
-            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => e.target.files?.[0] && uploadInvoice(e.target.files[0])} style={{ fontSize: "0.78rem", color: "#8b7355" }} disabled={uploadingInvoice || !newInvoice.description.trim()} />
-            {uploadingInvoice && <div style={{ fontSize: "0.75rem", color: "#b87333", marginTop: "4px" }}>Uploading...</div>}
-            <button onClick={() => setAddingInvoice(null)} style={{ marginTop: "6px", fontSize: "0.75rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer" }}>Cancel</button>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => { if (selectedFile) { uploadInvoice(selectedFile); setSelectedFile(null); } }}
+                disabled={uploadingInvoice || !newInvoice.description.trim() || !selectedFile}
+                style={{ padding: "8px 16px", background: selectedFile && newInvoice.description ? "#2c1810" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: selectedFile && newInvoice.description ? "pointer" : "not-allowed", fontFamily: "Georgia, serif" }}
+              >
+                {uploadingInvoice ? "Uploading..." : "Upload invoice"}
+              </button>
+              <button onClick={() => { setAddingInvoice(null); setSelectedFile(null); setNewInvoice({ description: "", amount: "" }); }} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+            </div>
           </div>
         ) : (
-          <button onClick={() => { setAddingInvoice({ type: "invoice", itemName, category }); setNewInvoice({ description: "", amount: "" }); }} style={{ marginTop: "4px", fontSize: "0.72rem", padding: "2px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>+ Add invoice</button>
+          <button onClick={() => { setAddingInvoice({ type: "invoice", itemName, category }); setNewInvoice({ description: "", amount: "" }); setSelectedFile(null); }} style={{ marginTop: "6px", fontSize: "0.78rem", padding: "4px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355", fontFamily: "Georgia, serif" }}>+ Add invoice</button>
         )}
       </div>
     );
