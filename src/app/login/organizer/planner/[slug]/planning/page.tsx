@@ -43,8 +43,9 @@ function calcHours(start: string, end: string): number {
   return diff > 0 ? Math.round(diff * 10) / 10 : 0;
 }
 
-export default function PlanningHub({ params }: { params: { slug: string } }) {
-  const eventSlug = params?.slug || "atlanta";
+export default function PlanningHub({ params }: { params: Promise<{ slug: string }> }) {
+  const [eventSlug, setEventSlug] = useState("atlanta");
+  useEffect(() => { params.then(p => setEventSlug(p.slug)); }, [params]);
   const [tab, setTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
