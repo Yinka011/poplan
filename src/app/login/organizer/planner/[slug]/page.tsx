@@ -121,21 +121,23 @@ export default function PlannerDashboard() {
 
   const addMyTask = async () => {
     if (!newMyTask.task.trim()) return;
-    const { data } = await supabase.from("planner_tasks").insert({
+    const { data, error } = await supabase.from("planner_tasks").insert({
       event_slug: slug, planner_email: userEmail, brand_email: plannerEvent?.brand_email || "",
-      task: newMyTask.task, due_date: newMyTask.due_date, completed: false, owner: "planner"
+      task: newMyTask.task, due_date: newMyTask.due_date || null, completed: false, owner: "planner"
     }).select().single();
+    if (error) { console.error("Task error:", error); alert("Error saving task: " + error.message); return; }
     if (data) setMyTasks(prev => [...prev, data]);
     setNewMyTask({ task: "", due_date: "" });
   };
 
   const addBrandTask = async () => {
     if (!newBrandTask.task.trim()) return;
-    const { data } = await supabase.from("planner_tasks").insert({
+    const { data, error } = await supabase.from("planner_tasks").insert({
       event_slug: slug, planner_email: userEmail, brand_email: plannerEvent?.brand_email || "",
-      task: newBrandTask.task, due_date: newBrandTask.due_date, completed: false, owner: "brand",
-      assigned_to: newBrandTask.assigned_to,
+      task: newBrandTask.task, due_date: newBrandTask.due_date || null, completed: false, owner: "brand",
+      assigned_to: newBrandTask.assigned_to || null,
     }).select().single();
+    if (error) { console.error("Brand task error:", error); alert("Error saving task: " + error.message); return; }
     if (data) setBrandTasks(prev => [...prev, data]);
     setNewBrandTask({ task: "", due_date: "", assigned_to: "" });
   };
