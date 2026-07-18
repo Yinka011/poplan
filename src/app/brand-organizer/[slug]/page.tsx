@@ -69,7 +69,7 @@ export default function BrandCityDashboard() {
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
   const [staff, setStaff] = useState<StaffItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "tasks" | "shipments" | "chat">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "tasks" | "shipments" | "chat">("overview");
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -80,6 +80,10 @@ export default function BrandCityDashboard() {
   const [rejecting, setRejecting] = useState<number | null>(null);
   const [rejectionNote, setRejectionNote] = useState("");
   const [newMyTask, setNewMyTask] = useState({ task: "", due_date: "" });
+  const [budget, setBudget] = useState(0);
+  const [editingBudget, setEditingBudget] = useState(false);
+  const [newBudget, setNewBudget] = useState("");
+  const [expenses, setExpenses] = useState<{id: number; category: string; item: string; cost: number; deposit: number;}[]>([]);
 
   useEffect(() => { if (slug) fetchAll(); }, [slug]);
 
@@ -91,7 +95,7 @@ export default function BrandCityDashboard() {
     const { data: profile } = await supabase.from("profiles").select("name").eq("email", user.email).single();
     if (profile?.name) setUserName(profile.name);
 
-    const [plannerRes, assignedTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes] = await Promise.all([
+    const [plannerRes, assignedTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes] = await Promise.all([
       supabase.from("event_planners").select("*").eq("event_slug", slug).maybeSingle(),
       supabase.from("planner_tasks").select("*").eq("event_slug", slug).eq("owner", "brand").order("created_at"),
       supabase.from("planner_messages").select("*").eq("event_slug", slug).order("created_at"),
@@ -103,11 +107,16 @@ export default function BrandCityDashboard() {
       supabase.from("planning_staff_shifts").select("*").eq("event", slug),
     ]);
 
-    if (plannerRes.data) setPlanner(plannerRes.data);
+    if (plannerRes.data) {
+      setPlanner(plannerRes.data);
+      setBudget(Number(plannerRes.data.budget) || 0);
+      setNewBudget(String(plannerRes.data.budget || ""));
+    }
     if (assignedTasksRes.data) setAssignedTasks(assignedTasksRes.data);
     if (messagesRes.data) setMessages(messagesRes.data);
     if (invoicesRes.data) setInvoices(invoicesRes.data);
     if (shipmentsRes.data) setShipments(shipmentsRes.data);
+    if (expensesRes.data) setExpenses(expensesRes.data);
     if (decorRes.data) setDecor(decorRes.data);
     if (refreshRes.data) setRefresh(refreshRes.data);
     if (staffRes.data && shiftsRes.data) {
@@ -132,6 +141,13 @@ export default function BrandCityDashboard() {
     }).select().single();
     if (data) setMyTasks(prev => [...prev, data]);
     setNewMyTask({ task: "", due_date: "" });
+  };
+
+  const saveBudget = async () => {
+    const val = parseFloat(newBudget) || 0;
+    await supabase.from("event_planners").update({ budget: val }).eq("event_slug", slug);
+    setBudget(val);
+    setEditingBudget(false);
   };
 
   const sendMessage = async () => {
@@ -178,6 +194,9 @@ export default function BrandCityDashboard() {
     return s + hrs * Number(m.pay_rate);
   }, 0);
 
+  const totalManualExpenses = expenses.reduce((s, e) => s + Number(e.cost), 0);
+  const totalSpent = totalDecor + totalRefresh + totalStaff + totalManualExpenses;
+  const isOverBudget = budget > 0 && totalSpent > budget;
   const pendingInvoices = invoices.filter(i => i.status === "pending").length;
   const assignedCompleted = assignedTasks.filter(t => t.completed).length;
   const myCompleted = myTasks.filter(t => t.completed).length;
@@ -223,6 +242,7 @@ export default function BrandCityDashboard() {
   const tabs = [
     { key: "overview", label: "Overview" },
     { key: "planning", label: "Planning Hub" },
+    { key: "budget", label: "Budget" },
     { key: "tasks", label: "Tasks" },
     { key: "shipments", label: "Shipments" },
     { key: "chat", label: "Chat" },
@@ -411,6 +431,104 @@ export default function BrandCityDashboard() {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Budget */}
+        {activeTab === "budget" && (
+          <div>
+            {/* Budget header */}
+            <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <div style={{ fontSize: "0.75rem", color: "#c8b89a", letterSpacing: "0.1em" }}>YOUR BUDGET FOR {cityName.toUpperCase()}</div>
+                {editingBudget ? (
+                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                    <input value={newBudget} onChange={e => setNewBudget(e.target.value)} placeholder="Enter budget" style={{ padding: "4px 8px", borderRadius: "6px", border: "none", fontSize: "0.85rem", width: "120px", fontFamily: "Georgia, serif" }} autoFocus />
+                    <button onClick={saveBudget} style={{ padding: "4px 10px", background: "#b87333", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
+                    <button onClick={() => setEditingBudget(false)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #c8b89a44", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer", color: "#c8b89a" }}>Cancel</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setEditingBudget(true)} style={{ fontSize: "0.75rem", padding: "3px 10px", background: "transparent", border: "1px solid #c8b89a44", borderRadius: "6px", cursor: "pointer", color: "#c8b89a" }}>
+                    {budget > 0 ? "Edit budget" : "Set budget"}
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>BUDGET</div>
+                  <div style={{ fontSize: "1.5rem", color: budget > 0 ? "#e8c97a" : "#8b7355" }}>{budget > 0 ? `$${budget.toFixed(2)}` : "Not set"}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>SPENT</div>
+                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#ff6b6b" : "#fff" }}>${totalSpent.toFixed(2)}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>{isOverBudget ? "OVER BUDGET" : "REMAINING"}</div>
+                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#ff6b6b" : "#4a7c59" }}>{budget > 0 ? `$${Math.abs(budget - totalSpent).toFixed(2)}` : "—"}</div>
+                </div>
+              </div>
+              {budget > 0 && (
+                <div style={{ marginTop: "1rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "#c8b89a", marginBottom: "4px" }}>
+                    <span>{Math.round((totalSpent / budget) * 100)}% spent</span>
+                    {isOverBudget && <span style={{ color: "#ff6b6b" }}>⚠ Over budget by ${(totalSpent - budget).toFixed(2)}</span>}
+                  </div>
+                  <div style={{ height: "6px", background: "#3d2415", borderRadius: "3px" }}>
+                    <div style={{ height: "100%", width: `${Math.min((totalSpent / budget) * 100, 100)}%`, background: isOverBudget ? "#ff6b6b" : totalSpent / budget > 0.8 ? "#b87333" : "#4a7c59", borderRadius: "3px", transition: "width 0.3s" }} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {isOverBudget && (
+              <div style={{ background: "#ff6b6b22", border: "1px solid #ff6b6b44", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "1.2rem" }}>⚠️</span>
+                <div>
+                  <div style={{ fontSize: "0.9rem", color: "#c0392b", fontWeight: 500 }}>You are over budget</div>
+                  <div style={{ fontSize: "0.82rem", color: "#8b7355" }}>Total spending of ${totalSpent.toFixed(2)} exceeds your budget of ${budget.toFixed(2)} by ${(totalSpent - budget).toFixed(2)}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Breakdown */}
+            {[
+              { label: "Decor", items: decor.map(d => ({ name: d.item, cost: d.cost })), total: totalDecor, color: "#b87333" },
+              { label: "Refreshments", items: refresh.map(r => ({ name: r.item, cost: r.cost })), total: totalRefresh, color: "#4a7c59" },
+              { label: "Staffing", items: staff.map(s => ({ name: s.name, cost: (s.shifts || []).reduce((h, sh) => h + Number(sh.hours), 0) * Number(s.pay_rate) })), total: totalStaff, color: "#5b7fa6" },
+            ].map(section => (
+              <div key={section.label} style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: section.color }} />
+                    <span style={{ fontSize: "0.85rem", color: "#2c1810", fontWeight: 500 }}>{section.label}</span>
+                  </div>
+                  <span style={{ fontSize: "0.95rem", color: section.color, fontWeight: 500 }}>${section.total.toFixed(2)}</span>
+                </div>
+                {section.items.filter(i => i.cost > 0).map((item, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #f8f5f0", fontSize: "0.82rem" }}>
+                    <span style={{ color: "#8b7355" }}>{item.name}</span>
+                    <span style={{ color: section.color }}>${Number(item.cost).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+
+            {expenses.length > 0 && (
+              <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
+                <div style={{ fontSize: "0.85rem", color: "#2c1810", fontWeight: 500, marginBottom: "0.75rem" }}>Other Expenses</div>
+                {expenses.map((exp, i) => (
+                  <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: i < expenses.length - 1 ? "1px solid #f8f5f0" : "none", fontSize: "0.82rem" }}>
+                    <span style={{ color: "#8b7355" }}>{exp.category} — {exp.item}</span>
+                    <span style={{ color: "#b87333" }}>${Number(exp.cost).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1rem 1.25rem", display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: "#c8b89a", fontSize: "0.85rem" }}>GRAND TOTAL</span>
+              <span style={{ color: "#fff", fontSize: "1.1rem" }}>${totalSpent.toFixed(2)}</span>
+            </div>
           </div>
         )}
 
