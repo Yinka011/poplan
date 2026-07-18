@@ -58,7 +58,7 @@ export default function PlannerDashboard() {
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
   const [staff, setStaff] = useState<StaffItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "expenses" | "mytasks" | "brandtasks" | "chat" | "receipts">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "mytasks" | "brandtasks" | "chat" | "receipts">("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [userEmail, setUserEmail] = useState("");
@@ -67,6 +67,9 @@ export default function PlannerDashboard() {
   const [newBrandTask, setNewBrandTask] = useState({ task: "", due_date: "" });
   const [newMessage, setNewMessage] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [manualExpenses, setManualExpenses] = useState<{id: number; category: string; item: string; cost: number; deposit: number;}[]>([]);
+  const [addingExpense, setAddingExpense] = useState<string | null>(null);
+  const [newExpense, setNewExpense] = useState({ item: "", cost: "", deposit: "" });
   const [newReceipt, setNewReceipt] = useState({ description: "", amount: "" });
 
   useEffect(() => {
@@ -98,6 +101,9 @@ export default function PlannerDashboard() {
     if (brandTasksRes.data) setBrandTasks(brandTasksRes.data);
     if (messagesRes.data) setMessages(messagesRes.data);
     if (receiptsRes.data) setReceipts(receiptsRes.data);
+
+    const { data: expData } = await supabase.from("expenses").select("*").eq("event", slug).order("category");
+    if (expData) setManualExpenses(expData);
     if (decorRes.data) setDecor(decorRes.data);
     if (refreshRes.data) setRefresh(refreshRes.data);
     if (staffRes.data && shiftsRes.data) {
@@ -198,7 +204,7 @@ export default function PlannerDashboard() {
   const tabs = [
     { key: "overview", label: "Overview" },
     { key: "planning", label: "Planning Hub" },
-    { key: "expenses", label: "Expenses" },
+    { key: "budget", label: "Budget" },
     { key: "mytasks", label: "My Tasks" },
     { key: "brandtasks", label: `${plannerEvent?.brand_name || "Brand"} Tasks` },
     { key: "chat", label: "Chat" },
@@ -226,7 +232,7 @@ export default function PlannerDashboard() {
         </div>
         <nav style={{ flex: 1, padding: "1rem 0" }}>
           {tabs.map(tab => (
-            <a key={tab.key} onClick={() => { setActiveTab(tab.key as "overview" | "planning" | "expenses" | "mytasks" | "brandtasks" | "chat" | "receipts"); setSidebarOpen(false); }} style={{ display: "block", padding: "10px 1.25rem", fontSize: "0.85rem", color: activeTab === tab.key ? "#fff" : "#c8b89a", background: activeTab === tab.key ? "#3d2415" : "transparent", textDecoration: "none", borderLeft: activeTab === tab.key ? "2px solid #b87333" : "2px solid transparent", cursor: "pointer" }}>
+            <a key={tab.key} onClick={() => { setActiveTab(tab.key as "overview" | "planning" | "budget" | "mytasks" | "brandtasks" | "chat" | "receipts"); setSidebarOpen(false); }} style={{ display: "block", padding: "10px 1.25rem", fontSize: "0.85rem", color: activeTab === tab.key ? "#fff" : "#c8b89a", background: activeTab === tab.key ? "#3d2415" : "transparent", textDecoration: "none", borderLeft: activeTab === tab.key ? "2px solid #b87333" : "2px solid transparent", cursor: "pointer" }}>
               {tab.label}
             </a>
           ))}
@@ -327,24 +333,83 @@ export default function PlannerDashboard() {
           </div>
         )}
 
-                {/* Expenses */}
-        {activeTab === "expenses" && (
-          <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-            <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1.25rem" }}>Expenses from Planning Hub</div>
-            {[{ label: "Decor", value: totalDecor, color: "#b87333" }, { label: "Refreshments", value: totalRefresh, color: "#4a7c59" }, { label: "Staffing", value: totalStaff, color: "#5b7fa6" }].map((item, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", borderRadius: "8px", background: "#faf8f5", marginBottom: "8px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: item.color }} />
-                  <span style={{ fontSize: "0.9rem", color: "#2c1810" }}>{item.label}</span>
+                {/* Budget */}
+        {activeTab === "budget" && (
+          <div>
+            {/* Grand total bar */}
+            <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: "0.75rem", color: "#c8b89a", letterSpacing: "0.1em" }}>GRAND TOTAL</div>
+              <div style={{ fontSize: "1.5rem", color: "#fff" }}>${(totalExpenses + manualExpenses.reduce((s, e) => s + Number(e.cost), 0)).toFixed(2)}</div>
+            </div>
+
+            {/* Manual expense categories */}
+            {["Venue", "Content", "Marketing", "Operations", "Logistics"].map(cat => {
+              const items = manualExpenses.filter(e => e.category === cat);
+              const catTotal = items.reduce((s, e) => s + Number(e.cost), 0);
+              return (
+                <div key={cat} style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                    <div style={{ fontSize: "0.85rem", color: "#2c1810", fontWeight: 500 }}>{cat}</div>
+                    {catTotal > 0 && <div style={{ fontSize: "0.95rem", color: "#b87333", fontWeight: 500 }}>${catTotal.toFixed(2)}</div>}
+                  </div>
+                  {items.map(exp => (
+                    <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f0ebe4", fontSize: "0.85rem" }}>
+                      <span style={{ color: "#2c1810" }}>{exp.item}</span>
+                      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                        {exp.deposit > 0 && <span style={{ fontSize: "0.75rem", color: "#4a7c59" }}>Deposit: ${Number(exp.deposit).toFixed(2)}</span>}
+                        <span style={{ color: "#b87333", fontWeight: 500 }}>${Number(exp.cost).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {addingExpense === cat ? (
+                    <div style={{ marginTop: "8px", display: "flex", gap: "8px", flexWrap: "wrap" as const }}>
+                      <input placeholder="Item description" defaultValue="" onBlur={e => setNewExpense(prev => ({...prev, item: e.target.value}))} style={{ flex: 1, padding: "6px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif", minWidth: "150px" }} />
+                      <input placeholder="Cost $" defaultValue="" onBlur={e => setNewExpense(prev => ({...prev, cost: e.target.value}))} style={{ width: "80px", padding: "6px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+                      <input placeholder="Deposit $" defaultValue="" onBlur={e => setNewExpense(prev => ({...prev, deposit: e.target.value}))} style={{ width: "80px", padding: "6px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+                      <button onClick={async () => {
+                        if (!newExpense.item.trim()) return;
+                        const cost = parseFloat(newExpense.cost) || 0;
+                        const deposit = parseFloat(newExpense.deposit) || 0;
+                        const { data } = await supabase.from("expenses").insert({ event: slug, category: cat, item: newExpense.item, cost, deposit, balance: cost - deposit, notes: "" }).select().single();
+                        if (data) setManualExpenses(prev => [...prev, data]);
+                        setNewExpense({ item: "", cost: "", deposit: "" });
+                        setAddingExpense(null);
+                      }} style={{ padding: "6px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer" }}>Save</button>
+                      <button onClick={() => setAddingExpense(null)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => { setAddingExpense(cat); setNewExpense({ item: "", cost: "", deposit: "" }); }} style={{ marginTop: "8px", fontSize: "0.78rem", padding: "4px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>+ Add {cat.toLowerCase()} expense</button>
+                  )}
                 </div>
-                <span style={{ fontSize: "1rem", color: item.color, fontWeight: 500 }}>${item.value.toFixed(2)}</span>
+              );
+            })}
+
+            {/* Planning Hub sections */}
+            {[
+              { label: "Decor", items: decor.map(d => ({ name: d.item, cost: d.cost, detail: d.category })), total: totalDecor, color: "#b87333" },
+              { label: "Refreshments", items: refresh.map(r => ({ name: r.item, cost: r.cost, detail: r.quantity })), total: totalRefresh, color: "#4a7c59" },
+              { label: "Staffing", items: staff.map(s => ({ name: s.name, cost: (s.shifts || []).reduce((h, sh) => h + Number(sh.hours), 0) * Number(s.pay_rate), detail: s.notes })), total: totalStaff, color: "#5b7fa6" },
+            ].map(section => (
+              <div key={section.label} style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: section.color }} />
+                    <div style={{ fontSize: "0.85rem", color: "#2c1810", fontWeight: 500 }}>{section.label}</div>
+                    <span style={{ fontSize: "0.7rem", color: "#8b7355", background: "#f0ebe4", padding: "1px 6px", borderRadius: "10px" }}>From Planning Hub</span>
+                  </div>
+                  <div style={{ fontSize: "0.95rem", color: section.color, fontWeight: 500 }}>${section.total.toFixed(2)}</div>
+                </div>
+                {section.items.filter(i => i.cost > 0).map((item, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f8f5f0", fontSize: "0.82rem" }}>
+                    <div>
+                      <span style={{ color: "#2c1810" }}>{item.name}</span>
+                      {item.detail && <span style={{ color: "#8b7355", fontSize: "0.72rem", marginLeft: "6px" }}>{item.detail}</span>}
+                    </div>
+                    <span style={{ color: section.color }}>${Number(item.cost).toFixed(2)}</span>
+                  </div>
+                ))}
               </div>
             ))}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 12px", borderTop: "2px solid #2c1810", marginTop: "8px" }}>
-              <span style={{ fontSize: "1rem", color: "#2c1810", fontWeight: 500 }}>Grand Total</span>
-              <span style={{ fontSize: "1.2rem", color: "#2c1810", fontWeight: 500 }}>${totalExpenses.toFixed(2)}</span>
-            </div>
-            <Link href={`/login/organizer/planner/${slug}/expenses`} style={{ display: "inline-block", marginTop: "1rem", padding: "8px 16px", background: "transparent", color: "#2c1810", border: "1px solid #e8e0d5", borderRadius: "8px", textDecoration: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>View full expenses →</Link>
           </div>
         )}
 
