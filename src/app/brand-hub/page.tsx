@@ -98,7 +98,7 @@ export default function BrandHub() {
               {attending.map(brand => {
                 const statusStyle = STATUS_COLORS[brand.status] || STATUS_COLORS.Partial;
                 return (
-                  <a key={brand.id} href="/brand/portal" style={{ textDecoration: "none" }}>
+                  <Link key={brand.id} href="/brand/portal" style={{ textDecoration: "none" }}>
                     <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5", cursor: "pointer" }} onMouseEnter={e => (e.currentTarget.style.borderColor = "#b87333")} onMouseLeave={e => (e.currentTarget.style.borderColor = "#e8e0d5")}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
                         <div>
