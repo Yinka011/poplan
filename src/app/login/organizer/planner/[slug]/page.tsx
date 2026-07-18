@@ -320,14 +320,14 @@ export default function PlannerDashboard() {
 
         {/* Planning Hub */}
         {activeTab === "planning" && (
-          <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-            <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>Planning Hub</div>
-            <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1rem" }}>Use the full Planning Hub for this event. All costs auto-populate to the Expenses tab and Wanni&apos;s portal.</p>
-            <Link href={`/login/organizer/planner/${slug}/planning`} style={{ display: "inline-block", padding: "10px 20px", background: "#2c1810", color: "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>Open Planning Hub →</Link>
+          <div style={{ background: "#fff", borderRadius: "12px", padding: "2rem", border: "1px solid #e8e0d5", textAlign: "center" as const }}>
+            <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>Planning Hub</div>
+            <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.5rem" }}>Manage decor, refreshments and staffing for this event.</p>
+            <a href={`/login/organizer/planner/${slug}/planning`} style={{ display: "inline-block", padding: "10px 24px", background: "#2c1810", color: "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>Open Planning Hub →</a>
           </div>
         )}
 
-        {/* Expenses */}
+                {/* Expenses */}
         {activeTab === "expenses" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
             <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1.25rem" }}>Expenses from Planning Hub</div>

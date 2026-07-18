@@ -44,8 +44,11 @@ function calcHours(start: string, end: string): number {
 }
 
 export default function PlanningHub({ params }: { params: Promise<{ slug: string }> }) {
-  const [eventSlug, setEventSlug] = useState("atlanta");
-  useEffect(() => { params.then(p => setEventSlug(p.slug)); }, [params]);
+  const [eventSlug, setEventSlug] = useState("");
+
+  useEffect(() => {
+    params.then(p => setEventSlug(p.slug));
+  }, [params]);
   const [tab, setTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
@@ -59,7 +62,7 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
   const [newRefresh, setNewRefresh] = useState({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
   const [newStaff, setNewStaff] = useState({ name: "", role: "Cashier", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { if (eventSlug) fetchAll(); }, [eventSlug]);
 
   const fetchAll = async () => {
     const [d, r, s, sh] = await Promise.all([
@@ -85,7 +88,7 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
     const unitCost = parseFloat(newDecor.cost) || 0;
     const totalCost = qty > 0 ? qty * unitCost : unitCost;
     const { data } = await supabase.from("planning_decor").insert({
-      ...newDecor, cost: totalCost, quantity: qty, event: "Atlanta"
+      ...newDecor, cost: totalCost, quantity: qty, event: eventSlug
     }).select().single();
     if (data) setDecor(prev => [...prev, data]);
     setNewDecor({ category: "Theme", item: "", decision: "", vendor: "", cost: "", quantity: "", status: "Pending", notes: "" });
@@ -104,7 +107,7 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
       quantity_num: qty,
       cost: totalCost,
       notes: newRefresh.notes,
-      event: "Atlanta"
+      event: eventSlug
     }).select().single();
     if (data) setRefresh(prev => [...prev, data]);
     setNewRefresh({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
@@ -121,7 +124,7 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
       email: newStaff.email,
       instagram: newStaff.instagram,
       notes: newStaff.notes,
-      event: "Atlanta"
+      event: eventSlug
     }).select().single();
     if (data) setStaff(prev => [...prev, { ...data, shifts: [] }]);
     setNewStaff({ name: "", role: "Cashier", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
@@ -133,7 +136,7 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
     const hours = calcHours(newShift.start_time, newShift.end_time);
     const { data } = await supabase.from("planning_staff_shifts").insert({
       staff_id: staffId,
-      event: "Atlanta",
+      event: eventSlug,
       shift_date: newShift.shift_date,
       start_time: newShift.start_time,
       end_time: newShift.end_time,
@@ -197,7 +200,7 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
         <div style={{ marginBottom: "1.5rem" }}>
           <Link href={`/login/organizer/planner/${eventSlug}`} style={{ fontSize: "0.85rem", color: "#8b7355", textDecoration: "none" }}>← Back to planner</Link>
           <h1 style={{ fontSize: "1.8rem", color: "#2c1810", fontWeight: "normal", marginTop: "0.5rem" }}>Planning Hub</h1>
-          <p style={{ color: "#8b7355", fontSize: "0.9rem" }}>Decor, refreshments and staffing for Atlanta</p>
+          <p style={{ color: "#8b7355", fontSize: "0.9rem" }}>Decor, refreshments and staffing for this event</p>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "12px", marginBottom: "1.5rem" }}>
