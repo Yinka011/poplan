@@ -297,7 +297,14 @@ export default function EventsPage() {
                     </div>
                     <button onClick={() => deletePlannerEvent(pe.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "12px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                   </div>
-                  <Link href={`/login/organizer/planner/${pe.event_slug}`} style={{ fontSize: "0.78rem", color: "#b87333", textDecoration: "none" }}>Open planning dashboard →</Link>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" as const }}>
+                    <Link href={`/login/organizer/planner/${pe.event_slug}`} style={{ fontSize: "0.78rem", color: "#b87333", textDecoration: "none" }}>Open planning dashboard →</Link>
+                    {pe.brand_email && (
+                      <button onClick={() => invitePlannerBrand(pe.brand_email, pe.id)} disabled={inviting === pe.id} style={{ fontSize: "0.72rem", padding: "3px 10px", background: "transparent", border: "1px solid #b87333", borderRadius: "6px", cursor: "pointer", color: "#b87333", fontFamily: "Georgia, serif" }}>
+                        {inviting === pe.id ? "Sending..." : "✉ Invite brand"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
