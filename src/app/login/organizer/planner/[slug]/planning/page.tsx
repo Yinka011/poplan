@@ -8,6 +8,7 @@ type DecorItem = { id: number; category: string; item: string; decision: string;
 type RefreshItem = { id: number; item: string; vendor: string; quantity: string; quantity_num: number; cost: number; notes: string; };
 type StaffItem = { id: number; name: string; role: string; hours: string; pay_rate: number; phone: string; email: string; instagram: string; notes: string; shifts?: StaffShift[]; };
 type StaffShift = { id: number; staff_id: number; shift_date: string; start_time: string; end_time: string; hours: number; };
+type Invoice = { id: number; item_name: string; item_category: string; description: string; amount: number; file_url: string; file_name: string; status: string; rejection_note: string; receipt_url: string; receipt_name: string; };
 
 const DECOR_CATEGORIES = ["Theme", "Furniture", "Florals", "Lighting", "Signage", "Props"];
 const STAFF_ROLES = ["Cashier", "Stylist", "Runner", "Check-in", "Security", "Inventory", "Brand liaison", "Photographer"];
@@ -43,16 +44,13 @@ function calcHours(start: string, end: string): number {
   return diff > 0 ? Math.round(diff * 10) / 10 : 0;
 }
 
-export default function PlanningHub({ params }: { params: Promise<{ slug: string }> }) {
+export default function PlannerPlanningHub({ params }: { params: Promise<{ slug: string }> }) {
   const [eventSlug, setEventSlug] = useState("");
-
-  useEffect(() => {
-    params.then(p => setEventSlug(p.slug));
-  }, [params]);
   const [tab, setTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
   const [staff, setStaff] = useState<StaffItem[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>({});
@@ -61,15 +59,29 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
   const [newDecor, setNewDecor] = useState({ category: "Theme", item: "", decision: "", vendor: "", cost: "", quantity: "", status: "Pending", notes: "" });
   const [newRefresh, setNewRefresh] = useState({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
   const [newStaff, setNewStaff] = useState({ name: "", role: "Cashier", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
+  const [addingInvoice, setAddingInvoice] = useState<{ type: string; itemName: string; category: string } | null>(null);
+  const [newInvoice, setNewInvoice] = useState({ description: "", amount: "" });
+  const [uploadingInvoice, setUploadingInvoice] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
 
-  useEffect(() => { if (eventSlug) fetchAll(); }, [eventSlug]);
+  useEffect(() => {
+    params.then(p => setEventSlug(p.slug));
+  }, [params]);
+
+  useEffect(() => {
+    if (eventSlug) fetchAll();
+  }, [eventSlug]);
 
   const fetchAll = async () => {
-    const [d, r, s, sh] = await Promise.all([
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) setUserEmail(user.email || "");
+
+    const [d, r, s, sh, inv] = await Promise.all([
       supabase.from("planning_decor").select("*").eq("event", eventSlug).order("category"),
       supabase.from("planning_refreshments").select("*").eq("event", eventSlug),
       supabase.from("planning_staff").select("*").eq("event", eventSlug),
       supabase.from("planning_staff_shifts").select("*").eq("event", eventSlug),
+      supabase.from("item_invoices").select("*").eq("event_slug", eventSlug).order("created_at", { ascending: false }),
     ]);
     if (d.data) setDecor(d.data);
     if (r.data) setRefresh(r.data);
@@ -80,6 +92,7 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
       }));
       setStaff(staffWithShifts);
     }
+    if (inv.data) setInvoices(inv.data);
   };
 
   const addDecor = async () => {
@@ -101,13 +114,8 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
     const unitCost = parseFloat(newRefresh.cost) || 0;
     const totalCost = qty > 0 ? qty * unitCost : unitCost;
     const { data } = await supabase.from("planning_refreshments").insert({
-      item: newRefresh.item,
-      vendor: newRefresh.vendor,
-      quantity: newRefresh.quantity,
-      quantity_num: qty,
-      cost: totalCost,
-      notes: newRefresh.notes,
-      event: eventSlug
+      item: newRefresh.item, vendor: newRefresh.vendor, quantity: newRefresh.quantity,
+      quantity_num: qty, cost: totalCost, notes: newRefresh.notes, event: eventSlug
     }).select().single();
     if (data) setRefresh(prev => [...prev, data]);
     setNewRefresh({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
@@ -117,14 +125,9 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
   const addStaff = async () => {
     if (!newStaff.name.trim()) return;
     const { data } = await supabase.from("planning_staff").insert({
-      name: newStaff.name,
-      role: newStaff.role,
-      pay_rate: parseFloat(newStaff.pay_rate) || 0,
-      phone: newStaff.phone,
-      email: newStaff.email,
-      instagram: newStaff.instagram,
-      notes: newStaff.notes,
-      event: eventSlug
+      name: newStaff.name, role: newStaff.role, pay_rate: parseFloat(newStaff.pay_rate) || 0,
+      phone: newStaff.phone, email: newStaff.email, instagram: newStaff.instagram,
+      notes: newStaff.notes, event: eventSlug
     }).select().single();
     if (data) setStaff(prev => [...prev, { ...data, shifts: [] }]);
     setNewStaff({ name: "", role: "Cashier", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
@@ -135,12 +138,8 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
     if (!newShift.start_time || !newShift.end_time) return;
     const hours = calcHours(newShift.start_time, newShift.end_time);
     const { data } = await supabase.from("planning_staff_shifts").insert({
-      staff_id: staffId,
-      event: eventSlug,
-      shift_date: newShift.shift_date,
-      start_time: newShift.start_time,
-      end_time: newShift.end_time,
-      hours,
+      staff_id: staffId, event: eventSlug, shift_date: newShift.shift_date,
+      start_time: newShift.start_time, end_time: newShift.end_time, hours,
     }).select().single();
     if (data) {
       setStaff(prev => prev.map(m => m.id === staffId ? { ...m, shifts: [...(m.shifts || []), data] } : m));
@@ -183,6 +182,33 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
     if (table === "planning_staff") setStaff(prev => prev.filter(i => i.id !== id));
   };
 
+  const uploadInvoice = async (file: File) => {
+    if (!file || !addingInvoice || !newInvoice.description.trim()) return;
+    setUploadingInvoice(true);
+    const path = `invoices/${eventSlug}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const { error } = await supabase.storage.from("brand-uploads").upload(path, file, { upsert: true });
+    if (!error) {
+      const { data: urlData } = supabase.storage.from("brand-uploads").getPublicUrl(path);
+      const { data } = await supabase.from("item_invoices").insert({
+        event_slug: eventSlug,
+        item_name: addingInvoice.itemName,
+        item_category: addingInvoice.category,
+        description: newInvoice.description,
+        amount: parseFloat(newInvoice.amount) || 0,
+        file_url: urlData.publicUrl,
+        file_name: file.name,
+        status: "pending",
+        uploaded_by: userEmail,
+      }).select().single();
+      if (data) setInvoices(prev => [data, ...prev]);
+    }
+    setNewInvoice({ description: "", amount: "" });
+    setAddingInvoice(null);
+    setUploadingInvoice(false);
+  };
+
+  const getItemInvoices = (itemName: string) => invoices.filter(inv => inv.item_name === itemName);
+
   const inp = (style?: any) => ({ padding: "7px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", ...style });
   const editInp = (style?: any) => ({ padding: "4px 7px", border: "1px solid #b87333", borderRadius: "6px", fontSize: "12px", ...style });
 
@@ -192,6 +218,40 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
   }, 0);
   const totalRefreshCost = refresh.reduce((s, x) => s + Number(x.cost), 0);
   const totalDecorCost = decor.reduce((s, x) => s + Number(x.cost), 0);
+
+  const InvoiceSection = ({ itemName, category }: { itemName: string; category: string }) => {
+    const itemInvoices = getItemInvoices(itemName);
+    return (
+      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
+        {itemInvoices.map(inv => (
+          <div key={inv.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0", fontSize: "0.78rem" }}>
+            <span style={{ padding: "1px 6px", borderRadius: "10px", background: inv.status === "approved" ? "#4a7c5922" : inv.status === "rejected" ? "#c0392b22" : "#f0ebe4", color: inv.status === "approved" ? "#4a7c59" : inv.status === "rejected" ? "#c0392b" : "#8b7355", fontSize: "0.68rem" }}>
+              {inv.status === "approved" ? "Approved" : inv.status === "rejected" ? "Rejected" : "Pending"}
+            </span>
+            <span style={{ color: "#2c1810", flex: 1 }}>{inv.description}</span>
+            <span style={{ color: "#b87333" }}>${Number(inv.amount).toFixed(2)}</span>
+            <a href={inv.file_url} target="_blank" rel="noopener noreferrer" style={{ color: "#8b7355", fontSize: "0.72rem", textDecoration: "none", border: "1px solid #e8e0d5", padding: "1px 6px", borderRadius: "4px" }}>View</a>
+            {inv.rejection_note && <span style={{ color: "#c0392b", fontSize: "0.68rem" }}>Note: {inv.rejection_note}</span>}
+          </div>
+        ))}
+        {addingInvoice?.itemName === itemName ? (
+          <div style={{ marginTop: "6px", background: "#faf8f5", borderRadius: "8px", padding: "8px", border: "1px solid #f0ebe4" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "6px", marginBottom: "6px" }}>
+              <input placeholder="Description e.g. Venue deposit" value={newInvoice.description} onChange={e => setNewInvoice({...newInvoice, description: e.target.value})} style={editInp({ width: "100%" })} />
+              <input placeholder="Amount $" value={newInvoice.amount} onChange={e => setNewInvoice({...newInvoice, amount: e.target.value})} style={editInp()} />
+            </div>
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => e.target.files?.[0] && uploadInvoice(e.target.files[0])} style={{ fontSize: "0.78rem", color: "#8b7355" }} disabled={uploadingInvoice || !newInvoice.description.trim()} />
+            {uploadingInvoice && <div style={{ fontSize: "0.75rem", color: "#b87333", marginTop: "4px" }}>Uploading...</div>}
+            <button onClick={() => setAddingInvoice(null)} style={{ marginTop: "6px", fontSize: "0.75rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer" }}>Cancel</button>
+          </div>
+        ) : (
+          <button onClick={() => { setAddingInvoice({ type: "invoice", itemName, category }); setNewInvoice({ description: "", amount: "" }); }} style={{ marginTop: "4px", fontSize: "0.72rem", padding: "2px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>+ Add invoice</button>
+        )}
+      </div>
+    );
+  };
+
+  if (!eventSlug) return <div style={{ minHeight: "100vh", background: "#f5f0ea", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#8b7355" }}>Loading...</div>;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
@@ -296,10 +356,11 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
                             {item.vendor && <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Vendor: {item.vendor}</div>}
                             {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#b87333", fontWeight: 500, marginTop: "4px" }}>${Number(item.cost).toFixed(2)}</div>}
                             {item.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", marginTop: "4px", fontStyle: "italic" }}>{item.notes}</div>}
-                            <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
+                            <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
                               <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity > 0 ? (item.cost / item.quantity).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
                               <button onClick={() => deleteItem("planning_decor", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                             </div>
+                            <InvoiceSection itemName={item.item} category={cat} />
                           </div>
                         )}
                       </div>
@@ -334,36 +395,35 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
             <div style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e8e0d5", overflow: "hidden" }}>
               {refresh.length === 0 && <p style={{ padding: "1rem", fontSize: "0.85rem", color: "#8b7355" }}>No refreshments added yet.</p>}
               {refresh.map((item, i) => (
-                <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: i < refresh.length - 1 ? "1px solid #f0ebe4" : "none" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#4a7c59", flexShrink: 0 }} />
+                <div key={item.id} style={{ padding: "12px 16px", borderBottom: i < refresh.length - 1 ? "1px solid #f0ebe4" : "none" }}>
                   {editing === item.id ? (
-                    <div style={{ display: "flex", gap: "6px", flex: 1, flexWrap: "wrap" as const }}>
+                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
                       <input value={editData.item || ""} onChange={e => setEditData({...editData, item: e.target.value})} style={editInp({ width: "120px" })} />
                       <input value={editData.vendor || ""} onChange={e => setEditData({...editData, vendor: e.target.value})} placeholder="Vendor" style={editInp({ width: "100px" })} />
                       <input value={editData.quantity_num || ""} onChange={e => setEditData({...editData, quantity_num: e.target.value})} placeholder="Qty" style={editInp({ width: "50px" })} />
                       <input value={editData.unit_cost || ""} onChange={e => setEditData({...editData, unit_cost: e.target.value})} placeholder="Unit $" style={editInp({ width: "60px" })} />
-                      <div style={{ padding: "4px 7px", background: "#faf8f5", borderRadius: "6px", fontSize: "12px", color: "#4a7c59" }}>
-                        = ${((parseFloat(editData.quantity_num) || 0) * (parseFloat(editData.unit_cost) || 0)).toFixed(2)}
-                      </div>
                       <input value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} placeholder="Notes" style={editInp({ width: "100px" })} />
                       <button onClick={() => saveEdit("planning_refreshments", item.id)} style={{ padding: "3px 8px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
                       <button onClick={() => setEditing(null)} style={{ padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                     </div>
                   ) : (
                     <>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "0.9rem", color: "#2c1810" }}>{item.item}</div>
-                        <div style={{ display: "flex", gap: "12px", marginTop: "2px" }}>
-                          {item.vendor && item.vendor !== "TBD" && <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>Vendor: {item.vendor}</span>}
-                          {item.quantity_num > 0 && <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>Qty: {item.quantity_num}</span>}
-                          {item.cost > 0 && <span style={{ fontSize: "0.85rem", color: "#4a7c59", fontWeight: 500 }}>${Number(item.cost).toFixed(2)}</span>}
-                          {item.notes && <span style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic" }}>{item.notes}</span>}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <div style={{ fontSize: "0.9rem", color: "#2c1810" }}>{item.item}</div>
+                          <div style={{ display: "flex", gap: "12px", marginTop: "2px" }}>
+                            {item.vendor && item.vendor !== "TBD" && <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>Vendor: {item.vendor}</span>}
+                            {item.quantity_num > 0 && <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>Qty: {item.quantity_num}</span>}
+                            {item.cost > 0 && <span style={{ fontSize: "0.85rem", color: "#4a7c59", fontWeight: 500 }}>${Number(item.cost).toFixed(2)}</span>}
+                            {item.notes && <span style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic" }}>{item.notes}</span>}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity_num > 0 ? (item.cost / item.quantity_num).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
+                          <button onClick={() => deleteItem("planning_refreshments", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: "6px" }}>
-                        <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity_num > 0 ? (item.cost / item.quantity_num).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
-                        <button onClick={() => deleteItem("planning_refreshments", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
-                      </div>
+                      <InvoiceSection itemName={item.item} category="Refreshments" />
                     </>
                   )}
                 </div>
@@ -413,7 +473,6 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
                         {totalHours > 0 && <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>{totalHours}hrs total</div>}
                       </div>
                     </div>
-
                     {editing === member.id ? (
                       <div style={{ display: "flex", flexDirection: "column" as const, gap: "6px" }}>
                         <select value={editData.role || ""} onChange={e => setEditData({...editData, role: e.target.value})} style={editInp({ width: "100%" })}>
@@ -422,7 +481,6 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
                         <input placeholder="Pay rate $/hr" value={editData.pay_rate || ""} onChange={e => setEditData({...editData, pay_rate: e.target.value})} style={editInp({ width: "100%" })} />
                         <input placeholder="Phone" value={editData.phone || ""} onChange={e => setEditData({...editData, phone: e.target.value})} style={editInp({ width: "100%" })} />
                         <input placeholder="Email" value={editData.email || ""} onChange={e => setEditData({...editData, email: e.target.value})} style={editInp({ width: "100%" })} />
-                        <input placeholder="Instagram @" value={editData.instagram || ""} onChange={e => setEditData({...editData, instagram: e.target.value})} style={editInp({ width: "100%" })} />
                         <input placeholder="Notes" value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} style={editInp({ width: "100%" })} />
                         <div style={{ display: "flex", gap: "6px" }}>
                           <button onClick={() => saveEdit("planning_staff", member.id)} style={{ padding: "4px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
@@ -433,9 +491,7 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
                       <div>
                         {member.phone && <div style={{ fontSize: "0.78rem", color: "#8b7355", marginBottom: "2px" }}>📞 {member.phone}</div>}
                         {member.email && <div style={{ fontSize: "0.78rem", color: "#8b7355", marginBottom: "2px" }}>✉️ {member.email}</div>}
-                        {member.instagram && <div style={{ fontSize: "0.78rem", color: "#8b7355", marginBottom: "2px" }}>📸 {member.instagram}</div>}
                         {member.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic", marginTop: "4px" }}>{member.notes}</div>}
-
                         <div style={{ marginTop: "10px", borderTop: "1px solid #f0ebe4", paddingTop: "10px" }}>
                           <div style={{ fontSize: "0.72rem", color: "#8b7355", letterSpacing: "0.05em", marginBottom: "6px" }}>SHIFTS</div>
                           {(member.shifts || []).map(shift => (
@@ -446,7 +502,6 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
                               <button onClick={() => deleteShift(member.id, shift.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✕</button>
                             </div>
                           ))}
-
                           {addingShift === member.id ? (
                             <div style={{ marginTop: "8px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
                               <select value={newShift.shift_date} onChange={e => setNewShift({...newShift, shift_date: e.target.value})} style={editInp({ width: "100%" })}>
@@ -468,11 +523,11 @@ export default function PlanningHub({ params }: { params: Promise<{ slug: string
                             <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: "Fri Sep 11", start_time: "", end_time: "" }); }} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>+ Add shift</button>
                           )}
                         </div>
-
                         <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
                           <button onClick={() => { setEditing(member.id); setEditData({...member}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
                           <button onClick={() => deleteItem("planning_staff", member.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                         </div>
+                        <InvoiceSection itemName={member.name} category="Staff" />
                       </div>
                     )}
                   </div>
