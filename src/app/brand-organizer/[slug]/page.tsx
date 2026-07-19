@@ -451,7 +451,7 @@ export default function BrandCityDashboard() {
                             {item.quantity > 0 && <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Qty: {item.quantity}</div>}
                             {item.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic" }}>{item.notes}</div>}
                             {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#b87333", fontWeight: 500, marginTop: "6px" }}>${Number(item.cost).toFixed(2)}</div>}
-                            <InvoiceApproval itemName={item.item} />
+                            <BrandApproval itemName={item.item} table="planning_decor" itemId={item.id} brandStatus={item.brand_status} />
                           </div>
                         ))}
                       </div>
@@ -474,7 +474,7 @@ export default function BrandCityDashboard() {
                       </div>
                       {item.cost > 0 && <span style={{ fontSize: "0.9rem", color: "#4a7c59", fontWeight: 500 }}>${Number(item.cost).toFixed(2)}</span>}
                     </div>
-                    <BrandApproval itemName={item.item} table="planning_decor" itemId={item.id} brandStatus={item.brand_status} />
+                    <BrandApproval itemName={item.item} table="planning_refreshments" itemId={item.id} brandStatus={item.brand_status} />
                   </div>
                 ))}
               </div>
