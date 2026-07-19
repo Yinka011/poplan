@@ -74,8 +74,7 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
       }
     }
 
-    console.log("final imageUrl:", imageUrl);
-    if (!imageUrl) { alert("No image URL — upload may have failed"); setUploading(false); return; }
+    if (!imageUrl) { alert("Please upload an image or paste a URL"); setUploading(false); return; }
 
     const { data } = await supabase.from("mood_board").insert({
       event_slug: eventSlug,
