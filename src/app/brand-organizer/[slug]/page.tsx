@@ -394,7 +394,7 @@ export default function BrandCityDashboard() {
                   </button>
                 </div>
                 <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", textAlign: "center" as const }}>
-                  <div style={{ fontSize: "3rem", color: "#2c1810", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent ?? "—"}</div>
+                  <div style={{ fontSize: "3rem", color: "#1c1c1e", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent ?? "—"}</div>
                   <div style={{ fontSize: "0.6rem", color: "#8b7355", marginTop: "6px", letterSpacing: "0.1em" }}>DAYS TO EVENT</div>
                 </div>
               </div>
@@ -412,7 +412,7 @@ export default function BrandCityDashboard() {
                   </div>
                 ) : (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ fontSize: "1rem", color: "#2c1810" }}>{plannerDisplay}</div>
+                    <div style={{ fontSize: "1rem", color: "#1c1c1e" }}>{plannerDisplay}</div>
                     <button onClick={() => setEditingPlannerName(true)} style={{ fontSize: "0.68rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer" }}>Edit</button>
                   </div>
                 )}
@@ -429,7 +429,7 @@ export default function BrandCityDashboard() {
 
               <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2" }}>
                 <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.15em", marginBottom: "12px" }}>SHIPMENTS</div>
-                <div style={{ fontSize: "1.4rem", color: "#2c1810", marginBottom: "4px" }}>{shipments.filter(s => s.shipped).length}/{shipments.length}</div>
+                <div style={{ fontSize: "1.4rem", color: "#1c1c1e", marginBottom: "4px" }}>{shipments.filter(s => s.shipped).length}/{shipments.length}</div>
                 <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>shipped to {cityName}</div>
               </div>
             </div>
@@ -451,7 +451,7 @@ export default function BrandCityDashboard() {
           <div>
             <div style={{ display: "flex", gap: "8px", marginBottom: "2rem" }}>
               {(["decor", "refreshments", "staff"] as const).map(t => (
-                <button key={t} onClick={() => setPlanningTab(t)} style={{ padding: "8px 24px", background: planningTab === t ? "#2c1810" : "#fff", color: planningTab === t ? "#fff" : "#8b7355", border: "1px solid " + (planningTab === t ? "#2c1810" : "#ede8e2"), borderRadius: "30px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const, letterSpacing: "0.08em" }}>{t}</button>
+                <button key={t} onClick={() => setPlanningTab(t)} style={{ padding: "8px 24px", background: planningTab === t ? "#1c1c1e" : "#fff", color: planningTab === t ? "#fff" : "#8b7355", border: "1px solid " + (planningTab === t ? "#1c1c1e" : "#ede8e2"), borderRadius: "30px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const, letterSpacing: "0.08em" }}>{t}</button>
               ))}
             </div>
 
