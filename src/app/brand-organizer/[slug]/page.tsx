@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import MoodBoard from "@/components/shared/MoodBoard";
 
 type PlannerInfo = {
   id: number;
@@ -74,7 +75,7 @@ export default function BrandCityDashboard() {
   const [expenses, setExpenses] = useState<{id: number; category: string; item: string; cost: number; deposit: number;}[]>([]);
   const [comments, setComments] = useState<{id: number; item_name: string; sender_email: string; sender_name: string; message: string; created_at: string;}[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "invoices" | "tasks" | "shipments" | "chat">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "invoices" | "tasks" | "shipments" | "chat" | "moodboard">("overview");
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -255,6 +256,7 @@ export default function BrandCityDashboard() {
     { key: "tasks", label: `Tasks${overdueAssigned > 0 ? " ⚠" : ""}` },
     { key: "shipments", label: "Shipments" },
     { key: "chat", label: "Chat" },
+    { key: "moodboard", label: "Mood Board" },
   ];
 
   const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", ...style });
@@ -720,6 +722,11 @@ export default function BrandCityDashboard() {
               </div>
             ))}
           </div>
+        )}
+
+        {/* Mood Board */}
+        {activeTab === "moodboard" && (
+          <MoodBoard eventSlug={slug} userEmail={userEmail} userName={userName} />
         )}
 
         {/* Chat */}

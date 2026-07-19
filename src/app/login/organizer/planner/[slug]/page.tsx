@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import MoodBoard from "@/components/shared/MoodBoard";
 
 type PlannerEvent = {
   id: number;
@@ -62,7 +63,7 @@ export default function PlannerDashboard() {
   const [staff, setStaff] = useState<StaffItem[]>([]);
   const [manualExpenses, setManualExpenses] = useState<ManualExpense[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "mytasks" | "brandtasks" | "chat" | "receipts">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "mytasks" | "brandtasks" | "chat" | "receipts" | "moodboard">("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [userEmail, setUserEmail] = useState("");
@@ -234,6 +235,7 @@ export default function PlannerDashboard() {
     { key: "brandtasks", label: `${plannerEvent?.brand_name || "Brand"} Tasks` },
     { key: "chat", label: "Chat" },
     { key: "receipts", label: "Receipts" },
+    { key: "moodboard", label: "Mood Board" },
   ];
 
   const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", ...style });
@@ -579,6 +581,11 @@ export default function PlannerDashboard() {
               <button onClick={sendMessage} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Send</button>
             </div>
           </div>
+        )}
+
+        {/* Mood Board */}
+        {activeTab === "moodboard" && (
+          <MoodBoard eventSlug={slug} userEmail={userEmail} userName={userName} />
         )}
 
         {/* Receipts */}
