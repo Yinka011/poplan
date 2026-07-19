@@ -6,15 +6,17 @@ export default function Onboarding() {
   const [selected, setSelected] = useState<"organizer" | "brand_organizer" | "planner" | null>(null);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     const checkRole = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: role } = await supabase.from("user_roles").select("role").eq("user_email", user.email).single();
-      if (role?.role === "brand_organizer") { window.location.href = "/brand-organizer"; return; }
-      if (role?.role === "organizer") { window.location.href = "/login/organizer/events"; return; }
-      if (role?.role === "planner") { window.location.href = "/login/organizer/events"; return; }
+      if (!user) { setChecking(false); return; }
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_email", user.email).limit(1);
+      const role = roles?.[0]?.role;
+      if (role === "brand_organizer") { window.location.href = "/brand-organizer"; return; }
+      if (role === "organizer" || role === "planner") { window.location.href = "/login/organizer/events"; return; }
+      setChecking(false);
     };
     checkRole();
   }, []);
@@ -37,6 +39,8 @@ export default function Onboarding() {
     }
     setLoading(false);
   };
+
+  if (checking) return <div style={{ minHeight: "100vh", background: "#f5f0ea", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#8b7355" }}>Loading...</div>;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
