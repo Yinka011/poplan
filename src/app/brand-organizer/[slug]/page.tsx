@@ -617,7 +617,8 @@ export default function BrandCityDashboard() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
                     <div>
                       <div style={{ fontSize: "0.9rem", color: "#2c1810", fontWeight: 500 }}>{inv.description}</div>
-                      <div style={{ fontSize: "0.72rem", color: "#8b7355", marginTop: "2px" }}>{inv.item_name} · {new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                      <button onClick={() => { setActiveTab("planning"); setPlanningTab(inv.item_category?.toLowerCase() === "refreshments" ? "refreshments" : inv.item_category?.toLowerCase() === "staff" ? "staff" : "decor"); }} style={{ fontSize: "0.72rem", color: "#b87333", background: "transparent", border: "none", cursor: "pointer", padding: "0", textDecoration: "underline", fontFamily: "Georgia, serif" }}>{inv.item_name} →</button>
+                      <div style={{ fontSize: "0.68rem", color: "#8b7355", marginTop: "2px" }}>{new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
                     </div>
                     <div style={{ textAlign: "right" as const }}>
                       <div style={{ fontSize: "1.1rem", color: "#b87333", fontWeight: 500 }}>${Number(inv.amount).toFixed(2)}</div>
