@@ -272,12 +272,12 @@ export default function BrandCityDashboard() {
             {itemComments.map(c => (
               <div key={c.id} style={{ marginBottom: "6px", padding: "6px 8px", background: "#fff", borderRadius: "6px", borderLeft: c.sender_email === userEmail ? "2px solid #b87333" : "2px solid #e8e0d5" }}>
                 <div style={{ fontSize: "0.68rem", color: "#8b7355", marginBottom: "2px" }}>{c.sender_name} · {new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
-                <div style={{ fontSize: "0.82rem", color: "#2c1810" }}>{c.message}</div>
+                <div style={{ fontSize: "0.82rem", color: "#1c1c1e" }}>{c.message}</div>
               </div>
             ))}
             <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
               <input placeholder="Add a note..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(itemName)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }} autoFocus />
-              <button onClick={() => sendComment(itemName)} style={{ padding: "5px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>Send</button>
+              <button onClick={() => sendComment(itemName)} style={{ padding: "5px 10px", background: "#1c1c1e", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>Send</button>
             </div>
           </div>
         )}
@@ -328,8 +328,8 @@ export default function BrandCityDashboard() {
     <div style={{ minHeight: "100vh", background: "#f9f7f4", fontFamily: "Georgia, serif" }}>
 
       {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "#00000033", zIndex: 15 }} />}
-      <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: "240px", background: "#2c1810", zIndex: 16, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.3s ease", display: "flex", flexDirection: "column" as const }}>
-        <div style={{ padding: "2rem 1.5rem 1.5rem", borderBottom: "1px solid #3d2415" }}>
+      <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: "240px", background: "#1c1c1e", zIndex: 16, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.3s ease", display: "flex", flexDirection: "column" as const }}>
+        <div style={{ padding: "2rem 1.5rem 1.5rem", borderBottom: "1px solid #2c2c2e" }}>
           <div style={{ fontSize: "0.65rem", color: "#8b6a4a", letterSpacing: "0.15em", marginBottom: "8px" }}>YOUR EVENT</div>
           <div style={{ fontSize: "1.1rem", color: "#fff", letterSpacing: "0.05em" }}>{cityName}</div>
           {datesLabel && <div style={{ fontSize: "0.75rem", color: "#c8a882", marginTop: "4px" }}>{datesLabel}</div>}
@@ -341,17 +341,17 @@ export default function BrandCityDashboard() {
         </div>
         <nav style={{ flex: 1, padding: "1rem 0" }}>
           {tabs.map(tab => (
-            <a key={tab.key} onClick={() => { setActiveTab(tab.key as any); setSidebarOpen(false); }} style={{ display: "flex", alignItems: "center", padding: "12px 1.5rem", fontSize: "0.82rem", color: activeTab === tab.key ? "#fff" : "#8b6a4a", background: activeTab === tab.key ? "#3d2415" : "transparent", textDecoration: "none", borderLeft: activeTab === tab.key ? "2px solid #c8a882" : "2px solid transparent", cursor: "pointer", letterSpacing: "0.05em", transition: "all 0.15s" }}>
+            <a key={tab.key} onClick={() => { setActiveTab(tab.key as any); setSidebarOpen(false); }} style={{ display: "flex", alignItems: "center", padding: "12px 1.5rem", fontSize: "0.82rem", color: activeTab === tab.key ? "#fff" : "#8b6a4a", background: activeTab === tab.key ? "#2c2c2e" : "transparent", textDecoration: "none", borderLeft: activeTab === tab.key ? "2px solid #d4a853" : "2px solid transparent", cursor: "pointer", letterSpacing: "0.05em", transition: "all 0.15s" }}>
               {tab.label}
             </a>
           ))}
         </nav>
-        <div style={{ padding: "1.5rem", borderTop: "1px solid #3d2415" }}>
+        <div style={{ padding: "1.5rem", borderTop: "1px solid #2c2c2e" }}>
           <Link href="/brand-organizer" style={{ fontSize: "0.75rem", color: "#8b6a4a", textDecoration: "none", letterSpacing: "0.08em" }}>← ALL CITIES</Link>
         </div>
       </div>
 
-      <div style={{ background: "#2c1810", padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem", position: "sticky" as const, top: 0, zIndex: 14 }}>
+      <div style={{ background: "#1c1c1e", padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem", position: "sticky" as const, top: 0, zIndex: 14 }}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px", display: "flex", flexDirection: "column" as const, gap: "5px" }}>
           <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "#c8a882" : "#8b6a4a", transition: "all 0.2s", transform: sidebarOpen ? "rotate(45deg) translate(4px, 4px)" : "none" }} />
           <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "transparent" : "#8b6a4a", transition: "all 0.2s" }} />
@@ -366,7 +366,7 @@ export default function BrandCityDashboard() {
         {activeTab === "overview" && (
           <div>
             {/* Hero stats */}
-            <div style={{ background: "#2c1810", borderRadius: "20px", padding: "2.5rem", marginBottom: "2rem", color: "#fff", position: "relative" as const, overflow: "hidden" }}>
+            <div style={{ background: "#1c1c1e", borderRadius: "20px", padding: "2.5rem", marginBottom: "2rem", color: "#fff", position: "relative" as const, overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, right: 0, width: "200px", height: "200px", background: "radial-gradient(circle, #b8733322 0%, transparent 70%)", pointerEvents: "none" as const }} />
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "2rem", alignItems: "start" }}>
                 <div>
@@ -407,7 +407,7 @@ export default function BrandCityDashboard() {
                 {editingPlannerName ? (
                   <div style={{ display: "flex", gap: "6px" }}>
                     <input value={newPlannerName} onChange={e => setNewPlannerName(e.target.value)} placeholder="Planner name" style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} autoFocus />
-                    <button onClick={savePlannerName} style={{ padding: "5px 8px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>✓</button>
+                    <button onClick={savePlannerName} style={{ padding: "5px 8px", background: "#1c1c1e", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>✓</button>
                     <button onClick={() => setEditingPlannerName(false)} style={{ padding: "5px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>✕</button>
                   </div>
                 ) : (
@@ -538,7 +538,7 @@ export default function BrandCityDashboard() {
                 {editingBudget ? (
                   <div style={{ display: "flex", gap: "6px" }}>
                     <input value={newBudget} onChange={e => setNewBudget(e.target.value)} placeholder="Enter amount" style={{ padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.85rem", width: "120px", fontFamily: "Georgia, serif" }} autoFocus />
-                    <button onClick={saveBudget} style={{ padding: "5px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
+                    <button onClick={saveBudget} style={{ padding: "5px 10px", background: "#1c1c1e", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
                     <button onClick={() => setEditingBudget(false)} style={{ padding: "5px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Cancel</button>
                   </div>
                 ) : (
@@ -596,7 +596,7 @@ export default function BrandCityDashboard() {
               </div>
             ) : null)}
 
-            <div style={{ background: "#2c1810", borderRadius: "14px", padding: "1rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ background: "#1c1c1e", borderRadius: "14px", padding: "1rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "0.72rem", color: "#8b6a4a", letterSpacing: "0.15em" }}>TOTAL SPEND</span>
               <span style={{ fontSize: "1.2rem", color: "#fff" }}>${totalSpent.toFixed(2)}</span>
             </div>
@@ -676,7 +676,7 @@ export default function BrandCityDashboard() {
               <div style={{ display: "flex", gap: "8px", marginBottom: "1rem", flexWrap: "wrap" as const }}>
                 <input placeholder="Add a task..." value={newMyTask.task} onChange={e => setNewMyTask({...newMyTask, task: e.target.value})} onKeyDown={e => e.key === "Enter" && addMyTask()} style={inp({ flex: 1, minWidth: "200px" })} />
                 <input type="date" value={newMyTask.due_date} onChange={e => setNewMyTask({...newMyTask, due_date: e.target.value})} style={inp({ width: "150px" })} />
-                <button onClick={addMyTask} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Add</button>
+                <button onClick={addMyTask} style={{ padding: "8px 16px", background: "#1c1c1e", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Add</button>
               </div>
               {myTasks.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No tasks yet.</p>}
               {myTasks.map(task => (
@@ -699,12 +699,12 @@ export default function BrandCityDashboard() {
           <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.15em" }}>SHIPMENTS TO {cityName.toUpperCase()}</div>
-              <button onClick={() => setAddingShipment(true)} style={{ padding: "6px 14px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>+ Add</button>
+              <button onClick={() => setAddingShipment(true)} style={{ padding: "6px 14px", background: "#1c1c1e", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>+ Add</button>
             </div>
             {addingShipment && (
               <div style={{ display: "flex", gap: "8px", marginBottom: "1rem" }}>
                 <input placeholder="e.g. 12 dresses, 5 bags..." value={newShipment} onChange={e => setNewShipment(e.target.value)} style={inp({ flex: 1 })} autoFocus />
-                <button onClick={addShipment} style={{ padding: "6px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
+                <button onClick={addShipment} style={{ padding: "6px 12px", background: "#1c1c1e", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
                 <button onClick={() => setAddingShipment(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #ede8e2", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>Cancel</button>
               </div>
             )}
@@ -732,7 +732,7 @@ export default function BrandCityDashboard() {
                 return (
                   <div key={msg.id} style={{ display: "flex", flexDirection: "column" as const, alignItems: isMe ? "flex-end" : "flex-start" }}>
                     <div style={{ fontSize: "0.65rem", color: "#8b7355", marginBottom: "3px", letterSpacing: "0.05em" }}>{msg.sender_name}</div>
-                    <div style={{ maxWidth: "70%", padding: "10px 16px", borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: isMe ? "#2c1810" : "#f5f2ee", color: isMe ? "#fff" : "#2c1810", fontSize: "0.88rem", lineHeight: 1.6 }}>{msg.message}</div>
+                    <div style={{ maxWidth: "70%", padding: "10px 16px", borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: isMe ? "#1c1c1e" : "#f5f2ee", color: isMe ? "#fff" : "#2c1810", fontSize: "0.88rem", lineHeight: 1.6 }}>{msg.message}</div>
                     <div style={{ fontSize: "0.62rem", color: "#b0a090", marginTop: "3px" }}>{new Date(msg.created_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</div>
                   </div>
                 );
@@ -740,7 +740,7 @@ export default function BrandCityDashboard() {
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
               <input placeholder="Write a message..." value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} style={inp({ flex: 1 })} />
-              <button onClick={sendMessage} style={{ padding: "8px 20px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Send</button>
+              <button onClick={sendMessage} style={{ padding: "8px 20px", background: "#1c1c1e", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Send</button>
             </div>
           </div>
         )}
