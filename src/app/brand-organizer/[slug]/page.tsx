@@ -6,13 +6,16 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 
 type PlannerInfo = {
+  id: number;
   planner_email: string;
+  planner_name?: string;
   brand_name: string;
   city?: string;
   dates_label?: string;
   venue_name?: string;
   venue_address?: string;
   start_date?: string;
+  budget?: number;
 };
 
 type Task = {
@@ -51,7 +54,7 @@ type Shipment = {
   shipped: boolean;
 };
 
-type DecorItem = { id: number; category: string; item: string; cost: number; quantity: number; notes: string; brand_status?: string; };
+type DecorItem = { id: number; category: string; item: string; cost: number; quantity: number; notes: string; brand_status?: string; decision?: string; vendor?: string; };
 type RefreshItem = { id: number; item: string; quantity: string; cost: number; notes: string; brand_status?: string; };
 type StaffItem = { id: number; name: string; role: string; pay_rate: number; notes: string; brand_status?: string; shifts?: { staff_id: number; hours: number }[]; };
 
@@ -68,6 +71,8 @@ export default function BrandCityDashboard() {
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
   const [staff, setStaff] = useState<StaffItem[]>([]);
+  const [expenses, setExpenses] = useState<{id: number; category: string; item: string; cost: number; deposit: number;}[]>([]);
+  const [comments, setComments] = useState<{id: number; item_name: string; sender_email: string; sender_name: string; message: string; created_at: string;}[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "tasks" | "shipments" | "chat">("overview");
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
@@ -80,13 +85,13 @@ export default function BrandCityDashboard() {
   const [rejecting, setRejecting] = useState<number | null>(null);
   const [rejectionNote, setRejectionNote] = useState("");
   const [newMyTask, setNewMyTask] = useState({ task: "", due_date: "" });
-  const [comments, setComments] = useState<{id: number; item_name: string; sender_email: string; sender_name: string; message: string; created_at: string;}[]>([]);
   const [activeComment, setActiveComment] = useState<string | null>(null);
   const [newComment, setNewComment] = useState("");
+  const [editingPlannerName, setEditingPlannerName] = useState(false);
+  const [newPlannerName, setNewPlannerName] = useState("");
   const [budget, setBudget] = useState(0);
   const [editingBudget, setEditingBudget] = useState(false);
   const [newBudget, setNewBudget] = useState("");
-  const [expenses, setExpenses] = useState<{id: number; category: string; item: string; cost: number; deposit: number;}[]>([]);
 
   useEffect(() => { if (slug) fetchAll(); }, [slug]);
 
@@ -94,13 +99,12 @@ export default function BrandCityDashboard() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { window.location.href = "/"; return; }
     setUserEmail(user.email || "");
-
     const { data: profile } = await supabase.from("profiles").select("name").eq("email", user.email).single();
     if (profile?.name) setUserName(profile.name);
 
-    const [plannerRes, assignedTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes, commentsRes] = await Promise.all([
+    const [plannerRes, allTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes, commentsRes] = await Promise.all([
       supabase.from("event_planners").select("*").eq("event_slug", slug).maybeSingle(),
-      supabase.from("planner_tasks").select("*").eq("event_slug", slug).eq("owner", "brand").order("created_at"),
+      supabase.from("planner_tasks").select("*").eq("event_slug", slug).order("created_at"),
       supabase.from("planner_messages").select("*").eq("event_slug", slug).order("created_at"),
       supabase.from("item_invoices").select("*").eq("event_slug", slug).order("created_at", { ascending: false }),
       supabase.from("shipments").select("*").eq("event_slug", slug),
@@ -114,15 +118,17 @@ export default function BrandCityDashboard() {
 
     if (plannerRes.data) {
       setPlanner(plannerRes.data);
+      setNewPlannerName(plannerRes.data.planner_name || "");
       setBudget(Number(plannerRes.data.budget) || 0);
       setNewBudget(String(plannerRes.data.budget || ""));
     }
-    if (assignedTasksRes.data) setAssignedTasks(assignedTasksRes.data);
+    if (allTasksRes.data) {
+      setAssignedTasks(allTasksRes.data.filter((t: Task) => t.owner === "brand"));
+      setMyTasks(allTasksRes.data.filter((t: Task) => t.owner === "brand_self"));
+    }
     if (messagesRes.data) setMessages(messagesRes.data);
     if (invoicesRes.data) setInvoices(invoicesRes.data);
     if (shipmentsRes.data) setShipments(shipmentsRes.data);
-    if (expensesRes.data) setExpenses(expensesRes.data);
-    if (commentsRes.data) setComments(commentsRes.data);
     if (decorRes.data) setDecor(decorRes.data);
     if (refreshRes.data) setRefresh(refreshRes.data);
     if (staffRes.data && shiftsRes.data) {
@@ -130,24 +136,9 @@ export default function BrandCityDashboard() {
         ...s, shifts: shiftsRes.data.filter((sh: any) => sh.staff_id === s.id)
       })));
     }
+    if (expensesRes.data) setExpenses(expensesRes.data);
+    if (commentsRes.data) setComments(commentsRes.data);
     setLoading(false);
-  };
-
-  const sendComment = async (itemName: string) => {
-    if (!newComment.trim()) return;
-    const { data } = await supabase.from("item_comments").insert({
-      event_slug: slug, item_name: itemName,
-      sender_email: userEmail, sender_name: userName || userEmail, message: newComment,
-    }).select().single();
-    if (data) setComments(prev => [...prev, data]);
-    setNewComment("");
-  };
-
-  const updateBrandStatus = async (table: string, itemId: number, status: string) => {
-    await supabase.from(table).update({ brand_status: status }).eq("id", itemId);
-    if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
-    if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
-    if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
   };
 
   const toggleTask = async (task: Task, isMine: boolean) => {
@@ -164,13 +155,6 @@ export default function BrandCityDashboard() {
     }).select().single();
     if (data) setMyTasks(prev => [...prev, data]);
     setNewMyTask({ task: "", due_date: "" });
-  };
-
-  const saveBudget = async () => {
-    const val = parseFloat(newBudget) || 0;
-    await supabase.from("event_planners").update({ budget: val }).eq("event_slug", slug);
-    setBudget(val);
-    setEditingBudget(false);
   };
 
   const sendMessage = async () => {
@@ -210,30 +194,77 @@ export default function BrandCityDashboard() {
     setShipments(prev => prev.map(s => s.id === shipment.id ? { ...s, shipped: !s.shipped } : s));
   };
 
+  const updateBrandStatus = async (table: string, itemId: number, status: string) => {
+    await supabase.from(table).update({ brand_status: status }).eq("id", itemId);
+    if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
+    if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
+    if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
+  };
+
+  const sendComment = async (itemName: string) => {
+    if (!newComment.trim()) return;
+    const { data } = await supabase.from("item_comments").insert({
+      event_slug: slug, item_name: itemName,
+      sender_email: userEmail, sender_name: userName || userEmail, message: newComment,
+    }).select().single();
+    if (data) setComments(prev => [...prev, data]);
+    setNewComment("");
+  };
+
+  const savePlannerName = async () => {
+    if (!planner) return;
+    await supabase.from("event_planners").update({ planner_name: newPlannerName }).eq("id", planner.id);
+    setPlanner(prev => prev ? { ...prev, planner_name: newPlannerName } : prev);
+    setEditingPlannerName(false);
+  };
+
+  const saveBudget = async () => {
+    const val = parseFloat(newBudget) || 0;
+    await supabase.from("event_planners").update({ budget: val }).eq("event_slug", slug);
+    setBudget(val);
+    setEditingBudget(false);
+  };
+
   const totalDecor = decor.reduce((s, x) => s + Number(x.cost), 0);
   const totalRefresh = refresh.reduce((s, x) => s + Number(x.cost), 0);
   const totalStaff = staff.reduce((s, m) => {
     const hrs = (m.shifts || []).reduce((h, sh) => h + Number(sh.hours), 0);
     return s + hrs * Number(m.pay_rate);
   }, 0);
-
-  const totalManualExpenses = expenses.reduce((s, e) => s + Number(e.cost), 0);
-  const totalSpent = totalDecor + totalRefresh + totalStaff + totalManualExpenses;
+  const totalManual = expenses.reduce((s, e) => s + Number(e.cost), 0);
+  const totalSpent = totalDecor + totalRefresh + totalStaff + totalManual;
   const isOverBudget = budget > 0 && totalSpent > budget;
+
   const pendingInvoices = invoices.filter(i => i.status === "pending").length;
   const assignedCompleted = assignedTasks.filter(t => t.completed).length;
   const myCompleted = myTasks.filter(t => t.completed).length;
+  const overdueAssigned = assignedTasks.filter(t => !t.completed && t.due_date && new Date(t.due_date) < new Date()).length;
   const daysToEvent = planner?.start_date ? Math.ceil((new Date(planner.start_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
 
-  const getItemInvoices = (itemName: string) => invoices.filter(inv => inv.item_name === itemName);
+  const cityName = planner?.city || slug;
+  const datesLabel = planner?.dates_label || "";
+  const venueName = planner?.venue_name || "";
+  const venueAddress = planner?.venue_address || "";
+  const plannerDisplay = planner?.planner_name || planner?.planner_email || "Not assigned";
+
+  const tabs = [
+    { key: "overview", label: "Overview" },
+    { key: "planning", label: "Planning Hub" },
+    { key: "budget", label: "Budget" },
+    { key: "tasks", label: `Tasks${overdueAssigned > 0 ? ` ⚠` : ""}` },
+    { key: "shipments", label: "Shipments" },
+    { key: "chat", label: `Chat${messages.length > 0 ? "" : ""}` },
+  ];
+
+  const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", ...style });
 
   const CommentThread = ({ itemName, table, itemId }: { itemName: string; table: string; itemId: number }) => {
     const itemComments = comments.filter(c => c.item_name === itemName);
     const isActive = activeComment === itemName;
     return (
-      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
-        <button onClick={() => setActiveComment(isActive ? null : itemName)} style={{ fontSize: "0.7rem", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>
-          💬 {itemComments.length > 0 ? `${itemComments.length} note${itemComments.length > 1 ? "s" : ""}` : "Add note"}
+      <div style={{ marginTop: "8px" }}>
+        <button onClick={() => setActiveComment(isActive ? null : itemName)} style={{ background: "transparent", border: "none", cursor: "pointer", color: itemComments.length > 0 ? "#b87333" : "#c8bfb5", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", padding: "2px 0" }}>
+          ✏ {itemComments.length > 0 ? `${itemComments.length} note${itemComments.length > 1 ? "s" : ""}` : "Add note"}
         </button>
         {isActive && (
           <div style={{ marginTop: "6px", background: "#faf8f5", borderRadius: "8px", padding: "8px", border: "1px solid #f0ebe4" }}>
@@ -244,7 +275,7 @@ export default function BrandCityDashboard() {
               </div>
             ))}
             <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
-              <input placeholder="Reply..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(itemName)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }} autoFocus />
+              <input placeholder="Add a note..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(itemName)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }} autoFocus />
               <button onClick={() => sendComment(itemName)} style={{ padding: "5px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>Send</button>
             </div>
           </div>
@@ -254,185 +285,172 @@ export default function BrandCityDashboard() {
   };
 
   const BrandApproval = ({ itemName, table, itemId, brandStatus }: { itemName: string; table: string; itemId: number; brandStatus?: string }) => {
-    if (brandStatus !== "suggested" && brandStatus !== "approved" && brandStatus !== "rejected") return <CommentThread itemName={itemName} table={table} itemId={itemId} />;
     return (
       <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
         {brandStatus === "suggested" && (
-          <div style={{ background: "#b8733311", borderRadius: "8px", padding: "8px 10px", marginBottom: "6px" }}>
-            <div style={{ fontSize: "0.75rem", color: "#b87333", marginBottom: "6px" }}>Your planner has suggested this item. Do you want to include it?</div>
-            <div style={{ display: "flex", gap: "6px" }}>
-              <button onClick={() => updateBrandStatus(table, itemId, "approved")} style={{ fontSize: "0.75rem", padding: "4px 12px", background: "#4a7c59", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>✓ Yes, include it</button>
-              <button onClick={() => updateBrandStatus(table, itemId, "rejected")} style={{ fontSize: "0.75rem", padding: "4px 12px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>✗ No, remove it</button>
+          <div style={{ background: "#b8733311", borderRadius: "8px", padding: "8px 10px", marginBottom: "6px", border: "1px solid #b8733333" }}>
+            <div style={{ fontSize: "0.72rem", color: "#b87333", marginBottom: "6px", letterSpacing: "0.05em" }}>SUGGESTED BY YOUR PLANNER</div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button onClick={() => updateBrandStatus(table, itemId, "approved")} title="Approve" style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#4a7c59", color: "#fff", border: "none", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>✓</button>
+              <button onClick={() => updateBrandStatus(table, itemId, "rejected")} title="Remove" style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#c0392b", color: "#fff", border: "none", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
           </div>
         )}
-        {brandStatus === "approved" && <div style={{ fontSize: "0.72rem", color: "#4a7c59", background: "#4a7c5922", padding: "3px 8px", borderRadius: "6px", display: "inline-block", marginBottom: "6px" }}>✓ You approved this item</div>}
-        {brandStatus === "rejected" && <div style={{ fontSize: "0.72rem", color: "#c0392b", background: "#c0392b22", padding: "3px 8px", borderRadius: "6px", display: "inline-block", marginBottom: "6px" }}>✗ You removed this item</div>}
+        {brandStatus === "approved" && (
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#4a7c59", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>
+            </div>
+            <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>Approved by you</span>
+            <button onClick={() => updateBrandStatus(table, itemId, "suggested")} style={{ fontSize: "0.68rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer", marginLeft: "auto" }}>Undo</button>
+          </div>
+        )}
+        {brandStatus === "rejected" && (
+          <div style={{ marginBottom: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#c0392b", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ color: "#fff", fontSize: "11px" }}>✕</span>
+              </div>
+              <span style={{ fontSize: "0.72rem", color: "#c0392b" }}>Removed by you</span>
+              <button onClick={() => updateBrandStatus(table, itemId, "suggested")} style={{ fontSize: "0.68rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer", marginLeft: "auto" }}>Undo</button>
+            </div>
+          </div>
+        )}
         <CommentThread itemName={itemName} table={table} itemId={itemId} />
       </div>
     );
   };
 
-  const InvoiceApproval = ({ itemName }: { itemName: string }) => {
-    const itemInvoices = getItemInvoices(itemName);
-    if (!itemInvoices.length) return null;
-    return (
-      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
-        {itemInvoices.map(inv => (
-          <div key={inv.id} style={{ background: "#faf8f5", borderRadius: "8px", padding: "8px 10px", marginBottom: "6px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-              <span style={{ padding: "1px 6px", borderRadius: "10px", background: inv.status === "approved" ? "#4a7c5922" : inv.status === "rejected" ? "#c0392b22" : "#f0ebe4", color: inv.status === "approved" ? "#4a7c59" : inv.status === "rejected" ? "#c0392b" : "#8b7355", fontSize: "0.68rem", flexShrink: 0 }}>
-                {inv.status === "approved" ? "Approved" : inv.status === "rejected" ? "Rejected" : "Pending"}
-              </span>
-              <span style={{ color: "#2c1810", flex: 1, fontSize: "0.82rem" }}>{inv.description}</span>
-              <span style={{ color: "#b87333", fontWeight: 500, fontSize: "0.85rem" }}>${Number(inv.amount).toFixed(2)}</span>
-              <a href={inv.file_url} download target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "0.72rem", textDecoration: "none", background: "#2c1810", padding: "3px 8px", borderRadius: "4px" }}>↓</a>
-            </div>
-            {inv.status === "pending" && (
-              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                <button onClick={() => approveInvoice(inv.id)} style={{ fontSize: "0.75rem", padding: "4px 10px", background: "#4a7c59", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>✓ Approve</button>
-                <button onClick={() => { setRejecting(inv.id); setRejectionNote(""); }} style={{ fontSize: "0.75rem", padding: "4px 10px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>✕ Reject</button>
-              </div>
-            )}
-            {rejecting === inv.id && (
-              <div style={{ marginTop: "6px", display: "flex", gap: "6px" }}>
-                <input placeholder="Reason for rejection..." value={rejectionNote} onChange={e => setRejectionNote(e.target.value)} style={{ flex: 1, padding: "6px 8px", border: "1px solid #c0392b", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} autoFocus />
-                <button onClick={() => rejectInvoice(inv.id)} style={{ padding: "6px 10px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>Confirm</button>
-                <button onClick={() => setRejecting(null)} style={{ padding: "6px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>Cancel</button>
-              </div>
-            )}
-            {inv.rejection_note && <div style={{ fontSize: "0.72rem", color: "#c0392b", marginTop: "4px" }}>Note: {inv.rejection_note}</div>}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const tabs = [
-    { key: "overview", label: "Overview" },
-    { key: "planning", label: "Planning Hub" },
-    { key: "budget", label: "Budget" },
-    { key: "tasks", label: "Tasks" },
-    { key: "shipments", label: "Shipments" },
-    { key: "chat", label: "Chat" },
-  ];
-
-  const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", ...style });
-
-  if (loading) return <div style={{ minHeight: "100vh", background: "#f5f0ea", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#8b7355" }}>Loading...</div>;
-
-  const cityName = planner?.city || slug;
-  const datesLabel = planner?.dates_label || "";
-  const venueName = planner?.venue_name || "";
-  const venueAddress = planner?.venue_address || "";
+  if (loading) return <div style={{ minHeight: "100vh", background: "#f9f7f4", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#8b7355" }}>Loading...</div>;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f9f7f4", fontFamily: "Georgia, serif" }}>
 
-      {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "#00000044", zIndex: 15 }} />}
-      <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: "220px", background: "#2c1810", zIndex: 16, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.25s ease", display: "flex", flexDirection: "column" as const, paddingTop: "60px" }}>
-        <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid #3d2415" }}>
-          <div style={{ fontSize: "0.7rem", color: "#c8b89a", letterSpacing: "0.1em", marginBottom: "4px" }}>MY POP-UP</div>
-          <div style={{ fontSize: "0.9rem", color: "#fff" }}>{cityName}</div>
-          {datesLabel && <div style={{ fontSize: "0.72rem", color: "#b87333", marginTop: "2px" }}>{datesLabel}</div>}
+      {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "#00000033", zIndex: 15 }} />}
+      <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: "240px", background: "#1a0f0a", zIndex: 16, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.3s ease", display: "flex", flexDirection: "column" as const }}>
+        <div style={{ padding: "2rem 1.5rem 1.5rem", borderBottom: "1px solid #2d1810" }}>
+          <div style={{ fontSize: "0.65rem", color: "#8b6a4a", letterSpacing: "0.15em", marginBottom: "8px" }}>YOUR EVENT</div>
+          <div style={{ fontSize: "1.1rem", color: "#fff", letterSpacing: "0.05em" }}>{cityName}</div>
+          {datesLabel && <div style={{ fontSize: "0.75rem", color: "#c8a882", marginTop: "4px" }}>{datesLabel}</div>}
+          {pendingInvoices > 0 && (
+            <div style={{ marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "4px", background: "#c0392b22", border: "1px solid #c0392b44", borderRadius: "20px", padding: "2px 8px" }}>
+              <span style={{ fontSize: "0.65rem", color: "#c0392b" }}>{pendingInvoices} invoice{pendingInvoices > 1 ? "s" : ""} pending</span>
+            </div>
+          )}
         </div>
         <nav style={{ flex: 1, padding: "1rem 0" }}>
           {tabs.map(tab => (
-            <a key={tab.key} onClick={() => { setActiveTab(tab.key as any); setSidebarOpen(false); }} style={{ display: "block", padding: "10px 1.25rem", fontSize: "0.85rem", color: activeTab === tab.key ? "#fff" : "#c8b89a", background: activeTab === tab.key ? "#3d2415" : "transparent", textDecoration: "none", borderLeft: activeTab === tab.key ? "2px solid #b87333" : "2px solid transparent", cursor: "pointer" }}>
-              {tab.label}{tab.key === "tasks" && pendingInvoices > 0 ? ` (${pendingInvoices})` : ""}
+            <a key={tab.key} onClick={() => { setActiveTab(tab.key as any); setSidebarOpen(false); }} style={{ display: "flex", alignItems: "center", padding: "12px 1.5rem", fontSize: "0.82rem", color: activeTab === tab.key ? "#fff" : "#8b6a4a", background: activeTab === tab.key ? "#2d1810" : "transparent", textDecoration: "none", borderLeft: activeTab === tab.key ? "2px solid #c8a882" : "2px solid transparent", cursor: "pointer", letterSpacing: "0.05em", transition: "all 0.15s" }}>
+              {tab.label}
             </a>
           ))}
         </nav>
-        <div style={{ padding: "1rem 1.25rem", borderTop: "1px solid #3d2415" }}>
-          <Link href="/brand-organizer" style={{ fontSize: "0.8rem", color: "#c8b89a", textDecoration: "none", display: "block" }}>← All cities</Link>
+        <div style={{ padding: "1.5rem", borderTop: "1px solid #2d1810" }}>
+          <Link href="/brand-organizer" style={{ fontSize: "0.75rem", color: "#8b6a4a", textDecoration: "none", letterSpacing: "0.08em" }}>← ALL CITIES</Link>
         </div>
       </div>
 
-      <div style={{ background: "#2c1810", padding: "0.85rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem", position: "sticky" as const, top: 0, zIndex: 14 }}>
+      <div style={{ background: "#1a0f0a", padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem", position: "sticky" as const, top: 0, zIndex: 14 }}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px", display: "flex", flexDirection: "column" as const, gap: "5px" }}>
-          <span style={{ display: "block", width: "20px", height: "1.5px", background: sidebarOpen ? "#b87333" : "#c8b89a", transform: sidebarOpen ? "rotate(45deg) translate(4.5px, 4.5px)" : "none", transition: "all 0.2s" }} />
-          <span style={{ display: "block", width: "20px", height: "1.5px", background: sidebarOpen ? "transparent" : "#c8b89a", transition: "all 0.2s" }} />
-          <span style={{ display: "block", width: "20px", height: "1.5px", background: sidebarOpen ? "#b87333" : "#c8b89a", transform: sidebarOpen ? "rotate(-45deg) translate(4.5px, -4.5px)" : "none", transition: "all 0.2s" }} />
+          <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "#c8a882" : "#8b6a4a", transition: "all 0.2s", transform: sidebarOpen ? "rotate(45deg) translate(4px, 4px)" : "none" }} />
+          <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "transparent" : "#8b6a4a", transition: "all 0.2s" }} />
+          <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "#c8a882" : "#8b6a4a", transition: "all 0.2s", transform: sidebarOpen ? "rotate(-45deg) translate(4px, -4px)" : "none" }} />
         </button>
-        <div style={{ fontSize: "1rem", color: "#fff" }}>{cityName}</div>
-        {pendingInvoices > 0 && <span style={{ fontSize: "0.72rem", background: "#c0392b", color: "#fff", padding: "2px 8px", borderRadius: "20px" }}>{pendingInvoices} invoice{pendingInvoices > 1 ? "s" : ""} pending</span>}
-        <div style={{ marginLeft: "auto", fontSize: "0.8rem", color: "#c8b89a" }}>{tabs.find(t => t.key === activeTab)?.label}</div>
+        <div style={{ fontSize: "0.85rem", color: "#fff", letterSpacing: "0.1em" }}>{cityName.toUpperCase()}</div>
+        <div style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#8b6a4a", letterSpacing: "0.1em" }}>{tabs.find(t => t.key === activeTab)?.label.toUpperCase()}</div>
       </div>
 
       <div style={{ padding: "2rem 2.5rem", maxWidth: "1000px", margin: "0 auto" }}>
 
-        {/* Stats box - only on overview */}
-        {activeTab === "overview" && <div style={{ background: "#2c1810", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "#fff" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1.5rem" }}>
-            <div>
-              <div style={{ fontSize: "0.65rem", color: "#c8b89a", letterSpacing: "0.1em", marginBottom: "6px" }}>CITY</div>
-              <div style={{ fontSize: "1.1rem" }}>{cityName}</div>
-              {datesLabel && <div style={{ fontSize: "0.75rem", color: "#b87333", marginTop: "4px" }}>{datesLabel}</div>}
-              {venueName && <div style={{ fontSize: "0.72rem", color: "#c8b89a", marginTop: "4px" }}>📍 {venueName}</div>}
-              {venueAddress && <div style={{ fontSize: "0.68rem", color: "#8b7355", marginTop: "2px" }}>{venueAddress}</div>}
-            </div>
-            <div>
-              <div style={{ fontSize: "0.65rem", color: "#c8b89a", letterSpacing: "0.1em", marginBottom: "6px" }}>PLANNER</div>
-              <div style={{ fontSize: "0.9rem" }}>{planner?.planner_email || "Self-managed"}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "0.65rem", color: "#c8b89a", letterSpacing: "0.1em", marginBottom: "6px" }}>BUDGET</div>
-              <div style={{ fontSize: "1.5rem", color: "#e8c97a" }}>${(totalDecor + totalRefresh + totalStaff).toFixed(2)}</div>
-            </div>
-            <div style={{ background: "#fff", borderRadius: "10px", padding: "1rem", textAlign: "center" as const }}>
-              <div style={{ fontSize: "2.5rem", color: "#2c1810", lineHeight: 1 }}>{daysToEvent ?? "—"}</div>
-              <div style={{ fontSize: "0.7rem", color: "#8b7355", marginTop: "6px" }}>DAYS TO EVENT</div>
-            </div>
-          </div>
-        </div>}
-
-        {/* Overview */}
         {activeTab === "overview" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-              <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "1rem" }}>TASKS</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+          <div>
+            {/* Hero stats */}
+            <div style={{ background: "#1a0f0a", borderRadius: "20px", padding: "2.5rem", marginBottom: "2rem", color: "#fff", position: "relative" as const, overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, right: 0, width: "200px", height: "200px", background: "radial-gradient(circle, #b8733322 0%, transparent 70%)", pointerEvents: "none" as const }} />
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "2rem", alignItems: "start" }}>
                 <div>
-                  <div style={{ fontSize: "0.72rem", color: "#8b7355", marginBottom: "4px" }}>ASSIGNED TO ME</div>
-                  <div style={{ fontSize: "1.3rem", color: "#2c1810" }}>{assignedCompleted}/{assignedTasks.length}</div>
+                  <div style={{ fontSize: "0.6rem", color: "#8b6a4a", letterSpacing: "0.2em", marginBottom: "8px" }}>LOCATION</div>
+                  <div style={{ fontSize: "1.8rem", fontWeight: "normal", letterSpacing: "0.05em", lineHeight: 1.1 }}>{cityName}</div>
+                  {datesLabel && <div style={{ fontSize: "0.85rem", color: "#c8a882", marginTop: "8px" }}>{datesLabel}</div>}
+                  {venueName && <div style={{ fontSize: "0.75rem", color: "#8b6a4a", marginTop: "6px" }}>📍 {venueName}</div>}
+                  {venueAddress && <div style={{ fontSize: "0.7rem", color: "#5a4a3a", marginTop: "2px" }}>{venueAddress}</div>}
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.72rem", color: "#8b7355", marginBottom: "4px" }}>MY OWN TASKS</div>
-                  <div style={{ fontSize: "1.3rem", color: "#2c1810" }}>{myCompleted}/{myTasks.length}</div>
+                  <div style={{ fontSize: "0.6rem", color: "#8b6a4a", letterSpacing: "0.2em", marginBottom: "8px" }}>BUDGET</div>
+                  <div style={{ fontSize: "1.4rem", color: isOverBudget ? "#ff6b6b" : "#c8a882" }}>${totalSpent.toFixed(0)}</div>
+                  {budget > 0 && <div style={{ fontSize: "0.72rem", color: isOverBudget ? "#ff6b6b" : "#8b6a4a", marginTop: "4px" }}>of ${budget.toFixed(0)}</div>}
+                  {budget > 0 && (
+                    <div style={{ height: "2px", background: "#2d1810", borderRadius: "2px", marginTop: "8px" }}>
+                      <div style={{ height: "100%", width: `${Math.min((totalSpent / budget) * 100, 100)}%`, background: isOverBudget ? "#ff6b6b" : "#c8a882", borderRadius: "2px" }} />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.6rem", color: "#8b6a4a", letterSpacing: "0.2em", marginBottom: "8px" }}>TASKS</div>
+                  <button onClick={() => setActiveTab("tasks")} style={{ background: "transparent", border: "none", cursor: "pointer", textAlign: "left" as const, padding: 0 }}>
+                    <div style={{ fontSize: "1.4rem", color: "#fff" }}>{assignedCompleted + myCompleted}/{assignedTasks.length + myTasks.length}</div>
+                    <div style={{ fontSize: "0.72rem", color: overdueAssigned > 0 ? "#ff6b6b" : "#8b6a4a", marginTop: "4px" }}>{overdueAssigned > 0 ? `${overdueAssigned} overdue` : "completed"}</div>
+                  </button>
+                </div>
+                <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", textAlign: "center" as const }}>
+                  <div style={{ fontSize: "3rem", color: "#1a0f0a", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent ?? "—"}</div>
+                  <div style={{ fontSize: "0.6rem", color: "#8b7355", marginTop: "6px", letterSpacing: "0.1em" }}>DAYS TO EVENT</div>
                 </div>
               </div>
             </div>
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-              <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "1rem" }}>INVOICES</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                <div><div style={{ fontSize: "1.3rem", color: "#b87333" }}>{pendingInvoices}</div><div style={{ fontSize: "0.72rem", color: "#8b7355" }}>Pending</div></div>
-                <div><div style={{ fontSize: "1.3rem", color: "#4a7c59" }}>{invoices.filter(i => i.status === "approved").length}</div><div style={{ fontSize: "0.72rem", color: "#8b7355" }}>Approved</div></div>
-                <div><div style={{ fontSize: "1.3rem", color: "#c0392b" }}>{invoices.filter(i => i.status === "rejected").length}</div><div style={{ fontSize: "0.72rem", color: "#8b7355" }}>Rejected</div></div>
+
+            {/* Info cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2" }}>
+                <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.15em", marginBottom: "12px" }}>YOUR PLANNER</div>
+                {editingPlannerName ? (
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <input value={newPlannerName} onChange={e => setNewPlannerName(e.target.value)} placeholder="Planner name" style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} autoFocus />
+                    <button onClick={savePlannerName} style={{ padding: "5px 8px", background: "#1a0f0a", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>✓</button>
+                    <button onClick={() => setEditingPlannerName(false)} style={{ padding: "5px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>✕</button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ fontSize: "1rem", color: "#1a0f0a" }}>{plannerDisplay}</div>
+                    <button onClick={() => setEditingPlannerName(true)} style={{ fontSize: "0.68rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer" }}>Edit</button>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2", cursor: "pointer" }} onClick={() => setActiveTab("budget")}>
+                <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.15em", marginBottom: "12px" }}>INVOICES</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                  <div><div style={{ fontSize: "1.4rem", color: "#b87333" }}>{pendingInvoices}</div><div style={{ fontSize: "0.65rem", color: "#8b7355" }}>Pending</div></div>
+                  <div><div style={{ fontSize: "1.4rem", color: "#4a7c59" }}>{invoices.filter(i => i.status === "approved").length}</div><div style={{ fontSize: "0.65rem", color: "#8b7355" }}>Approved</div></div>
+                  <div><div style={{ fontSize: "1.4rem", color: "#c0392b" }}>{invoices.filter(i => i.status === "rejected").length}</div><div style={{ fontSize: "0.65rem", color: "#8b7355" }}>Rejected</div></div>
+                </div>
+              </div>
+
+              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2" }}>
+                <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.15em", marginBottom: "12px" }}>SHIPMENTS</div>
+                <div style={{ fontSize: "1.4rem", color: "#1a0f0a", marginBottom: "4px" }}>{shipments.filter(s => s.shipped).length}/{shipments.length}</div>
+                <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>shipped to {cityName}</div>
               </div>
             </div>
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-              <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "1rem" }}>BUDGET BREAKDOWN</div>
-              {[{ label: "Decor", value: totalDecor, color: "#b87333" }, { label: "Refreshments", value: totalRefresh, color: "#4a7c59" }, { label: "Staffing", value: totalStaff, color: "#5b7fa6" }].map((item, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i < 2 ? "1px solid #f0ebe4" : "none" }}>
-                  <span style={{ fontSize: "0.85rem", color: "#8b7355" }}>{item.label}</span>
-                  <span style={{ fontSize: "0.85rem", color: item.color, fontWeight: 500 }}>${item.value.toFixed(2)}</span>
+
+            {isOverBudget && (
+              <div style={{ background: "#ff6b6b11", border: "1px solid #ff6b6b33", borderRadius: "14px", padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.2rem" }}>⚠️</span>
+                <div>
+                  <div style={{ fontSize: "0.9rem", color: "#c0392b" }}>Over budget by ${(totalSpent - budget).toFixed(2)}</div>
+                  <div style={{ fontSize: "0.78rem", color: "#8b7355", marginTop: "2px" }}>Your spending of ${totalSpent.toFixed(2)} exceeds your target of ${budget.toFixed(2)}</div>
                 </div>
-              ))}
-            </div>
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-              <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "1rem" }}>SHIPMENTS</div>
-              <div style={{ fontSize: "1.3rem", color: "#2c1810", marginBottom: "4px" }}>{shipments.filter(s => s.shipped).length}/{shipments.length}</div>
-              <div style={{ fontSize: "0.78rem", color: "#8b7355" }}>shipped to {cityName}</div>
-            </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Planning Hub */}
         {activeTab === "planning" && (
           <div>
-            <div style={{ display: "flex", gap: "8px", marginBottom: "1.5rem" }}>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "2rem" }}>
               {(["decor", "refreshments", "staff"] as const).map(t => (
-                <button key={t} onClick={() => setPlanningTab(t)} style={{ padding: "8px 20px", background: planningTab === t ? "#2c1810" : "#fff", color: planningTab === t ? "#fff" : "#8b7355", border: "1px solid " + (planningTab === t ? "#2c1810" : "#e8e0d5"), borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const }}>{t}</button>
+                <button key={t} onClick={() => setPlanningTab(t)} style={{ padding: "8px 24px", background: planningTab === t ? "#1a0f0a" : "#fff", color: planningTab === t ? "#fff" : "#8b7355", border: "1px solid " + (planningTab === t ? "#1a0f0a" : "#ede8e2"), borderRadius: "30px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const, letterSpacing: "0.08em" }}>{t}</button>
               ))}
             </div>
 
@@ -442,15 +460,22 @@ export default function BrandCityDashboard() {
                   const items = decor.filter(d => d.category === cat);
                   if (!items.length) return null;
                   return (
-                    <div key={cat} style={{ marginBottom: "1rem" }}>
-                      <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "8px" }}>{cat.toUpperCase()}</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "10px" }}>
+                    <div key={cat} style={{ marginBottom: "2rem" }}>
+                      <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.2em", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "12px" }}>
+                        {cat.toUpperCase()}
+                        <div style={{ flex: 1, height: "1px", background: "#ede8e2" }} />
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
                         {items.map(item => (
-                          <div key={item.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem", border: "1px solid #e8e0d5" }}>
-                            <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "4px" }}>{item.item}</div>
-                            {item.quantity > 0 && <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Qty: {item.quantity}</div>}
-                            {item.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic" }}>{item.notes}</div>}
-                            {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#b87333", fontWeight: 500, marginTop: "6px" }}>${Number(item.cost).toFixed(2)}</div>}
+                          <div key={item.id} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", border: "1px solid #ede8e2", borderLeft: item.brand_status === "approved" ? "3px solid #4a7c59" : item.brand_status === "rejected" ? "3px solid #c0392b" : item.brand_status === "suggested" ? "3px solid #b87333" : "1px solid #ede8e2" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                              <div style={{ fontSize: "0.95rem", color: "#1a0f0a", fontWeight: 500 }}>{item.item}</div>
+                              {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#b87333" }}>${Number(item.cost).toFixed(2)}</div>}
+                            </div>
+                            {item.quantity > 0 && <div style={{ fontSize: "0.72rem", color: "#8b7355", marginBottom: "2px" }}>Qty: {item.quantity}</div>}
+                            {item.decision && item.decision !== "TBD" && <div style={{ fontSize: "0.78rem", color: "#5a4a3a", marginBottom: "4px", lineHeight: 1.4 }}>{item.decision}</div>}
+                            {item.vendor && <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>Vendor: {item.vendor}</div>}
+                            {item.notes && <div style={{ fontSize: "0.72rem", color: "#aaa", marginTop: "4px", fontStyle: "italic" }}>{item.notes}</div>}
                             <BrandApproval itemName={item.item} table="planning_decor" itemId={item.id} brandStatus={item.brand_status} />
                           </div>
                         ))}
@@ -463,16 +488,16 @@ export default function BrandCityDashboard() {
             )}
 
             {planningTab === "refreshments" && (
-              <div style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e8e0d5", overflow: "hidden" }}>
-                {refresh.length === 0 && <p style={{ padding: "1rem", fontSize: "0.85rem", color: "#8b7355" }}>No refreshments yet.</p>}
+              <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #ede8e2", overflow: "hidden" }}>
+                {refresh.length === 0 && <p style={{ padding: "1.5rem", fontSize: "0.85rem", color: "#8b7355" }}>No refreshments yet.</p>}
                 {refresh.map((item, i) => (
-                  <div key={item.id} style={{ padding: "12px 16px", borderBottom: i < refresh.length - 1 ? "1px solid #f0ebe4" : "none" }}>
+                  <div key={item.id} style={{ padding: "1rem 1.25rem", borderBottom: i < refresh.length - 1 ? "1px solid #f5f2ee" : "none" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
-                        <div style={{ fontSize: "0.88rem", color: "#2c1810" }}>{item.item}</div>
-                        {item.quantity && <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>{item.quantity}</div>}
+                        <div style={{ fontSize: "0.9rem", color: "#1a0f0a" }}>{item.item}</div>
+                        {item.quantity && <div style={{ fontSize: "0.72rem", color: "#8b7355", marginTop: "2px" }}>{item.quantity}</div>}
                       </div>
-                      {item.cost > 0 && <span style={{ fontSize: "0.9rem", color: "#4a7c59", fontWeight: 500 }}>${Number(item.cost).toFixed(2)}</span>}
+                      {item.cost > 0 && <span style={{ fontSize: "0.85rem", color: "#4a7c59" }}>${Number(item.cost).toFixed(2)}</span>}
                     </div>
                     <BrandApproval itemName={item.item} table="planning_refreshments" itemId={item.id} brandStatus={item.brand_status} />
                   </div>
@@ -481,19 +506,19 @@ export default function BrandCityDashboard() {
             )}
 
             {planningTab === "staff" && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "10px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
                 {staff.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No staff yet.</p>}
                 {staff.map(member => {
                   const totalHours = (member.shifts || []).reduce((h, s) => h + Number(s.hours), 0);
                   const totalPay = totalHours * Number(member.pay_rate);
                   return (
-                    <div key={member.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem", border: "1px solid #e8e0d5" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <div style={{ fontSize: "0.95rem", color: "#2c1810" }}>{member.name}</div>
-                        {totalPay > 0 && <div style={{ fontSize: "0.9rem", color: "#b87333", fontWeight: 500 }}>${totalPay.toFixed(2)}</div>}
+                    <div key={member.id} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", border: "1px solid #ede8e2" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                        <div style={{ fontSize: "0.95rem", color: "#1a0f0a" }}>{member.name}</div>
+                        {totalPay > 0 && <div style={{ fontSize: "0.85rem", color: "#b87333" }}>${totalPay.toFixed(2)}</div>}
                       </div>
-                      {member.notes && <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "2px" }}>{member.notes}</div>}
-                      {totalHours > 0 && <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "2px" }}>{totalHours} hrs</div>}
+                      {member.notes && <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>{member.notes}</div>}
+                      {totalHours > 0 && <div style={{ fontSize: "0.72rem", color: "#8b7355", marginTop: "2px" }}>{totalHours} hrs</div>}
                       <BrandApproval itemName={member.name} table="planning_staff" itemId={member.id} brandStatus={member.brand_status} />
                     </div>
                   );
@@ -506,97 +531,73 @@ export default function BrandCityDashboard() {
         {/* Budget */}
         {activeTab === "budget" && (
           <div>
-            {/* Budget header */}
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.1em" }}>YOUR BUDGET FOR {cityName.toUpperCase()}</div>
+            <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #ede8e2" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.15em" }}>YOUR TARGET BUDGET</div>
                 {editingBudget ? (
-                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                    <input value={newBudget} onChange={e => setNewBudget(e.target.value)} placeholder="Enter budget" style={{ padding: "4px 8px", borderRadius: "6px", border: "none", fontSize: "0.85rem", width: "120px", fontFamily: "Georgia, serif" }} autoFocus />
-                    <button onClick={saveBudget} style={{ padding: "4px 10px", background: "#b87333", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
-                    <button onClick={() => setEditingBudget(false)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer", color: "#8b7355" }}>Cancel</button>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <input value={newBudget} onChange={e => setNewBudget(e.target.value)} placeholder="Enter amount" style={{ padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.85rem", width: "120px", fontFamily: "Georgia, serif" }} autoFocus />
+                    <button onClick={saveBudget} style={{ padding: "5px 10px", background: "#1a0f0a", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
+                    <button onClick={() => setEditingBudget(false)} style={{ padding: "5px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Cancel</button>
                   </div>
                 ) : (
-                  <button onClick={() => setEditingBudget(true)} style={{ fontSize: "0.75rem", padding: "3px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>
-                    {budget > 0 ? "Edit budget" : "Set budget"}
+                  <button onClick={() => setEditingBudget(true)} style={{ fontSize: "0.72rem", color: "#8b7355", background: "transparent", border: "1px solid #ede8e2", borderRadius: "6px", padding: "3px 10px", cursor: "pointer" }}>
+                    {budget > 0 ? "Edit" : "Set budget"}
                   </button>
                 )}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.5rem" }}>
                 <div>
-                  <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>BUDGET</div>
-                  <div style={{ fontSize: "1.5rem", color: budget > 0 ? "#2c1810" : "#8b7355" }}>{budget > 0 ? `$${budget.toFixed(2)}` : "Not set"}</div>
+                  <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.1em", marginBottom: "6px" }}>TARGET</div>
+                  <div style={{ fontSize: "1.5rem", color: "#1a0f0a" }}>{budget > 0 ? `$${budget.toFixed(0)}` : "—"}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>SPENT</div>
-                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#c0392b" : "#2c1810" }}>${totalSpent.toFixed(2)}</div>
+                  <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.1em", marginBottom: "6px" }}>SPENT</div>
+                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#c0392b" : "#1a0f0a" }}>${totalSpent.toFixed(0)}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.65rem", color: "#c8b89a", marginBottom: "4px" }}>{isOverBudget ? "OVER BUDGET" : "REMAINING"}</div>
-                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#c0392b" : "#4a7c59" }}>{budget > 0 ? `$${Math.abs(budget - totalSpent).toFixed(2)}` : "—"}</div>
+                  <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.1em", marginBottom: "6px" }}>{isOverBudget ? "OVER" : "REMAINING"}</div>
+                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#c0392b" : "#4a7c59" }}>{budget > 0 ? `$${Math.abs(budget - totalSpent).toFixed(0)}` : "—"}</div>
                 </div>
               </div>
               {budget > 0 && (
                 <div style={{ marginTop: "1rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "#c8b89a", marginBottom: "4px" }}>
-                    <span style={{ color: "#8b7355" }}>{Math.round((totalSpent / budget) * 100)}% spent</span>
-                    {isOverBudget && <span style={{ color: "#c0392b" }}>⚠ Over budget by ${(totalSpent - budget).toFixed(2)}</span>}
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "#8b7355", marginBottom: "6px" }}>
+                    <span>{Math.round((totalSpent / budget) * 100)}% of budget used</span>
+                    {isOverBudget && <span style={{ color: "#c0392b" }}>Over by ${(totalSpent - budget).toFixed(0)}</span>}
                   </div>
-                  <div style={{ height: "6px", background: "#f0ebe4", borderRadius: "3px" }}>
-                    <div style={{ height: "100%", width: `${Math.min((totalSpent / budget) * 100, 100)}%`, background: isOverBudget ? "#ff6b6b" : totalSpent / budget > 0.8 ? "#b87333" : "#4a7c59", borderRadius: "3px", transition: "width 0.3s" }} />
+                  <div style={{ height: "4px", background: "#f0ebe4", borderRadius: "2px" }}>
+                    <div style={{ height: "100%", width: `${Math.min((totalSpent / budget) * 100, 100)}%`, background: isOverBudget ? "#c0392b" : totalSpent / budget > 0.8 ? "#b87333" : "#4a7c59", borderRadius: "2px" }} />
                   </div>
                 </div>
               )}
             </div>
 
-            {isOverBudget && (
-              <div style={{ background: "#ff6b6b22", border: "1px solid #ff6b6b44", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ fontSize: "1.2rem" }}>⚠️</span>
-                <div>
-                  <div style={{ fontSize: "0.9rem", color: "#c0392b", fontWeight: 500 }}>You are over budget</div>
-                  <div style={{ fontSize: "0.82rem", color: "#8b7355" }}>Total spending of ${totalSpent.toFixed(2)} exceeds your budget of ${budget.toFixed(2)} by ${(totalSpent - budget).toFixed(2)}</div>
-                </div>
-              </div>
-            )}
-
-            {/* Breakdown */}
             {[
-              { label: "Decor", items: decor.map(d => ({ name: d.item, cost: d.cost })), total: totalDecor, color: "#b87333" },
-              { label: "Refreshments", items: refresh.map(r => ({ name: r.item, cost: r.cost })), total: totalRefresh, color: "#4a7c59" },
-              { label: "Staffing", items: staff.map(s => ({ name: s.name, cost: (s.shifts || []).reduce((h, sh) => h + Number(sh.hours), 0) * Number(s.pay_rate) })), total: totalStaff, color: "#5b7fa6" },
-            ].map(section => (
-              <div key={section.label} style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+              { label: "Decor", items: decor.map(d => ({ name: d.item, cost: d.cost, detail: d.category })), total: totalDecor, color: "#b87333" },
+              { label: "Refreshments", items: refresh.map(r => ({ name: r.item, cost: r.cost, detail: r.quantity })), total: totalRefresh, color: "#4a7c59" },
+              { label: "Staffing", items: staff.map(s => ({ name: s.name, cost: (s.shifts || []).reduce((h, sh) => h + Number(sh.hours), 0) * Number(s.pay_rate), detail: s.notes })), total: totalStaff, color: "#5b7fa6" },
+            ].map(section => section.total > 0 ? (
+              <div key={section.label} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #ede8e2" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: section.color }} />
-                    <span style={{ fontSize: "0.85rem", color: "#2c1810", fontWeight: 500 }}>{section.label}</span>
+                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: section.color }} />
+                    <span style={{ fontSize: "0.82rem", color: "#1a0f0a", letterSpacing: "0.05em" }}>{section.label.toUpperCase()}</span>
                   </div>
-                  <span style={{ fontSize: "0.95rem", color: section.color, fontWeight: 500 }}>${section.total.toFixed(2)}</span>
+                  <span style={{ fontSize: "0.95rem", color: section.color }}>${section.total.toFixed(2)}</span>
                 </div>
                 {section.items.filter(i => i.cost > 0).map((item, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #f8f5f0", fontSize: "0.82rem" }}>
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #f8f5f2", fontSize: "0.8rem" }}>
                     <span style={{ color: "#8b7355" }}>{item.name}</span>
                     <span style={{ color: section.color }}>${Number(item.cost).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
-            ))}
+            ) : null)}
 
-            {expenses.length > 0 && (
-              <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
-                <div style={{ fontSize: "0.85rem", color: "#2c1810", fontWeight: 500, marginBottom: "0.75rem" }}>Other Expenses</div>
-                {expenses.map((exp, i) => (
-                  <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: i < expenses.length - 1 ? "1px solid #f8f5f0" : "none", fontSize: "0.82rem" }}>
-                    <span style={{ color: "#8b7355" }}>{exp.category} — {exp.item}</span>
-                    <span style={{ color: "#b87333" }}>${Number(exp.cost).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1rem 1.25rem", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "#c8b89a", fontSize: "0.85rem" }}>GRAND TOTAL</span>
-              <span style={{ color: "#fff", fontSize: "1.1rem" }}>${totalSpent.toFixed(2)}</span>
+            <div style={{ background: "#1a0f0a", borderRadius: "14px", padding: "1rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "0.72rem", color: "#8b6a4a", letterSpacing: "0.15em" }}>TOTAL SPEND</span>
+              <span style={{ fontSize: "1.2rem", color: "#fff" }}>${totalSpent.toFixed(2)}</span>
             </div>
           </div>
         )}
@@ -604,44 +605,41 @@ export default function BrandCityDashboard() {
         {/* Tasks */}
         {activeTab === "tasks" && (
           <div>
-            {/* Assigned tasks */}
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5", marginBottom: "1rem" }}>
-              <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "0.5rem" }}>Tasks from planner ({assignedCompleted}/{assignedTasks.length})</div>
-              <p style={{ fontSize: "0.8rem", color: "#8b7355", marginBottom: "1rem" }}>Tasks assigned to you by your planner. Check them off as you complete them.</p>
+            <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2", marginBottom: "1rem" }}>
+              <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.15em", marginBottom: "1rem" }}>FROM YOUR PLANNER ({assignedCompleted}/{assignedTasks.length})</div>
               {assignedTasks.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No tasks assigned yet.</p>}
               {assignedTasks.map(task => (
-                <div key={task.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px", borderRadius: "8px", borderBottom: "1px solid #f0ebe4" }}>
-                  <div onClick={() => toggleTask(task, false)} style={{ width: "20px", height: "20px", borderRadius: "50%", border: task.completed ? "none" : "2px solid #d4c5b0", background: task.completed ? "#4a7c59" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
-                    {task.completed && <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>}
+                <div key={task.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 0", borderBottom: "1px solid #f5f2ee" }}>
+                  <div onClick={() => toggleTask(task, false)} style={{ width: "20px", height: "20px", borderRadius: "50%", border: task.completed ? "none" : "1.5px solid #d4c5b0", background: task.completed ? "#4a7c59" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.15s" }}>
+                    {task.completed && <span style={{ color: "#fff", fontSize: "10px" }}>✓</span>}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "0.9rem", color: task.completed ? "#b0a090" : "#2c1810", textDecoration: task.completed ? "line-through" : "none" }}>{task.task}</div>
+                    <div style={{ fontSize: "0.9rem", color: task.completed ? "#b0a090" : "#1a0f0a", textDecoration: task.completed ? "line-through" : "none" }}>{task.task}</div>
                     <div style={{ display: "flex", gap: "8px", marginTop: "2px" }}>
-                      {task.due_date && <span style={{ fontSize: "0.72rem", color: "#8b7355" }}>Due {task.due_date}</span>}
-                      {task.assigned_to && <span style={{ fontSize: "0.72rem", color: "#b87333" }}>→ {task.assigned_to}</span>}
+                      {task.due_date && <span style={{ fontSize: "0.68rem", color: !task.completed && new Date(task.due_date) < new Date() ? "#c0392b" : "#8b7355" }}>Due {task.due_date}</span>}
+                      {task.assigned_to && <span style={{ fontSize: "0.68rem", color: "#b87333" }}>→ {task.assigned_to}</span>}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* My own tasks */}
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-              <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>My own tasks ({myCompleted}/{myTasks.length})</div>
+            <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2" }}>
+              <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.15em", marginBottom: "1rem" }}>MY OWN TASKS ({myCompleted}/{myTasks.length})</div>
               <div style={{ display: "flex", gap: "8px", marginBottom: "1rem", flexWrap: "wrap" as const }}>
                 <input placeholder="Add a task..." value={newMyTask.task} onChange={e => setNewMyTask({...newMyTask, task: e.target.value})} onKeyDown={e => e.key === "Enter" && addMyTask()} style={inp({ flex: 1, minWidth: "200px" })} />
                 <input type="date" value={newMyTask.due_date} onChange={e => setNewMyTask({...newMyTask, due_date: e.target.value})} style={inp({ width: "150px" })} />
-                <button onClick={addMyTask} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Add</button>
+                <button onClick={addMyTask} style={{ padding: "8px 16px", background: "#1a0f0a", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Add</button>
               </div>
               {myTasks.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No tasks yet.</p>}
               {myTasks.map(task => (
-                <div key={task.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px", borderRadius: "8px", borderBottom: "1px solid #f0ebe4" }}>
-                  <div onClick={() => toggleTask(task, true)} style={{ width: "20px", height: "20px", borderRadius: "50%", border: task.completed ? "none" : "2px solid #d4c5b0", background: task.completed ? "#b87333" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
-                    {task.completed && <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>}
+                <div key={task.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 0", borderBottom: "1px solid #f5f2ee" }}>
+                  <div onClick={() => toggleTask(task, true)} style={{ width: "20px", height: "20px", borderRadius: "50%", border: task.completed ? "none" : "1.5px solid #d4c5b0", background: task.completed ? "#b87333" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+                    {task.completed && <span style={{ color: "#fff", fontSize: "10px" }}>✓</span>}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "0.9rem", color: task.completed ? "#b0a090" : "#2c1810", textDecoration: task.completed ? "line-through" : "none" }}>{task.task}</div>
-                    {task.due_date && <div style={{ fontSize: "0.72rem", color: "#8b7355", marginTop: "2px" }}>Due {task.due_date}</div>}
+                    <div style={{ fontSize: "0.9rem", color: task.completed ? "#b0a090" : "#1a0f0a", textDecoration: task.completed ? "line-through" : "none" }}>{task.task}</div>
+                    {task.due_date && <div style={{ fontSize: "0.68rem", color: "#8b7355", marginTop: "2px" }}>Due {task.due_date}</div>}
                   </div>
                 </div>
               ))}
@@ -651,26 +649,26 @@ export default function BrandCityDashboard() {
 
         {/* Shipments */}
         {activeTab === "shipments" && (
-          <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <div style={{ fontSize: "0.9rem", color: "#2c1810" }}>Shipments to {cityName}</div>
-              <button onClick={() => setAddingShipment(true)} style={{ padding: "6px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>+ Add</button>
+          <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.15em" }}>SHIPMENTS TO {cityName.toUpperCase()}</div>
+              <button onClick={() => setAddingShipment(true)} style={{ padding: "6px 14px", background: "#1a0f0a", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>+ Add</button>
             </div>
             {addingShipment && (
               <div style={{ display: "flex", gap: "8px", marginBottom: "1rem" }}>
                 <input placeholder="e.g. 12 dresses, 5 bags..." value={newShipment} onChange={e => setNewShipment(e.target.value)} style={inp({ flex: 1 })} autoFocus />
-                <button onClick={addShipment} style={{ padding: "6px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Save</button>
-                <button onClick={() => setAddingShipment(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
+                <button onClick={addShipment} style={{ padding: "6px 12px", background: "#1a0f0a", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
+                <button onClick={() => setAddingShipment(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #ede8e2", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>Cancel</button>
               </div>
             )}
             {shipments.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No shipments yet.</p>}
             {shipments.map(shipment => (
-              <div key={shipment.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0", borderBottom: "1px solid #f0ebe4" }}>
-                <div onClick={() => toggleShipment(shipment)} style={{ width: "20px", height: "20px", borderRadius: "50%", border: shipment.shipped ? "none" : "2px solid #d4c5b0", background: shipment.shipped ? "#4a7c59" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+              <div key={shipment.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #f5f2ee" }}>
+                <div onClick={() => toggleShipment(shipment)} style={{ width: "22px", height: "22px", borderRadius: "50%", border: shipment.shipped ? "none" : "1.5px solid #d4c5b0", background: shipment.shipped ? "#4a7c59" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
                   {shipment.shipped && <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>}
                 </div>
-                <div style={{ flex: 1, fontSize: "0.88rem", color: shipment.shipped ? "#b0a090" : "#2c1810", textDecoration: shipment.shipped ? "line-through" : "none" }}>{shipment.notes}</div>
-                <span style={{ fontSize: "0.72rem", color: shipment.shipped ? "#4a7c59" : "#8b7355" }}>{shipment.shipped ? "Shipped ✓" : "Pending"}</span>
+                <div style={{ flex: 1, fontSize: "0.9rem", color: shipment.shipped ? "#b0a090" : "#1a0f0a", textDecoration: shipment.shipped ? "line-through" : "none" }}>{shipment.notes}</div>
+                <span style={{ fontSize: "0.68rem", color: shipment.shipped ? "#4a7c59" : "#8b7355", letterSpacing: "0.05em" }}>{shipment.shipped ? "SHIPPED" : "PENDING"}</span>
               </div>
             ))}
           </div>
@@ -678,24 +676,24 @@ export default function BrandCityDashboard() {
 
         {/* Chat */}
         {activeTab === "chat" && (
-          <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-            <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>Chat{planner ? ` with ${planner.planner_email}` : ""}</div>
-            <div style={{ height: "400px", overflowY: "auto", marginBottom: "1rem", display: "flex", flexDirection: "column" as const, gap: "10px", padding: "0.5rem" }}>
-              {messages.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355", textAlign: "center", marginTop: "2rem" }}>No messages yet.</p>}
+          <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2" }}>
+            <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.15em", marginBottom: "1.5rem" }}>MESSAGES WITH {plannerDisplay.toUpperCase()}</div>
+            <div style={{ height: "420px", overflowY: "auto", marginBottom: "1rem", display: "flex", flexDirection: "column" as const, gap: "12px", padding: "0.5rem" }}>
+              {messages.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355", textAlign: "center", marginTop: "3rem" }}>No messages yet. Start the conversation.</p>}
               {messages.map(msg => {
                 const isMe = msg.sender_email === userEmail;
                 return (
                   <div key={msg.id} style={{ display: "flex", flexDirection: "column" as const, alignItems: isMe ? "flex-end" : "flex-start" }}>
-                    <div style={{ fontSize: "0.7rem", color: "#8b7355", marginBottom: "2px" }}>{msg.sender_name}</div>
-                    <div style={{ maxWidth: "75%", padding: "10px 14px", borderRadius: isMe ? "14px 14px 4px 14px" : "14px 14px 14px 4px", background: isMe ? "#2c1810" : "#f0ebe4", color: isMe ? "#fff" : "#2c1810", fontSize: "0.88rem", lineHeight: 1.5 }}>{msg.message}</div>
-                    <div style={{ fontSize: "0.68rem", color: "#b0a090", marginTop: "2px" }}>{new Date(msg.created_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</div>
+                    <div style={{ fontSize: "0.65rem", color: "#8b7355", marginBottom: "3px", letterSpacing: "0.05em" }}>{msg.sender_name}</div>
+                    <div style={{ maxWidth: "70%", padding: "10px 16px", borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: isMe ? "#1a0f0a" : "#f5f2ee", color: isMe ? "#fff" : "#1a0f0a", fontSize: "0.88rem", lineHeight: 1.6 }}>{msg.message}</div>
+                    <div style={{ fontSize: "0.62rem", color: "#b0a090", marginTop: "3px" }}>{new Date(msg.created_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</div>
                   </div>
                 );
               })}
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <input placeholder="Type a message..." value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} style={inp({ flex: 1 })} />
-              <button onClick={sendMessage} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Send</button>
+              <input placeholder="Write a message..." value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} style={inp({ flex: 1 })} />
+              <button onClick={sendMessage} style={{ padding: "8px 20px", background: "#1a0f0a", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Send</button>
             </div>
           </div>
         )}

@@ -7,6 +7,18 @@ export default function Onboarding() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const checkRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: role } = await supabase.from("user_roles").select("role").eq("user_email", user.email).single();
+      if (role?.role === "brand_organizer") { window.location.href = "/brand-organizer"; return; }
+      if (role?.role === "organizer") { window.location.href = "/login/organizer/events"; return; }
+      if (role?.role === "planner") { window.location.href = "/login/organizer/events"; return; }
+    };
+    checkRole();
+  }, []);
+
   const handleContinue = async () => {
     if (!selected || !name.trim()) return;
     setLoading(true);
