@@ -78,7 +78,7 @@ export default function MarketingPlans({ event }: Props) {
   if (loading) return <div style={{ fontSize: "0.85rem", color: "#8b7355" }}>Loading...</div>;
 
   return (
-    <div style={{ fontFamily: "Georgia, serif" }}>
+    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5", fontFamily: "Georgia, serif" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
         <h2 style={{ fontSize: "1rem", color: "#2c1810", fontWeight: "normal", margin: 0 }}>Marketing Plans</h2>
       </div>
