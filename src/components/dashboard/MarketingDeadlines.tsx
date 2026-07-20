@@ -79,12 +79,15 @@ export default function MarketingPlans({ event }: Props) {
 
   return (
     <div style={{ fontFamily: "Georgia, serif" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <h2 style={{ fontSize: "1rem", color: "#2c1810", fontWeight: "normal", margin: 0 }}>Marketing Plans</h2>
+      </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <span style={{ fontSize: "0.78rem", color: "#8b7355" }}>{completedItems}/{totalItems} done</span>
           {overdueItems > 0 && <span style={{ fontSize: "0.7rem", color: "#c0392b", background: "#c0392b11", padding: "2px 8px", borderRadius: "20px" }}>{overdueItems} overdue</span>}
         </div>
-        <button onClick={() => setAdding(!adding)} style={{ padding: "5px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add</button>
+        <button onClick={() => setAdding(!adding)} style={{ padding: "5px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add task</button>
       </div>
 
       {totalItems > 0 && (
