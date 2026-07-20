@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Checklist from "@/components/dashboard/Checklist";
-import { MarketingDeadlines } from "@/components/dashboard/MarketingDeadlines";
+import MarketingDeadlines from "@/components/dashboard/MarketingDeadlines";
 import PaymentTracker from "@/components/dashboard/PaymentTracker";
 import AnnouncementManager from "@/components/dashboard/AnnouncementManager";
 import { type EventSummary } from "@/lib/events";
