@@ -22,6 +22,8 @@ export default function MarketingPlans({ event }: Props) {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [editing, setEditing] = useState<number | null>(null);
+  const [editData, setEditData] = useState({ task: "", due_date: "", channel: "Instagram", assigned_to: "", notes: "" });
   const [newItem, setNewItem] = useState({ task: "", due_date: "", channel: "Instagram", assigned_to: "", notes: "" });
 
   useEffect(() => { fetchItems(); }, [event]);
@@ -47,6 +49,15 @@ export default function MarketingPlans({ event }: Props) {
   const toggleComplete = async (item: MarketingItem) => {
     await supabase.from("marketing_deadlines").update({ completed: !item.completed }).eq("id", item.id);
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, completed: !i.completed } : i));
+  };
+
+  const saveEdit = async (id: number) => {
+    await supabase.from("marketing_deadlines").update({
+      task: editData.task, due_date: editData.due_date, channel: editData.channel,
+      assigned_to: editData.assigned_to || null, notes: editData.notes || null
+    }).eq("id", id);
+    setItems(prev => prev.map(i => i.id === id ? { ...i, ...editData } : i));
+    setEditing(null);
   };
 
   const deleteItem = async (id: number) => {
@@ -134,15 +145,31 @@ export default function MarketingPlans({ event }: Props) {
                   <div onClick={() => toggleComplete(item)} style={{ width: "17px", height: "17px", borderRadius: "50%", border: item.completed ? "none" : "1.5px solid #d4c5b0", background: item.completed ? "#4a7c59" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, marginTop: "2px" }}>
                     {item.completed && <span style={{ color: "#fff", fontSize: "9px" }}>✓</span>}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "0.85rem", color: item.completed ? "#b0a090" : "#2c1810", textDecoration: item.completed ? "line-through" : "none" }}>{item.task}</div>
-                    <div style={{ display: "flex", gap: "8px", marginTop: "2px", flexWrap: "wrap" as const }}>
-                      <span style={{ fontSize: "0.7rem", color: isOverdue(item) ? "#c0392b" : "#8b7355" }}>{isOverdue(item) ? "⚠ " : ""}Due {formatDate(item.due_date)}</span>
-                      {item.assigned_to && <span style={{ fontSize: "0.7rem", color: "#b87333" }}>→ {item.assigned_to}</span>}
-                      {item.notes && <span style={{ fontSize: "0.7rem", color: "#aaa", fontStyle: "italic" }}>{item.notes}</span>}
+                  {editing === item.id ? (
+                    <div style={{ flex: 1, display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
+                      <input value={editData.task} onChange={e => setEditData({...editData, task: e.target.value})} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif", minWidth: "150px" }} />
+                      <select value={editData.channel} onChange={e => setEditData({...editData, channel: e.target.value})} style={{ padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }}>
+                        {PLATFORMS.map(p => <option key={p}>{p}</option>)}
+                      </select>
+                      <input type="date" value={editData.due_date} onChange={e => setEditData({...editData, due_date: e.target.value})} style={{ padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem" }} />
+                      <input placeholder="Assigned to" value={editData.assigned_to} onChange={e => setEditData({...editData, assigned_to: e.target.value})} style={{ padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif", width: "110px" }} />
+                      <button onClick={() => saveEdit(item.id)} style={{ padding: "4px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>Save</button>
+                      <button onClick={() => setEditing(null)} style={{ padding: "4px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>✕</button>
                     </div>
-                  </div>
-                  <button onClick={() => deleteItem(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
+                  ) : (
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "0.85rem", color: item.completed ? "#b0a090" : "#2c1810", textDecoration: item.completed ? "line-through" : "none" }}>{item.task}</div>
+                      <div style={{ display: "flex", gap: "8px", marginTop: "2px", flexWrap: "wrap" as const }}>
+                        <span style={{ fontSize: "0.7rem", color: isOverdue(item) ? "#c0392b" : "#8b7355" }}>{isOverdue(item) ? "⚠ " : ""}Due {formatDate(item.due_date)}</span>
+                        {item.assigned_to && <span style={{ fontSize: "0.7rem", color: "#b87333" }}>→ {item.assigned_to}</span>}
+                        {item.notes && <span style={{ fontSize: "0.7rem", color: "#aaa", fontStyle: "italic" }}>{item.notes}</span>}
+                      </div>
+                    </div>
+                  )}
+                  {editing !== item.id && <div style={{ display: "flex", gap: "4px" }}>
+                    <button onClick={() => { setEditing(item.id); setEditData({ task: item.task, due_date: item.due_date || "", channel: item.channel, assigned_to: item.assigned_to || "", notes: item.notes || "" }); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#8b7355")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✎</button>
+                    <button onClick={() => deleteItem(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✕</button>
+                  </div>}
                 </div>
               ))}
             </div>
