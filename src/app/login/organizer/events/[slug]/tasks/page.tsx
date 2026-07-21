@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { sendNotification } from "@/lib/notifications";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -68,7 +69,12 @@ export default function TasksPage() {
       due_date: newItem.due_date,
       category: newItem.category,
     }).select().single();
-    if (data) setDeadlines(prev => [...prev, data]);
+    if (data) {
+      setDeadlines(prev => [...prev, data]);
+      if (data.brand_email) {
+        await sendNotification({ recipientEmail: data.brand_email, eventSlug: slug as string, type: 'task', title: 'New task assigned', message: data.task, link: '/brand/portal' });
+      }
+    }
     setNewItem({ task: "", due_date: "", category: "Admin" });
     setAdding(false);
   };

@@ -1,4 +1,5 @@
 "use client";
+import NotificationBell from "@/components/shared/NotificationBell";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Announcements from "@/components/brand/Announcements";
@@ -188,7 +189,8 @@ export default function BrandPortal() {
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "1.5rem", color: "#2c1810", marginBottom: "0.5rem" }}>POPLAN</div>
         <p style={{ color: "#8b7355", marginBottom: "1rem" }}>No brand found for {userEmail}</p>
-        <button onClick={handleLogout} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>Sign out</button>
+        <NotificationBell userEmail={userEmail} />
+          <button onClick={handleLogout} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>Sign out</button>
       </div>
     </div>
   );
@@ -205,6 +207,7 @@ export default function BrandPortal() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <span style={{ fontSize: "0.85rem", color: "#8b7355" }}>Brand</span>
+          <NotificationBell userEmail={userEmail} />
           <button onClick={handleLogout} style={{ fontSize: "0.8rem", padding: "5px 12px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", cursor: "pointer", color: "#8b7355", fontFamily: "Georgia, serif" }}>Sign out</button>
         </div>
       </div>

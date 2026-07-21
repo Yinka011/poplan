@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { sendNotification } from "@/lib/notifications";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
