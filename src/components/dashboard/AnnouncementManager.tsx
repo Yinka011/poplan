@@ -46,7 +46,23 @@ export default function AnnouncementManager({ event }: { event: string }) {
       author: "AO Curates",
       pinned,
     }).select().single();
-    if (data) setAnnouncements(prev => [data, ...prev]);
+    if (data) {
+      setAnnouncements(prev => [data, ...prev]);
+      // Notify all brands in this event
+      const { data: brands } = await supabase.from("brands").select("email").eq("event", event);
+      if (brands) {
+        await Promise.all(brands.map(brand =>
+          sendNotification({
+            recipientEmail: brand.email,
+            eventSlug: event,
+            type: "announcement",
+            title: "New announcement",
+            message: newMessage.slice(0, 100),
+            link: "/brand/portal",
+          })
+        ));
+      }
+    }
     setNewMessage("");
     setPinned(false);
     setAdding(false);
