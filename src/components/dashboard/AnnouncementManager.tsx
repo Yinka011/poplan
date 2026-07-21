@@ -40,19 +40,16 @@ export default function AnnouncementManager({ event }: { event: string }) {
   const postAnnouncement = async () => {
     if (!newMessage.trim()) return;
     setSaving(true);
-    console.log("saving announcement for event:", event);
     const { data, error } = await supabase.from("announcements").insert({
       event,
       message: newMessage,
       author: "AO Curates",
       pinned,
     }).select().single();
-    console.log("announcement result:", data, error);
     if (data) {
       setAnnouncements(prev => [data, ...prev]);
       // Notify all brands in this event
       const { data: brands, error: brandsError } = await supabase.from("brands").select("email").eq("event", event).not("email", "is", null);
-      console.log("brands for notification:", brands, "error:", brandsError, "event:", event);
       if (brands) {
         await Promise.all(brands.map(brand =>
           sendNotification({
