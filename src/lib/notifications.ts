@@ -15,7 +15,7 @@ export async function sendNotification({
   message: string;
   link: string;
 }) {
-  await supabase.from("notifications").insert({
+  const { error } = await supabase.from("notifications").insert({
     recipient_email: recipientEmail,
     event_slug: eventSlug,
     type,
@@ -24,4 +24,5 @@ export async function sendNotification({
     link,
     read: false,
   });
+  if (error) console.error("sendNotification error:", error);
 }
