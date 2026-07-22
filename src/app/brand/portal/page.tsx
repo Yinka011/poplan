@@ -38,7 +38,7 @@ const faqs = [
   { q: "Do I need to attend the pop-up in person?", a: "No — AO Curates will fully staff the store with trained sales associates. You do not need to send a representative." },
   { q: "When will I receive my payout?", a: "Payouts will be issued by October 5th, 2026." },
   { q: "What is the commission structure?", a: "AO Curates applies a 20% commission on all sales made during the pop-up." },
-  { q: "What happens to unsold items?", a: "Unsold items must either be picked up by October 31st, 2026 or shipped back at the brand expense." },
+  { q: "What happens to unsold items?", a: "Unsold items must either be picked up by October 31st, 2026 or shipped back at the brand's expense." },
   { q: "What shipping options are available?", a: "AO Curates has secured a discounted rate through Amgray Logistics at 17,500 per kg. Products must arrive in Atlanta between August 3rd and August 28th, 2026." },
   { q: "What are the event hours?", a: "Friday September 11th is a Private Shopping Event from 5PM to 7PM. Saturday September 12th is open 10AM to 6PM. Sunday September 13th is open 12PM to 5PM." },
   { q: "What labelling is required on my products?", a: "Every single item must be tagged with your brand name, product name and selling price before shipping." },
@@ -206,7 +206,7 @@ export default function BrandPortal() {
           <div style={{ width: "2rem", height: "1px", background: "#b87333", marginTop: "2px" }}></div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span style={{ fontSize: "0.85rem", color: "#8b7355" }}>Brand</span>
+          <span style={{ fontSize: "0.85rem", color: "#8b7355" }}>{brand?.name || "Brand"}</span>
           <NotificationBell userEmail={userEmail} />
           <button onClick={handleLogout} style={{ fontSize: "0.8rem", padding: "5px 12px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", cursor: "pointer", color: "#8b7355", fontFamily: "Georgia, serif" }}>Sign out</button>
         </div>
@@ -225,7 +225,7 @@ export default function BrandPortal() {
             We are so excited to have you as part of this experience. Your brand brings something truly special to our curated space and we cannot wait to showcase what you have created. This portal is your home base — everything you need to prepare for Atlanta is right here.
           </p>
           <p style={{ color: "#8b7355", marginTop: "0.75rem", fontSize: "0.95rem", lineHeight: 1.7 }}>
-            Thank you for trusting AO Curates with your brand. Lets make Atlanta unforgettable. 🌟
+            Thank you for trusting AO Curates with your brand. Let's make Atlanta unforgettable. 🌟
           </p>
         </div>
 
@@ -248,7 +248,7 @@ export default function BrandPortal() {
                 <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "2px" }}>Marked on {formatDate(brand.shipped_at)}</div>
               </div>
             ) : (
-              <div style={{ fontSize: "0.95rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>Not yet shipped</div>
+              <div style={{ fontSize: "0.95rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>Not yet shipped — please mark when your products are on their way</div>
             )}
           </div>
           {!brand.shipped && (
