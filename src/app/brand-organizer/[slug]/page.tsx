@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import WelcomeTutorial from "@/components/shared/WelcomeTutorial";
 import MoodBoard from "@/components/shared/MoodBoard";
 
 type PlannerInfo = {
@@ -75,6 +76,7 @@ export default function BrandCityDashboard() {
   const [expenses, setExpenses] = useState<{id: number; category: string; item: string; cost: number; deposit: number;}[]>([]);
   const [comments, setComments] = useState<{id: number; item_name: string; sender_email: string; sender_name: string; message: string; created_at: string;}[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "invoices" | "tasks" | "shipments" | "chat" | "moodboard">("overview");
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -140,6 +142,13 @@ export default function BrandCityDashboard() {
     if (expensesRes.data) setExpenses(expensesRes.data);
     if (commentsRes.data) setComments(commentsRes.data);
     setLoading(false);
+
+    // Show tutorial if first visit
+    const tutorialKey = `tutorial_seen_${slug}`;
+    if (!localStorage.getItem(tutorialKey)) {
+      setShowTutorial(true);
+      localStorage.setItem(tutorialKey, "true");
+    }
   };
 
   const toggleTask = async (task: Task, isMine: boolean) => {
@@ -457,6 +466,10 @@ export default function BrandCityDashboard() {
 
             {planningTab === "decor" && (
               <div>
+                <div style={{ background: "#fff", borderRadius: "10px", padding: "10px 16px", marginBottom: "1rem", border: "1px solid #ede8e2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.72rem", color: "#8b7355", letterSpacing: "0.1em" }}>{decor.length} ITEMS</span>
+                  <span style={{ fontSize: "0.95rem", color: "#2c1810" }}>Total: <strong>${totalDecor.toFixed(2)}</strong></span>
+                </div>
                 {["Furniture", "Props", "Lighting", "Signage", "Theme", "Florals"].map(cat => {
                   const items = decor.filter(d => d.category === cat);
                   if (!items.length) return null;
@@ -498,6 +511,11 @@ export default function BrandCityDashboard() {
             )}
 
             {planningTab === "refreshments" && (
+              <div>
+                <div style={{ background: "#fff", borderRadius: "10px", padding: "10px 16px", marginBottom: "1rem", border: "1px solid #ede8e2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.72rem", color: "#8b7355", letterSpacing: "0.1em" }}>{refresh.length} ITEMS</span>
+                  <span style={{ fontSize: "0.95rem", color: "#2c1810" }}>Total: <strong>${totalRefresh.toFixed(2)}</strong></span>
+                </div>
               <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #ede8e2", overflow: "hidden" }}>
                 {refresh.length === 0 && <p style={{ padding: "1.5rem", fontSize: "0.85rem", color: "#8b7355" }}>No refreshments yet.</p>}
                 {refresh.map((item, i) => (
@@ -516,6 +534,11 @@ export default function BrandCityDashboard() {
             )}
 
             {planningTab === "staff" && (
+              <div>
+                <div style={{ background: "#fff", borderRadius: "10px", padding: "10px 16px", marginBottom: "1rem", border: "1px solid #ede8e2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.72rem", color: "#8b7355", letterSpacing: "0.1em" }}>{staff.length} STAFF MEMBERS</span>
+                  <span style={{ fontSize: "0.95rem", color: "#2c1810" }}>Total: <strong>${totalStaff.toFixed(2)}</strong></span>
+                </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
                 {staff.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No staff yet.</p>}
                 {staff.map(member => {
@@ -533,6 +556,7 @@ export default function BrandCityDashboard() {
                     </div>
                   );
                 })}
+              </div>
               </div>
             )}
           </div>
