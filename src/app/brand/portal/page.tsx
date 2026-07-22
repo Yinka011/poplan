@@ -262,49 +262,62 @@ export default function BrandPortal() {
               </p>
             </div>
 
+            {/* Fee tracker */}
+            <div style={{ background: "#2c1810", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "#fff" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1.5rem", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "0.65rem", color: "#c8b89a", letterSpacing: "0.15em", marginBottom: "8px" }}>PARTICIPATION FEE</div>
+                  <div style={{ fontSize: "1.6rem", fontWeight: "normal" }}>${Number(brand.fee_owed).toFixed(2)}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.65rem", color: "#c8b89a", letterSpacing: "0.15em", marginBottom: "8px" }}>PAID</div>
+                  <div style={{ fontSize: "1.6rem", color: "#90c9a0", fontWeight: "normal" }}>${Number(brand.amount_paid).toFixed(2)}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.65rem", color: "#c8b89a", letterSpacing: "0.15em", marginBottom: "8px" }}>BALANCE DUE</div>
+                  <div style={{ fontSize: "1.6rem", color: Number(brand.balance) > 0 ? "#e8c97a" : "#90c9a0", fontWeight: "normal" }}>${Number(brand.balance).toFixed(2)}</div>
+                  {Number(brand.balance) > 0 && <div style={{ fontSize: "0.68rem", color: "#e8c97a", marginTop: "4px" }}>Payment outstanding</div>}
+                </div>
+                <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem", textAlign: "center" as const }}>
+                  <div style={{ fontSize: "2.5rem", color: "#2c1810", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent}</div>
+                  <div style={{ fontSize: "0.65rem", color: "#8b7355", marginTop: "6px", letterSpacing: "0.1em" }}>DAYS TO EVENT</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Announcements */}
             <Announcements event={brand.event || "Atlanta"} brandEmail={brandEmail} />
 
-            {/* Stats */}
-            <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.5rem 2rem", marginBottom: "1.5rem", color: "#fff", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem", alignItems: "center" }}>
-              <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PARTICIPATION FEE</div><div style={{ fontSize: "1.4rem" }}>${Number(brand.fee_owed).toFixed(2)}</div></div>
-              <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PAID</div><div style={{ fontSize: "1.4rem" }}>${Number(brand.amount_paid).toFixed(2)}</div></div>
-              <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>BALANCE</div><div style={{ fontSize: "1.4rem", color: Number(brand.balance) > 0 ? "#e8c97a" : "#90c9a0" }}>${Number(brand.balance).toFixed(2)}</div></div>
-              <div style={{ textAlign: "center", background: "#fff", borderRadius: "10px", padding: "0.75rem" }}>
-                <div style={{ fontSize: "2rem", color: "#2c1810", fontWeight: "normal", lineHeight: 1 }}>{daysToEvent}</div>
-                <div style={{ fontSize: "0.7rem", color: "#8b7355", marginTop: "4px" }}>days to event</div>
-              </div>
-            </div>
-
-            {/* Shipment */}
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "4px" }}>SHIPMENT STATUS</div>
+            {/* Shipment + Tasks side by side */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1.5rem" }}>
+              {/* Shipment card */}
+              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
+                <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.15em", marginBottom: "12px" }}>SHIPMENT STATUS</div>
                 {brand.shipped ? (
                   <div>
-                    <div style={{ fontSize: "0.95rem", color: "#4a7c59" }}>Products marked as shipped ✓</div>
-                    <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "2px" }}>Marked on {formatDate(brand.shipped_at)}</div>
+                    <div style={{ fontSize: "1rem", color: "#4a7c59", marginBottom: "4px" }}>✓ Shipped</div>
+                    <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Marked on {formatDate(brand.shipped_at)}</div>
                   </div>
                 ) : (
-                  <div style={{ fontSize: "0.95rem", color: "#2c1810" }}>Not yet shipped — please mark when your products are on their way</div>
+                  <div>
+                    <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "12px" }}>Not yet shipped</div>
+                    <button onClick={markShipped} disabled={markingShipped} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%" }}>
+                      {markingShipped ? "Saving..." : "Mark as shipped"}
+                    </button>
+                  </div>
                 )}
               </div>
-              {!brand.shipped && (
-                <button onClick={markShipped} disabled={markingShipped} style={{ padding: "10px 20px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const, marginLeft: "1rem" }}>
-                  {markingShipped ? "Saving..." : "Mark as shipped"}
-                </button>
-              )}
-            </div>
 
-            {/* Quick task progress */}
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5", cursor: "pointer" }} onClick={() => setActiveTab("tasks")}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <div style={{ fontSize: "0.9rem", color: "#2c1810" }}>Your to-do list</div>
-                <div style={{ fontSize: "0.8rem", color: "#8b7355" }}>{completed}/{deadlines.length} complete</div>
+              {/* To-do card */}
+              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e8e0d5", cursor: "pointer" }} onClick={() => setActiveTab("tasks")}>
+                <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.15em", marginBottom: "12px" }}>TO-DO LIST</div>
+                <div style={{ fontSize: "2rem", color: "#2c1810", fontWeight: "normal", lineHeight: 1, marginBottom: "4px" }}>{completed}<span style={{ fontSize: "1rem", color: "#8b7355" }}>/{deadlines.length}</span></div>
+                <div style={{ fontSize: "0.75rem", color: "#8b7355", marginBottom: "12px" }}>tasks completed</div>
+                <div style={{ height: "4px", background: "#f0ebe4", borderRadius: "2px", overflow: "hidden", marginBottom: "10px" }}>
+                  <div style={{ height: "100%", width: `${progress}%`, background: "#b87333", borderRadius: "2px", transition: "width 0.3s" }} />
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "#b87333" }}>View all tasks →</div>
               </div>
-              <div style={{ height: "4px", background: "#f0ebe4", borderRadius: "2px", overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${progress}%`, background: "#b87333", borderRadius: "2px", transition: "width 0.3s" }} />
-              </div>
-              <div style={{ fontSize: "0.78rem", color: "#b87333", marginTop: "8px" }}>View all tasks →</div>
             </div>
 
           </div>
