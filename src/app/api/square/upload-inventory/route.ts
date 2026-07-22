@@ -72,5 +72,46 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: data.errors?.[0]?.detail || "Square error", details: data.errors }, { status: 400 });
   }
 
-  return NextResponse.json({ success: true, catalogIds: data.id_mappings || [], objects: data.objects?.length || 0 });
+  // Now set inventory quantities for each variation
+  const idMappings = data.id_mappings || [];
+  const changes: object[] = [];
+
+  items.forEach((item: { name: string; base_price: number; category: string; variations?: { size: string; colour: string; quantity: number; price: number }[] }, index: number) => {
+    const variations = item.variations && item.variations.length > 0 ? item.variations : [{ size: "One Size", colour: "Default", quantity: 1, price: item.base_price }];
+    variations.forEach((v: { size: string; colour: string; quantity: number; price: number }, vIndex: number) => {
+      const tempId = `#${brandEmail.replace(/[^a-zA-Z0-9]/g, "_")}_${index}_v${vIndex}`;
+      const mapping = idMappings.find((m: { client_object_id: string; object_id: string }) => m.client_object_id.startsWith(tempId));
+      if (mapping && v.quantity > 0) {
+        changes.push({
+          type: "PHYSICAL_COUNT",
+          physical_count: {
+            catalog_object_id: mapping.object_id,
+            location_id: locationId,
+            quantity: String(v.quantity),
+            state: "IN_STOCK",
+            occurred_at: new Date().toISOString(),
+          },
+        });
+      }
+    });
+  });
+
+  if (changes.length > 0) {
+    const invResponse = await fetch("https://connect.squareup.com/v2/inventory/changes/batch-create", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "Square-Version": "2024-01-18",
+      },
+      body: JSON.stringify({
+        idempotency_key: `inv_${brandEmail}_${Date.now()}`,
+        changes,
+      }),
+    });
+    const invData = await invResponse.json();
+    console.log("Inventory response:", JSON.stringify(invData).slice(0, 300));
+  }
+
+  return NextResponse.json({ success: true, catalogIds: idMappings, objects: data.objects?.length || 0 });
 }
