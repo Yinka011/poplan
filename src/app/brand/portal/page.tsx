@@ -310,7 +310,7 @@ export default function BrandPortal() {
           </div>
         )}
 
-        {/* TASKS TAB */
+        {/* TASKS TAB */}
         {activeTab === "tasks" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
