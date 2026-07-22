@@ -294,29 +294,21 @@ export default function BrandCityDashboard() {
           <div style={{ background: "#b8733311", borderRadius: "8px", padding: "8px 10px", marginBottom: "6px", border: "1px solid #b8733333" }}>
             <div style={{ fontSize: "0.72rem", color: "#b87333", marginBottom: "6px", letterSpacing: "0.05em" }}>SUGGESTED BY YOUR PLANNER</div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={() => updateBrandStatus(table, itemId, "approved")} title="Approve" style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#4a7c59", color: "#fff", border: "none", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>✓</button>
-              <button onClick={() => updateBrandStatus(table, itemId, "rejected")} title="Remove" style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#c0392b", color: "#fff", border: "none", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              <button onClick={() => updateBrandStatus(table, itemId, "approved")} title="Approve" style={{ padding: "4px 14px", background: "transparent", color: "#4a7c59", border: "1px solid #4a7c59", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontFamily: "Georgia, serif" }}>Approve</button>
+              <button onClick={() => updateBrandStatus(table, itemId, "rejected")} title="Decline" style={{ padding: "4px 14px", background: "transparent", color: "#c0392b", border: "1px solid #c0392b", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontFamily: "Georgia, serif" }}>Decline</button>
             </div>
           </div>
         )}
         {brandStatus === "approved" && (
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-            <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#4a7c59", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>
-            </div>
-            <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>Approved by you</span>
-            <button onClick={() => updateBrandStatus(table, itemId, "suggested")} style={{ fontSize: "0.68rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer", marginLeft: "auto" }}>Undo</button>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+            <span style={{ fontSize: "0.72rem", color: "#4a7c59", border: "1px solid #4a7c5966", padding: "2px 10px", borderRadius: "20px" }}>✓ Approved</span>
+            <button onClick={() => updateBrandStatus(table, itemId, "suggested")} style={{ fontSize: "0.68rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer" }}>Undo</button>
           </div>
         )}
         {brandStatus === "rejected" && (
-          <div style={{ marginBottom: "6px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#c0392b", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ color: "#fff", fontSize: "11px" }}>✕</span>
-              </div>
-              <span style={{ fontSize: "0.72rem", color: "#c0392b" }}>Removed by you</span>
-              <button onClick={() => updateBrandStatus(table, itemId, "suggested")} style={{ fontSize: "0.68rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer", marginLeft: "auto" }}>Undo</button>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+            <span style={{ fontSize: "0.72rem", color: "#c0392b", border: "1px solid #c0392b66", padding: "2px 10px", borderRadius: "20px" }}>✕ Declined</span>
+            <button onClick={() => updateBrandStatus(table, itemId, "suggested")} style={{ fontSize: "0.68rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer" }}>Undo</button>
           </div>
         )}
         <CommentThread itemName={itemName} table={table} itemId={itemId} />
@@ -480,6 +472,15 @@ export default function BrandCityDashboard() {
                             {item.vendor && <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>Vendor: {item.vendor}</div>}
                             {item.notes && <div style={{ fontSize: "0.72rem", color: "#aaa", marginTop: "4px", fontStyle: "italic" }}>{item.notes}</div>}
                             <BrandApproval itemName={item.item} table="planning_decor" itemId={item.id} brandStatus={item.brand_status} />
+                            {invoices.filter(inv => inv.item_name === item.item).map(inv => (
+                              <div key={inv.id} style={{ marginTop: "6px", padding: "6px 8px", background: "#faf8f5", borderRadius: "6px", border: "1px solid #f0ebe4" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2px" }}>
+                                  <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>{inv.description}</span>
+                                  <span style={{ fontSize: "0.78rem", color: "#b87333" }}>${Number(inv.amount).toFixed(2)}</span>
+                                </div>
+                                <a href={inv.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.68rem", color: "#b87333", textDecoration: "none" }}>↓ View invoice</a>
+                              </div>
+                            ))}
                           </div>
                         ))}
                       </div>
@@ -598,6 +599,23 @@ export default function BrandCityDashboard() {
               </div>
             ) : null)}
 
+            {expenses.length > 0 && (
+              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #ede8e2" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#8b7355" }} />
+                    <span style={{ fontSize: "0.82rem", color: "#2c1810", letterSpacing: "0.05em" }}>VENUE & OTHER</span>
+                  </div>
+                  <span style={{ fontSize: "0.95rem", color: "#8b7355" }}>${totalManual.toFixed(2)}</span>
+                </div>
+                {expenses.map((exp, i) => (
+                  <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: i < expenses.length - 1 ? "1px solid #f8f5f2" : "none", fontSize: "0.8rem" }}>
+                    <span style={{ color: "#8b7355" }}>{exp.category} — {exp.item}</span>
+                    <span style={{ color: "#8b7355" }}>${Number(exp.cost).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <div style={{ background: "#2c1810", borderRadius: "14px", padding: "1rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "0.72rem", color: "#8b6a4a", letterSpacing: "0.15em" }}>TOTAL SPEND</span>
               <span style={{ fontSize: "1.2rem", color: "#fff" }}>${totalSpent.toFixed(2)}</span>
