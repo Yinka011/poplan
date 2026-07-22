@@ -39,6 +39,23 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   Completed: { bg: "#8b735522", color: "#8b7355" },
 };
 
+const formatDatesLabel = (label: string) => {
+  if (!label) return "";
+  if (label.includes(" to ")) {
+    const [start, end] = label.split(" to ");
+    const s = new Date(start);
+    const e = new Date(end);
+    const sDay = s.getDate() + 1;
+    const eDay = e.getDate() + 1;
+    const sMonth = s.toLocaleDateString("en-US", { month: "short" });
+    const eMonth = e.toLocaleDateString("en-US", { month: "short" });
+    const year = e.getFullYear();
+    if (sMonth === eMonth) return `${sMonth} ${sDay}–${eDay}, ${year}`;
+    return `${sMonth} ${sDay} – ${eMonth} ${eDay}, ${year}`;
+  }
+  return label;
+};
+
 export default function EventsPage() {
   const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [plannerEvents, setPlannerEvents] = useState<PlannerEvent[]>([]);
