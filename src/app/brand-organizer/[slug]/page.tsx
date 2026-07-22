@@ -386,6 +386,12 @@ export default function BrandCityDashboard() {
                     <div style={{ fontSize: "1.4rem", color: "#fff" }}>{assignedCompleted + myCompleted}/{assignedTasks.length + myTasks.length}</div>
                     <div style={{ fontSize: "0.72rem", color: overdueAssigned > 0 ? "#ff6b6b" : "#8b6a4a", marginTop: "4px" }}>{overdueAssigned > 0 ? `${overdueAssigned} overdue` : "completed"}</div>
                   </button>
+                  {assignedTasks.filter(t => !t.completed).slice(0, 3).map(t => (
+                    <div key={t.id} style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}>
+                      <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#c8a882", flexShrink: 0 }} />
+                      <div style={{ fontSize: "0.7rem", color: "#c8b89a", lineHeight: 1.3 }}>{t.task}</div>
+                    </div>
+                  ))}
                 </div>
                 <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", textAlign: "center" as const }}>
                   <div style={{ fontSize: "3rem", color: "#2c1810", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent ?? "—"}</div>
