@@ -65,10 +65,12 @@ export async function POST(request: Request) {
 
   const data = await response.json();
 
+  console.log("Square response status:", response.status);
+  console.log("Square response:", JSON.stringify(data).slice(0, 500));
+
   if (!response.ok) {
-    console.error("Square error:", JSON.stringify(data.errors));
-    return NextResponse.json({ error: data.errors?.[0]?.detail || "Square error" }, { status: 400 });
+    return NextResponse.json({ error: data.errors?.[0]?.detail || "Square error", details: data.errors }, { status: 400 });
   }
 
-  return NextResponse.json({ success: true, catalogIds: data.id_mappings || [] });
+  return NextResponse.json({ success: true, catalogIds: data.id_mappings || [], objects: data.objects?.length || 0 });
 }
