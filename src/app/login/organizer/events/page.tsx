@@ -293,12 +293,12 @@ export default function EventsPage() {
                       <div style={{ fontSize: "0.65rem", color: "#b87333", letterSpacing: "0.08em", marginBottom: "4px" }}>PLANNING FOR</div>
                       <div style={{ fontSize: "1.1rem", color: "#2c1810" }}>{pe.brand_name}</div>
                       <div style={{ fontSize: "0.8rem", color: "#8b7355", marginTop: "2px" }}>{pe.city || pe.event_slug}</div>
-                      {pe.dates_label && <div style={{ fontSize: "0.78rem", color: "#b87333", marginTop: "2px" }}>{pe.dates_label}</div>}
+                      {pe.dates_label && <div style={{ fontSize: "0.78rem", color: "#b87333", marginTop: "2px" }}>{formatDatesLabel(pe.dates_label)}</div>}
                     </div>
                     <button onClick={() => deletePlannerEvent(pe.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "12px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                   </div>
                   <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" as const }}>
-                    <Link href={`/login/organizer/planner/${pe.event_slug}`} style={{ fontSize: "0.78rem", color: "#b87333", textDecoration: "none" }}>Open planning dashboard →</Link>
+                    <Link href={`/login/organizer/planner/${pe.event_slug}`} style={{ fontSize: "0.78rem", color: "#b87333", textDecoration: "none" }}>View dashboard →</Link>
                     {pe.brand_email && (
                       <button onClick={() => invitePlannerBrand(pe.brand_email, pe.id)} disabled={inviting === pe.id} style={{ fontSize: "0.72rem", padding: "3px 10px", background: "transparent", border: "1px solid #b87333", borderRadius: "6px", cursor: "pointer", color: "#b87333", fontFamily: "Georgia, serif" }}>
                         {inviting === pe.id ? "Sending..." : "✉ Invite brand"}
