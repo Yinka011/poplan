@@ -72,6 +72,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: data.errors?.[0]?.detail || "Square error", details: data.errors }, { status: 400 });
   }
 
+  // Upload images for items that have photo_url
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (!item.photo_url) continue;
+    const catalogItemId = data.objects?.find((o: { item_data?: { name: string }; id: string }) => o.item_data?.name?.includes(item.name))?.id;
+    if (!catalogItemId) continue;
+    try {
+      const imgRes = await fetch(item.photo_url);
+      if (!imgRes.ok) continue;
+      const imgBlob = await imgRes.blob();
+      const imgType = imgBlob.type || "image/jpeg";
+      const ext = imgType.split("/")[1] || "jpg";
+      const formData = new FormData();
+      formData.append("request", JSON.stringify({
+        idempotency_key: `img_${brandEmail}_${i}_${Date.now()}`,
+        object_id: catalogItemId,
+        image: { type: "IMAGE", id: `#img_${brandEmail}_${i}_${Date.now()}`, image_data: { caption: item.name } },
+      }));
+      formData.append("image_file", new Blob([await imgBlob.arrayBuffer()], { type: imgType }), `product.${ext}`);
+      const imgResponse = await fetch("https://connect.squareup.com/v2/catalog/images", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${accessToken}`, "Square-Version": "2024-01-18" },
+        body: formData,
+      });
+      const imgData = await imgResponse.json();
+      console.log("Image upload:", imgData.errors || "success");
+    } catch (e) {
+      console.error("Image upload failed:", e);
+    }
+  }
+
   // Now set inventory quantities for each variation
   const idMappings = data.id_mappings || [];
   const changes: object[] = [];
