@@ -262,6 +262,8 @@ export default function BrandPortal() {
               </p>
             </div>
 
+            <Announcements event={brand.event || "Atlanta"} brandEmail={brandEmail} />
+
             {/* Stats */}
             <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1.5rem 2rem", marginBottom: "1.5rem", color: "#fff", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem", alignItems: "center" }}>
               <div><div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PARTICIPATION FEE</div><div style={{ fontSize: "1.4rem" }}>${Number(brand.fee_owed).toFixed(2)}</div></div>
@@ -305,11 +307,10 @@ export default function BrandPortal() {
               <div style={{ fontSize: "0.78rem", color: "#b87333", marginTop: "8px" }}>View all tasks →</div>
             </div>
 
-            <Announcements event={brand.event || "Atlanta"} brandEmail={brandEmail} />
           </div>
         )}
 
-        {/* TASKS TAB */}
+        {/* TASKS TAB */
         {activeTab === "tasks" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
