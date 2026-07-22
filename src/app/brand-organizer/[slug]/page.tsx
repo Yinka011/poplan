@@ -531,6 +531,7 @@ export default function BrandCityDashboard() {
                   </div>
                 ))}
               </div>
+              </div>
             )}
 
             {planningTab === "staff" && (
@@ -540,7 +541,7 @@ export default function BrandCityDashboard() {
                   <span style={{ fontSize: "0.95rem", color: "#2c1810" }}>Total: <strong>${totalStaff.toFixed(2)}</strong></span>
                 </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
-                {staff.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No staff yet.</p>}
+              {staff.length === 0 && <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>No staff yet.</p>}
                 {staff.map(member => {
                   const totalHours = (member.shifts || []).reduce((h, s) => h + Number(s.hours), 0);
                   const totalPay = totalHours * Number(member.pay_rate);
