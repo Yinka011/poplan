@@ -15,13 +15,13 @@ export async function POST(request: Request) {
   }
 
   const idempotencyKey = `${brandEmail}_${Date.now()}`;
-  const objects: any[] = [];
+  const objects: object[] = [];
 
-  items.forEach((item: any, index: number) => {
+  items.forEach((item: { name: string; base_price: number; category: string; photo_url?: string; variations?: { size: string; colour: string; quantity: number; price: number }[] }, index: number) => {
     const basePrice = Math.round(Number(item.base_price || 0) * 100);
     const variations = item.variations && item.variations.length > 0 ? item.variations : [{ size: "One Size", colour: "Default", quantity: 1, price: item.base_price }];
 
-    const squareVariations = variations.map((v: any, vIndex: number) => {
+    const squareVariations = variations.map((v: { size: string; colour: string; quantity: number; price: number }, vIndex: number) => {
       const varPrice = Math.round(Number(v.price || item.base_price || 0) * 100);
       const varName = [v.size, v.colour].filter(x => x && x !== "N/A" && x !== "One Size").join(" / ") || "Regular";
       return {
