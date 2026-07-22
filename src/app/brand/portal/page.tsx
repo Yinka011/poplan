@@ -130,12 +130,13 @@ export default function BrandPortal() {
   const eventDate = new Date("2026-09-12");
   const daysToEvent = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-  const markShipped = async () => {
+  const toggleShipped = async () => {
     if (!brand) return;
     setMarkingShipped(true);
+    const newShipped = !brand.shipped;
     const now = new Date().toISOString();
-    await supabase.from("brands").update({ shipped: true, shipped_at: now }).eq("id", brand.id);
-    setBrand(prev => prev ? { ...prev, shipped: true, shipped_at: now } : prev);
+    await supabase.from("brands").update({ shipped: newShipped, shipped_at: newShipped ? now : null }).eq("id", brand.id);
+    setBrand(prev => prev ? { ...prev, shipped: newShipped, shipped_at: newShipped ? now : "" } : prev);
     setMarkingShipped(false);
   };
 
@@ -293,19 +294,19 @@ export default function BrandPortal() {
               {/* Shipment card */}
               <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
                 <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.15em", marginBottom: "12px" }}>SHIPMENT STATUS</div>
-                {brand.shipped ? (
-                  <div>
-                    <div style={{ fontSize: "1rem", color: "#4a7c59", marginBottom: "4px" }}>✓ Shipped</div>
-                    <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Marked on {formatDate(brand.shipped_at)}</div>
-                  </div>
-                ) : (
-                  <div>
-                    <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "12px" }}>Not yet shipped</div>
-                    <button onClick={markShipped} disabled={markingShipped} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%" }}>
-                      {markingShipped ? "Saving..." : "Mark as shipped"}
-                    </button>
-                  </div>
-                )}
+                <div style={{ marginBottom: "12px" }}>
+                  {brand.shipped ? (
+                    <div>
+                      <div style={{ fontSize: "1rem", color: "#4a7c59", marginBottom: "4px" }}>✓ Shipped</div>
+                      <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Marked on {formatDate(brand.shipped_at)}</div>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: "0.9rem", color: "#2c1810" }}>Not yet shipped</div>
+                  )}
+                </div>
+                <button onClick={toggleShipped} disabled={markingShipped} style={{ padding: "8px 16px", background: brand.shipped ? "transparent" : "#2c1810", color: brand.shipped ? "#8b7355" : "#fff", border: brand.shipped ? "1px solid #e8e0d5" : "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%" }}>
+                  {markingShipped ? "Saving..." : brand.shipped ? "Mark as not shipped" : "Mark as shipped"}
+                </button>
               </div>
 
               {/* To-do card */}
