@@ -14,30 +14,41 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Square not configured" }, { status: 500 });
   }
 
-  // Build Square catalog objects for each item
-  const objects = items.map((item: { name: string; price: number; quantity: number; category: string }, index: number) => ({
-    type: "ITEM",
-    id: `#${brandEmail.replace(/[@.]/g, "_")}_${index}_${Date.now()}`,
-    item_data: {
-      name: `${brandName} — ${item.name}`,
-      description: `Brand: ${brandName} | Category: ${item.category}`,
-      variations: [
-        {
-          type: "ITEM_VARIATION",
-          id: `#${brandEmail.replace(/[@.]/g, "_")}_${index}_var_${Date.now()}`,
-          item_variation_data: {
-            name: "Regular",
-            pricing_type: "FIXED_PRICING",
-            price_money: {
-              amount: Math.round(item.price * 100),
-              currency: "USD",
-            },
-            track_inventory: true,
+  const idempotencyKey = `${brandEmail}_${Date.now()}`;
+  const objects: any[] = [];
+
+  items.forEach((item: any, index: number) => {
+    const basePrice = Math.round(Number(item.base_price || 0) * 100);
+    const variations = item.variations && item.variations.length > 0 ? item.variations : [{ size: "One Size", colour: "Default", quantity: 1, price: item.base_price }];
+
+    const squareVariations = variations.map((v: any, vIndex: number) => {
+      const varPrice = Math.round(Number(v.price || item.base_price || 0) * 100);
+      const varName = [v.size, v.colour].filter(x => x && x !== "N/A" && x !== "One Size").join(" / ") || "Regular";
+      return {
+        type: "ITEM_VARIATION",
+        id: `#${brandEmail.replace(/[^a-zA-Z0-9]/g, "_")}_${index}_v${vIndex}_${Date.now()}`,
+        item_variation_data: {
+          name: varName,
+          pricing_type: "FIXED_PRICING",
+          price_money: {
+            amount: varPrice > 0 ? varPrice : basePrice,
+            currency: "USD",
           },
+          track_inventory: true,
         },
-      ],
-    },
-  }));
+      };
+    });
+
+    objects.push({
+      type: "ITEM",
+      id: `#${brandEmail.replace(/[^a-zA-Z0-9]/g, "_")}_${index}_${Date.now()}`,
+      item_data: {
+        name: `${brandName} — ${item.name}`,
+        description: `Brand: ${brandName} | Category: ${item.category || ""}`,
+        variations: squareVariations,
+      },
+    });
+  });
 
   const response = await fetch("https://connect.squareup.com/v2/catalog/batch-upsert", {
     method: "POST",
@@ -47,7 +58,7 @@ export async function POST(request: Request) {
       "Square-Version": "2024-01-18",
     },
     body: JSON.stringify({
-      idempotency_key: `${brandEmail}_${Date.now()}`,
+      idempotency_key: idempotencyKey,
       batches: [{ objects }],
     }),
   });
@@ -55,11 +66,9 @@ export async function POST(request: Request) {
   const data = await response.json();
 
   if (!response.ok) {
+    console.error("Square error:", JSON.stringify(data.errors));
     return NextResponse.json({ error: data.errors?.[0]?.detail || "Square error" }, { status: 400 });
   }
 
-  // Extract the catalog IDs that Square assigned
-  const catalogIds = data.id_mappings || [];
-
-  return NextResponse.json({ success: true, catalogIds, objects: data.objects });
+  return NextResponse.json({ success: true, catalogIds: data.id_mappings || [] });
 }
