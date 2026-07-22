@@ -233,7 +233,7 @@ export default function BrandPortal() {
       </div>
 
       {/* Nav tabs */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e8e0d5", padding: "0 2rem", display: "flex", gap: "0", overflowX: "auto" as const }}>
+      <div style={{ background: "#fff", borderBottom: "1px solid #e8e0d5", padding: "0 1rem", display: "flex", gap: "0", overflowX: "auto" as const, scrollbarWidth: "none" as const }}>
         {tabs.map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key as any)} style={{ padding: "0.85rem 1.25rem", background: "transparent", border: "none", borderBottom: activeTab === tab.key ? "2px solid #b87333" : "2px solid transparent", color: activeTab === tab.key ? "#2c1810" : "#8b7355", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const, transition: "all 0.15s" }}>
             {tab.label}
