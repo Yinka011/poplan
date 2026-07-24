@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   );
 
   const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: "https://poplan.vercel.app/brand/setup",
+    redirectTo: "https://nalpop.com/brand/setup",
   });
 
   if (error) {

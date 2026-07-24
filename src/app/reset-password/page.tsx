@@ -39,7 +39,7 @@ export default function ResetPassword() {
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: "420px", padding: "0 1.5rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#2c1810" }}>POPLAN</div>
+          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#2c1810" }}>NALPOP</div>
           <div style={{ width: "2rem", height: "1px", background: "#b87333", margin: "0.5rem auto" }}></div>
         </div>
         <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e8e0d5" }}>

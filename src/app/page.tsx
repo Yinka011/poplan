@@ -50,7 +50,7 @@ export default function HomePage() {
     setLoading(true);
     setError("");
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://poplan.vercel.app/reset-password",
+      redirectTo: "https://nalpop.com/reset-password",
     });
     if (error) { setError(error.message); setLoading(false); return; }
     setSent(true);
@@ -74,7 +74,7 @@ export default function HomePage() {
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: "420px", padding: "0 1.5rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#2c1810" }}>POPLAN</div>
+          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#2c1810" }}>NALPOP</div>
           <div style={{ width: "2rem", height: "1px", background: "#b87333", margin: "0.5rem auto" }}></div>
           <p style={{ color: "#8b7355", fontSize: "0.9rem" }}>Pop-up planning, beautifully simple</p>
         </div>

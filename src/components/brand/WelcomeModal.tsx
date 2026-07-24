@@ -33,7 +33,7 @@ export default function WelcomeModal({ brandName, onClose }: { brandName: string
     <div style={{ position: "fixed" as const, inset: 0, background: "#00000066", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
       <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "480px", width: "100%", fontFamily: "Georgia, serif", position: "relative" as const }}>
         <div style={{ marginBottom: "2rem" }}>
-          <div style={{ fontSize: "0.7rem", letterSpacing: "0.15em", color: "#b87333", marginBottom: "6px" }}>WELCOME TO POPLAN</div>
+          <div style={{ fontSize: "0.7rem", letterSpacing: "0.15em", color: "#b87333", marginBottom: "6px" }}>WELCOME TO NALPOP</div>
           <h2 style={{ fontSize: "1.4rem", color: "#2c1810", fontWeight: "normal", margin: 0 }}>
             Hi <span style={{ fontStyle: "italic" }}>{brandName}</span>
           </h2>

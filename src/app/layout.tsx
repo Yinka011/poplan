@@ -15,7 +15,7 @@ const sans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "POPLAN — Pop-up Planning Made Simple",
+  title: "NALPOP — Pop-up Planning Made Simple",
   description:
     "Plan, manage, and grow your pop-up experiences. For organizers and brands.",
 };

@@ -75,7 +75,7 @@ export default function BrandHub() {
 
       <div style={{ background: "#2c1810", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: "1.2rem", letterSpacing: "0.15em", color: "#fff" }}>POPLAN</div>
+          <div style={{ fontSize: "1.2rem", letterSpacing: "0.15em", color: "#fff" }}>NALPOP</div>
           <div style={{ width: "1.5rem", height: "1px", background: "#b87333", marginTop: "2px" }}></div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>

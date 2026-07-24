@@ -46,10 +46,10 @@ export default function Onboarding() {
     <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
       <div style={{ maxWidth: "620px", width: "100%" }}>
         <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#2c1810" }}>POPLAN</div>
+          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#2c1810" }}>NALPOP</div>
           <div style={{ width: "2rem", height: "1px", background: "#b87333", margin: "0.5rem auto 1rem" }}></div>
           <h1 style={{ fontSize: "1.5rem", color: "#2c1810", fontWeight: "normal", margin: "0 0 0.5rem" }}>Welcome. Lets get you set up.</h1>
-          <p style={{ color: "#8b7355", fontSize: "0.9rem" }}>Tell us how you use Poplan so we can personalise your experience.</p>
+          <p style={{ color: "#8b7355", fontSize: "0.9rem" }}>Tell us how you use Nalpop so we can personalise your experience.</p>
         </div>
 
         <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e8e0d5", marginBottom: "1.5rem" }}>

@@ -212,7 +212,7 @@ export default function BrandPortal() {
   if (!brand) return (
     <div style={{ minHeight: "100vh", background: "#f5f0ea", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "1.5rem", color: "#2c1810", marginBottom: "0.5rem" }}>POPLAN</div>
+        <div style={{ fontSize: "1.5rem", color: "#2c1810", marginBottom: "0.5rem" }}>NALPOP</div>
         <p style={{ color: "#8b7355", marginBottom: "1rem" }}>No brand found for {userEmail}. Please contact your event organizer.</p>
         <button onClick={handleLogout} style={{ padding: "8px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>Sign out</button>
       </div>
@@ -225,7 +225,7 @@ export default function BrandPortal() {
       {/* Top bar */}
       <div style={{ background: "#fff", borderBottom: "1px solid #e8e0d5", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky" as const, top: 0, zIndex: 10 }}>
         <div>
-          <div style={{ fontSize: "1.4rem", letterSpacing: "0.15em", color: "#2c1810" }}>POPLAN</div>
+          <div style={{ fontSize: "1.4rem", letterSpacing: "0.15em", color: "#2c1810" }}>NALPOP</div>
           <div style={{ width: "2rem", height: "1px", background: "#b87333", marginTop: "2px" }}></div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>

@@ -34,7 +34,7 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
           <span style={{ display: "block", width: "20px", height: "1.5px", background: open ? "#b87333" : "#c8b89a", transition: "all 0.2s", transform: open ? "rotate(-45deg) translate(4.5px, -4.5px)" : "none" }} />
         </button>
         <Link href="/login/organizer/events" style={{ textDecoration: "none" }}>
-          <div style={{ fontSize: "1.1rem", letterSpacing: "0.15em", color: "#fff", fontFamily: "Georgia, serif" }}>POPLAN</div>
+          <div style={{ fontSize: "1.1rem", letterSpacing: "0.15em", color: "#fff", fontFamily: "Georgia, serif" }}>NALPOP</div>
         </Link>
         {event && (
           <div style={{ marginLeft: "auto", fontSize: "0.8rem", color: "#c8b89a" }}>{event.name}</div>
