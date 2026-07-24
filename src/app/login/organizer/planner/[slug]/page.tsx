@@ -361,7 +361,7 @@ export default function PlannerDashboard() {
               {(["decor", "refreshments", "staff"] as const).map(t => (
                 <button key={t} onClick={() => setPlanningTab(t)} style={{ padding: "8px 20px", background: planningTab === t ? "#2c1810" : "#fff", color: planningTab === t ? "#fff" : "#8b7355", border: "1px solid " + (planningTab === t ? "#2c1810" : "#e8e0d5"), borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const }}>{t}</button>
               ))}
-              <a href={`/login/organizer/planner/${slug}/planning`} style={{ marginLeft: "auto", padding: "8px 16px", background: "#b87333", color: "#fff", borderRadius: "20px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>Edit & Add Items →</a>
+              <a href={`/login/organizer/planner/${slug}/planning`} style={{ marginLeft: "auto", padding: "8px 16px", background: "#2c1810", color: "#fff", borderRadius: "20px", fontSize: "0.85rem", textDecoration: "none", fontFamily: "Georgia, serif" }}>Manage items →</a>
             </div>
 
             {planningTab === "decor" && (
