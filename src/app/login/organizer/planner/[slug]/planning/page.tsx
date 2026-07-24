@@ -252,13 +252,18 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const CommentThread = ({ itemName, table, itemId }: { itemName: string; table: string; itemId: number }) => {
+  const CommentThread = ({ itemName, table, itemId, currentStatus }: { itemName: string; table: string; itemId: number; currentStatus?: string }) => {
     const itemComments = comments.filter(c => c.item_name === itemName);
     const isActive = activeComment === itemName;
     return (
       <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
         <div style={{ display: "flex", gap: "6px", marginBottom: "6px", flexWrap: "wrap" as const }}>
-          <button onClick={() => updateBrandStatus(table, itemId, "suggested")} style={{ fontSize: "0.7rem", padding: "3px 8px", background: "#b8733322", color: "#b87333", border: "1px solid #b87333", borderRadius: "6px", cursor: "pointer" }}>📤 Suggest to brand</button>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "0.72rem", color: "#8b7355" }}>Share with Wanni</span>
+            <div onClick={() => updateBrandStatus(table, itemId, currentStatus === "suggested" ? "pending" : "suggested")} style={{ width: "36px", height: "20px", borderRadius: "10px", background: currentStatus === "suggested" ? "#b87333" : "#e8e0d5", cursor: "pointer", position: "relative" as const, transition: "background 0.2s", flexShrink: 0 }}>
+              <div style={{ position: "absolute" as const, top: "2px", left: currentStatus === "suggested" ? "18px" : "2px", width: "16px", height: "16px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px #0003" }} />
+            </div>
+          </div>
           <button onClick={() => setActiveComment(isActive ? null : itemName)} style={{ fontSize: "0.7rem", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>
             💬 {itemComments.length > 0 ? `${itemComments.length} comment${itemComments.length > 1 ? "s" : ""}` : "Add note"}
           </button>
@@ -464,7 +469,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                               {item.brand_status === "rejected" && <span style={{ fontSize: "0.68rem", color: "#c0392b", background: "#c0392b22", padding: "2px 6px", borderRadius: "10px" }}>✗ Removed by brand</span>}
                               {item.brand_status === "suggested" && <span style={{ fontSize: "0.68rem", color: "#b87333", background: "#b8733322", padding: "2px 6px", borderRadius: "10px" }}>📤 Suggested</span>}
                             </div>
-                            <CommentThread itemName={item.item} table="planning_decor" itemId={item.id} />
+                            <CommentThread itemName={item.item} table="planning_decor" itemId={item.id} currentStatus={item.brand_status} />
                             <InvoiceSection itemName={item.item} category={cat} />
                           </div>
                         )}
@@ -632,7 +637,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                           <button onClick={() => { setEditing(member.id); setEditData({...member}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
                           <button onClick={() => deleteItem("planning_staff", member.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                         </div>
-                        <CommentThread itemName={member.name} table="planning_staff" itemId={member.id} />
+                        <CommentThread itemName={member.name} table="planning_staff" itemId={member.id} currentStatus={member.brand_status} />
                         <InvoiceSection itemName={member.name} category="Staff" />
                       </div>
                     )}
