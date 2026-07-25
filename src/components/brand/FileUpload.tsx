@@ -172,23 +172,23 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
   }, {} as Record<string, UploadedFile[]>);
 
   return (
-    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
-      <div style={{ fontSize: "1rem", color: "#2c1810", fontFamily: "Georgia, serif", marginBottom: "0.5rem" }}>Upload documents</div>
-      <p style={{ fontSize: "0.85rem", color: "#8b7355", marginBottom: "1.25rem" }}>Upload your brand assets directly here. AO Curates will be notified and can access everything from their dashboard.</p>
+    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e2da" }}>
+      <div style={{ fontSize: "1rem", color: "#5a3e2b", fontFamily: "Georgia, serif", marginBottom: "0.5rem" }}>Upload documents</div>
+      <p style={{ fontSize: "0.85rem", color: "#6b5f54", marginBottom: "1.25rem" }}>Upload your brand assets directly here. AO Curates will be notified and can access everything from their dashboard.</p>
 
-      <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "1rem", border: "1px solid #f0ebe4", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "1rem", border: "1px solid #f0ece6", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: "0.85rem", color: "#2c1810", fontFamily: "Georgia, serif", marginBottom: "2px" }}>Inventory template</div>
-          <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Download, fill in your products, then upload below</div>
+          <div style={{ fontSize: "0.85rem", color: "#5a3e2b", fontFamily: "Georgia, serif", marginBottom: "2px" }}>Inventory template</div>
+          <div style={{ fontSize: "0.75rem", color: "#6b5f54" }}>Download, fill in your products, then upload below</div>
         </div>
-        <a href={TEMPLATE_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.8rem", padding: "7px 14px", background: "#2c1810", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif" }}>
+        <a href={TEMPLATE_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.8rem", padding: "7px 14px", background: "#5a3e2b", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif" }}>
           Download template
         </a>
       </div>
 
       <div style={{ marginBottom: "1rem" }}>
-        <label style={{ fontSize: "0.8rem", color: "#8b7355", display: "block", marginBottom: "6px" }}>Category</label>
-        <select value={category} onChange={e => setCategory(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", color: "#2c1810", background: "#faf8f5" }}>
+        <label style={{ fontSize: "0.8rem", color: "#6b5f54", display: "block", marginBottom: "6px" }}>Category</label>
+        <select value={category} onChange={e => setCategory(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", color: "#5a3e2b", background: "#faf8f5" }}>
           {CATEGORIES.map(c => <option key={c}>{c}</option>)}
         </select>
       </div>
@@ -197,12 +197,12 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={e => { e.preventDefault(); setDragOver(false); handleUpload(e.dataTransfer.files); }}
-        style={{ border: `2px dashed ${dragOver ? "#b87333" : "#e8e0d5"}`, borderRadius: "12px", padding: "2rem", textAlign: "center", background: dragOver ? "#fdf8f3" : "#faf8f5", transition: "all 0.2s", marginBottom: "1rem", cursor: "pointer" }}
+        style={{ border: `2px dashed ${dragOver ? "#c4956a" : "#e8e2da"}`, borderRadius: "12px", padding: "2rem", textAlign: "center", background: dragOver ? "#fdf8f3" : "#faf8f5", transition: "all 0.2s", marginBottom: "1rem", cursor: "pointer" }}
         onClick={() => document.getElementById("file-input")?.click()}
       >
         <div style={{ fontSize: "1.2rem", marginBottom: "8px", color: "#c8bfb5" }}>&#8593;</div>
-        <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "4px" }}>{uploading ? "Uploading..." : "Drop files here or click to browse"}</div>
-        <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Supports images, PDFs, spreadsheets and documents</div>
+        <div style={{ fontSize: "0.9rem", color: "#5a3e2b", marginBottom: "4px" }}>{uploading ? "Uploading..." : "Drop files here or click to browse"}</div>
+        <div style={{ fontSize: "0.75rem", color: "#6b5f54" }}>Supports images, PDFs, spreadsheets and documents</div>
         <input id="file-input" type="file" multiple onChange={e => handleUpload(e.target.files)} style={{ display: "none" }} />
       </div>
 
@@ -210,13 +210,13 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
 
       {files.length > 0 && (
         <div>
-          <div style={{ fontSize: "0.8rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>UPLOADED FILES</div>
+          <div style={{ fontSize: "0.8rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>UPLOADED FILES</div>
           {CATEGORIES.map(cat => {
             const catFiles = grouped[cat];
             if (!catFiles || catFiles.length === 0) return null;
             return (
               <div key={cat} style={{ marginBottom: "1rem" }}>
-                <div style={{ fontSize: "0.75rem", color: "#b87333", marginBottom: "6px", fontWeight: 500 }}>{cat.toUpperCase()}</div>
+                <div style={{ fontSize: "0.75rem", color: "#c4956a", marginBottom: "6px", fontWeight: 500 }}>{cat.toUpperCase()}</div>
                 {catFiles.map((file, i) => {
                   const approvalStatus = getApprovalStatus(file.name);
                   const badge = approvalBadge(approvalStatus);
@@ -228,18 +228,18 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
                          file.name.match(/\.(xlsx|csv|xls)$/i) ? "▦" : "▢"}
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "0.85rem", color: "#2c1810", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
-                        <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>{formatSize(file.size)} · {formatDate(file.uploaded_at)}</div>
+                        <div style={{ fontSize: "0.85rem", color: "#5a3e2b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#6b5f54" }}>{formatSize(file.size)} · {formatDate(file.uploaded_at)}</div>
                       </div>
                       {badge && (
                         <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: badge.background, color: badge.color, whiteSpace: "nowrap" as const }}>{badge.label}</span>
                       )}
-                      <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", color: "#8b7355", textDecoration: "none" }}>View</a>
+                      <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", color: "#6b5f54", textDecoration: "none" }}>View</a>
                       <button
                         onClick={() => deleteFile(file)}
                         title="Delete"
                         style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: "#c8bfb5", fontSize: "11px", lineHeight: 1 }}
-                        onMouseEnter={e => (e.currentTarget.style.color = "#8b7355")}
+                        onMouseEnter={e => (e.currentTarget.style.color = "#6b5f54")}
                         onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}
                       >
                         &#x2715;

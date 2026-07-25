@@ -86,34 +86,34 @@ export default function AnnouncementManager({ event }: { event: string }) {
   };
 
   return (
-    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
+    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e2da" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
         <div>
-          <div style={{ fontSize: "1.1rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>Announcements</div>
-          <div style={{ fontSize: "0.8rem", color: "#8b7355", marginTop: "2px" }}>All brands see these in their portal instantly</div>
+          <div style={{ fontSize: "1.1rem", color: "#5a3e2b", fontFamily: "Georgia, serif" }}>Announcements</div>
+          <div style={{ fontSize: "0.8rem", color: "#6b5f54", marginTop: "2px" }}>All brands see these in their portal instantly</div>
         </div>
-        <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Post</button>
+        <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Post</button>
       </div>
 
       {adding && (
-        <div style={{ background: "#faf8f5", borderRadius: "12px", padding: "1rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
+        <div style={{ background: "#faf8f5", borderRadius: "12px", padding: "1rem", marginBottom: "1rem", border: "1px solid #e8e2da" }}>
           <textarea
             placeholder="Write your announcement to all brands..."
             value={newMessage}
             onChange={e => setNewMessage(e.target.value)}
             rows={3}
-            style={{ width: "100%", padding: "10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.875rem", fontFamily: "Georgia, serif", marginBottom: "10px", boxSizing: "border-box" as const, resize: "vertical" as const }}
+            style={{ width: "100%", padding: "10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.875rem", fontFamily: "Georgia, serif", marginBottom: "10px", boxSizing: "border-box" as const, resize: "vertical" as const }}
           />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "#8b7355", cursor: "pointer" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "#6b5f54", cursor: "pointer" }}>
               <input type="checkbox" checked={pinned} onChange={e => setPinned(e.target.checked)} />
               Pin this announcement
             </label>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={postAnnouncement} disabled={saving} style={{ padding: "7px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+              <button onClick={postAnnouncement} disabled={saving} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
                 {saving ? "Posting..." : "Post to all brands"}
               </button>
-              <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
             </div>
           </div>
         </div>
@@ -121,18 +121,18 @@ export default function AnnouncementManager({ event }: { event: string }) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {announcements.map(a => (
-          <div key={a.id} style={{ background: a.pinned ? "#fdf8f3" : "#faf8f5", borderRadius: "10px", padding: "1rem", border: `1px solid ${a.pinned ? "#e8e0d5" : "#f0ebe4"}` }}>
+          <div key={a.id} style={{ background: a.pinned ? "#fdf8f3" : "#faf8f5", borderRadius: "10px", padding: "1rem", border: `1px solid ${a.pinned ? "#e8e2da" : "#f0ece6"}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                {a.pinned && <span style={{ fontSize: "0.65rem", padding: "1px 6px", borderRadius: "10px", background: "#f0ebe4", color: "#8b7355", letterSpacing: "0.05em" }}>PINNED</span>}
-                <span style={{ fontSize: "0.8rem", color: "#8b7355" }}>{formatDate(a.created_at)}</span>
+                {a.pinned && <span style={{ fontSize: "0.65rem", padding: "1px 6px", borderRadius: "10px", background: "#f0ece6", color: "#6b5f54", letterSpacing: "0.05em" }}>PINNED</span>}
+                <span style={{ fontSize: "0.8rem", color: "#6b5f54" }}>{formatDate(a.created_at)}</span>
               </div>
               <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                 <button
                   onClick={() => togglePin(a)}
                   title={a.pinned ? "Unpin" : "Pin"}
                   style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", lineHeight: 1, color: "#c8bfb5", fontSize: "12px" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#8b7355")}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#6b5f54")}
                   onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}
                 >
                   &#x2713;
@@ -141,14 +141,14 @@ export default function AnnouncementManager({ event }: { event: string }) {
                   onClick={() => deleteAnnouncement(a.id)}
                   title="Delete"
                   style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", lineHeight: 1, color: "#c8bfb5", fontSize: "12px" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#8b7355")}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#6b5f54")}
                   onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}
                 >
                   &#x2715;
                 </button>
               </div>
             </div>
-            <p style={{ fontSize: "0.875rem", color: "#2c1810", lineHeight: 1.7, margin: 0 }}>{a.message}</p>
+            <p style={{ fontSize: "0.875rem", color: "#5a3e2b", lineHeight: 1.7, margin: 0 }}>{a.message}</p>
           </div>
         ))}
       </div>

@@ -25,7 +25,7 @@ export default function ResetPassword() {
   const inp = {
     width: "100%",
     padding: "0.75rem",
-    border: "1px solid #e8e0d5",
+    border: "1px solid #e8e2da",
     borderRadius: "8px",
     fontSize: "0.95rem",
     fontFamily: "Georgia, serif",
@@ -36,27 +36,27 @@ export default function ResetPassword() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", background: "#faf8f5", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: "420px", padding: "0 1.5rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#2c1810" }}>NALPOP</div>
-          <div style={{ width: "2rem", height: "1px", background: "#b87333", margin: "0.5rem auto" }}></div>
+          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#5a3e2b" }}>NALPOP</div>
+          <div style={{ width: "2rem", height: "1px", background: "#c4956a", margin: "0.5rem auto" }}></div>
         </div>
-        <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e8e0d5" }}>
+        <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e8e2da" }}>
           {done ? (
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>✅</div>
-              <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "0.5rem" }}>Password updated!</h2>
-              <p style={{ fontSize: "0.85rem", color: "#8b7355" }}>Redirecting you to sign in...</p>
+              <h2 style={{ fontSize: "1.3rem", color: "#5a3e2b", fontWeight: "normal", marginBottom: "0.5rem" }}>Password updated!</h2>
+              <p style={{ fontSize: "0.85rem", color: "#6b5f54" }}>Redirecting you to sign in...</p>
             </div>
           ) : (
             <form onSubmit={handleReset}>
-              <h2 style={{ fontSize: "1.3rem", color: "#2c1810", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Set new password</h2>
-              <p style={{ fontSize: "0.85rem", color: "#8b7355", textAlign: "center", marginBottom: "1.5rem" }}>Choose a strong password for your account</p>
+              <h2 style={{ fontSize: "1.3rem", color: "#5a3e2b", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Set new password</h2>
+              <p style={{ fontSize: "0.85rem", color: "#6b5f54", textAlign: "center", marginBottom: "1.5rem" }}>Choose a strong password for your account</p>
               <input type="password" placeholder="New password" value={password} onChange={e => setPassword(e.target.value)} required style={inp} />
               <input type="password" placeholder="Confirm password" value={confirm} onChange={e => setConfirm(e.target.value)} required style={inp} />
               {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
-              <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.85rem", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
+              <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.85rem", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
                 {loading ? "Updating..." : "Update password"}
               </button>
             </form>

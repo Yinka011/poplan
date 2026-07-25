@@ -33,27 +33,27 @@ export default function WelcomeModal({ brandName, onClose }: { brandName: string
     <div style={{ position: "fixed" as const, inset: 0, background: "#00000066", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
       <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "480px", width: "100%", fontFamily: "Georgia, serif", position: "relative" as const }}>
         <div style={{ marginBottom: "2rem" }}>
-          <div style={{ fontSize: "0.7rem", letterSpacing: "0.15em", color: "#b87333", marginBottom: "6px" }}>WELCOME TO NALPOP</div>
-          <h2 style={{ fontSize: "1.4rem", color: "#2c1810", fontWeight: "normal", margin: 0 }}>
+          <div style={{ fontSize: "0.7rem", letterSpacing: "0.15em", color: "#c4956a", marginBottom: "6px" }}>WELCOME TO NALPOP</div>
+          <h2 style={{ fontSize: "1.4rem", color: "#5a3e2b", fontWeight: "normal", margin: 0 }}>
             Hi <span style={{ fontStyle: "italic" }}>{brandName}</span>
           </h2>
-          <p style={{ fontSize: "0.85rem", color: "#8b7355", marginTop: "6px", lineHeight: 1.6 }}>Here is everything you need to know to get started.</p>
+          <p style={{ fontSize: "0.85rem", color: "#6b5f54", marginTop: "6px", lineHeight: 1.6 }}>Here is everything you need to know to get started.</p>
         </div>
         <div style={{ display: "flex", gap: "6px", marginBottom: "2rem" }}>
           {steps.map((_, i) => (
-            <div key={i} style={{ height: "3px", flex: 1, borderRadius: "2px", background: i <= step ? "#2c1810" : "#e8e0d5", transition: "background 0.3s" }} />
+            <div key={i} style={{ height: "3px", flex: 1, borderRadius: "2px", background: i <= step ? "#5a3e2b" : "#e8e2da", transition: "background 0.3s" }} />
           ))}
         </div>
         <div style={{ marginBottom: "2rem" }}>
-          <div style={{ fontSize: "2.5rem", color: "#f0ebe4", lineHeight: 1, marginBottom: "0.5rem" }}>{current.number}</div>
-          <h3 style={{ fontSize: "1.1rem", color: "#2c1810", fontWeight: "normal", margin: "0 0 0.75rem 0" }}>{current.title}</h3>
-          <p style={{ fontSize: "0.88rem", color: "#8b7355", lineHeight: 1.75, margin: 0 }}>{current.description}</p>
+          <div style={{ fontSize: "2.5rem", color: "#f0ece6", lineHeight: 1, marginBottom: "0.5rem" }}>{current.number}</div>
+          <h3 style={{ fontSize: "1.1rem", color: "#5a3e2b", fontWeight: "normal", margin: "0 0 0.75rem 0" }}>{current.title}</h3>
+          <p style={{ fontSize: "0.88rem", color: "#6b5f54", lineHeight: 1.75, margin: 0 }}>{current.description}</p>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <button onClick={() => setStep(s => s - 1)} style={{ fontSize: "0.85rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer", padding: "8px 0", visibility: step === 0 ? "hidden" : "visible" as const }}>
+          <button onClick={() => setStep(s => s - 1)} style={{ fontSize: "0.85rem", color: "#6b5f54", background: "transparent", border: "none", cursor: "pointer", padding: "8px 0", visibility: step === 0 ? "hidden" : "visible" as const }}>
             Back
           </button>
-          <button onClick={() => isLast ? onClose() : setStep(s => s + 1)} style={{ padding: "10px 24px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.9rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+          <button onClick={() => isLast ? onClose() : setStep(s => s + 1)} style={{ padding: "10px 24px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.9rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
             {isLast ? "Lets go" : "Next"}
           </button>
         </div>

@@ -84,31 +84,31 @@ export default function MarketingPlans({ event }: Props) {
   const completedItems = items.filter(i => i.completed).length;
   const overdueItems = items.filter(i => isOverdue(i)).length;
 
-  const inp = (style?: object) => ({ padding: "7px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", ...style });
+  const inp = (style?: object) => ({ padding: "7px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", ...style });
 
-  if (loading) return <div style={{ fontSize: "0.85rem", color: "#8b7355" }}>Loading...</div>;
+  if (loading) return <div style={{ fontSize: "0.85rem", color: "#6b5f54" }}>Loading...</div>;
 
   return (
-    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5", fontFamily: "Georgia, serif" }}>
+    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e2da", fontFamily: "Georgia, serif" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-        <h2 style={{ fontSize: "1rem", color: "#2c1810", fontWeight: "normal", margin: 0 }}>Marketing Plans</h2>
+        <h2 style={{ fontSize: "1rem", color: "#5a3e2b", fontWeight: "normal", margin: 0 }}>Marketing Plans</h2>
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <span style={{ fontSize: "0.78rem", color: "#8b7355" }}>{completedItems}/{totalItems} done</span>
+          <span style={{ fontSize: "0.78rem", color: "#6b5f54" }}>{completedItems}/{totalItems} done</span>
           {overdueItems > 0 && <span style={{ fontSize: "0.7rem", color: "#c0392b", background: "#c0392b11", padding: "2px 8px", borderRadius: "20px" }}>{overdueItems} overdue</span>}
         </div>
-        <button onClick={() => setAdding(!adding)} style={{ padding: "5px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add task</button>
+        <button onClick={() => setAdding(!adding)} style={{ padding: "5px 12px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add task</button>
       </div>
 
       {totalItems > 0 && (
-        <div style={{ height: "3px", background: "#f0ebe4", borderRadius: "2px", marginBottom: "1rem" }}>
+        <div style={{ height: "3px", background: "#f0ece6", borderRadius: "2px", marginBottom: "1rem" }}>
           <div style={{ height: "100%", width: `${totalItems > 0 ? (completedItems / totalItems) * 100 : 0}%`, background: "#4a7c59", borderRadius: "2px" }} />
         </div>
       )}
 
       {adding && (
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem", marginBottom: "1rem", border: "1px solid #e8e2da" }}>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
             <input placeholder="Task e.g. Post event teaser" value={newItem.task} onChange={e => setNewItem({...newItem, task: e.target.value})} style={inp()} />
             <select value={newItem.channel} onChange={e => setNewItem({...newItem, channel: e.target.value})} style={inp()}>
@@ -121,53 +121,53 @@ export default function MarketingPlans({ event }: Props) {
             <input placeholder="Notes (optional)" value={newItem.notes} onChange={e => setNewItem({...newItem, notes: e.target.value})} style={inp()} />
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={addItem} style={{ padding: "6px 14px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
-            <button onClick={() => setAdding(false)} style={{ padding: "6px 14px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>Cancel</button>
+            <button onClick={addItem} style={{ padding: "6px 14px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
+            <button onClick={() => setAdding(false)} style={{ padding: "6px 14px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>Cancel</button>
           </div>
         </div>
       )}
 
       {Object.keys(grouped).length === 0 ? (
-        <div style={{ textAlign: "center", padding: "1.5rem", color: "#8b7355", fontSize: "0.82rem" }}>No marketing tasks yet.</div>
+        <div style={{ textAlign: "center", padding: "1.5rem", color: "#6b5f54", fontSize: "0.82rem" }}>No marketing tasks yet.</div>
       ) : (
         Object.entries(grouped).map(([channel, channelItems]) => {
           const done = channelItems.filter(i => i.completed).length;
           const isCollapsed = collapsed[channel];
           return (
-            <div key={channel} style={{ marginBottom: "0.75rem", background: "#fff", borderRadius: "10px", border: "1px solid #e8e0d5", overflow: "hidden" }}>
+            <div key={channel} style={{ marginBottom: "0.75rem", background: "#fff", borderRadius: "10px", border: "1px solid #e8e2da", overflow: "hidden" }}>
               <div onClick={() => setCollapsed(prev => ({...prev, [channel]: !prev[channel]}))} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", cursor: "pointer", background: "#faf8f5" }}>
-                <span style={{ fontSize: "0.82rem", color: "#2c1810", fontWeight: 500, flex: 1 }}>{channel}</span>
-                <span style={{ fontSize: "0.7rem", color: "#8b7355" }}>{done}/{channelItems.length}</span>
-                <span style={{ fontSize: "0.7rem", color: "#8b7355" }}>{isCollapsed ? "▸" : "▾"}</span>
+                <span style={{ fontSize: "0.82rem", color: "#5a3e2b", fontWeight: 500, flex: 1 }}>{channel}</span>
+                <span style={{ fontSize: "0.7rem", color: "#6b5f54" }}>{done}/{channelItems.length}</span>
+                <span style={{ fontSize: "0.7rem", color: "#6b5f54" }}>{isCollapsed ? "▸" : "▾"}</span>
               </div>
               {!isCollapsed && channelItems.map(item => (
-                <div key={item.id} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "9px 14px", borderTop: "1px solid #f0ebe4", background: isOverdue(item) ? "#fff8f8" : "#fff" }}>
+                <div key={item.id} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "9px 14px", borderTop: "1px solid #f0ece6", background: isOverdue(item) ? "#fff8f8" : "#fff" }}>
                   <div onClick={() => toggleComplete(item)} style={{ width: "17px", height: "17px", borderRadius: "50%", border: item.completed ? "none" : "1.5px solid #d4c5b0", background: item.completed ? "#4a7c59" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, marginTop: "2px" }}>
                     {item.completed && <span style={{ color: "#fff", fontSize: "9px" }}>✓</span>}
                   </div>
                   {editing === item.id ? (
                     <div style={{ flex: 1, display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
-                      <input value={editData.task} onChange={e => setEditData({...editData, task: e.target.value})} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif", minWidth: "150px" }} />
-                      <select value={editData.channel} onChange={e => setEditData({...editData, channel: e.target.value})} style={{ padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }}>
+                      <input value={editData.task} onChange={e => setEditData({...editData, task: e.target.value})} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif", minWidth: "150px" }} />
+                      <select value={editData.channel} onChange={e => setEditData({...editData, channel: e.target.value})} style={{ padding: "5px 8px", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }}>
                         {PLATFORMS.map(p => <option key={p}>{p}</option>)}
                       </select>
-                      <input type="date" value={editData.due_date} onChange={e => setEditData({...editData, due_date: e.target.value})} style={{ padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem" }} />
-                      <input placeholder="Assigned to" value={editData.assigned_to} onChange={e => setEditData({...editData, assigned_to: e.target.value})} style={{ padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif", width: "110px" }} />
-                      <button onClick={() => saveEdit(item.id)} style={{ padding: "4px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>Save</button>
-                      <button onClick={() => setEditing(null)} style={{ padding: "4px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>✕</button>
+                      <input type="date" value={editData.due_date} onChange={e => setEditData({...editData, due_date: e.target.value})} style={{ padding: "5px 8px", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "0.78rem" }} />
+                      <input placeholder="Assigned to" value={editData.assigned_to} onChange={e => setEditData({...editData, assigned_to: e.target.value})} style={{ padding: "5px 8px", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif", width: "110px" }} />
+                      <button onClick={() => saveEdit(item.id)} style={{ padding: "4px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>Save</button>
+                      <button onClick={() => setEditing(null)} style={{ padding: "4px 8px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>✕</button>
                     </div>
                   ) : (
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "0.85rem", color: item.completed ? "#b0a090" : "#2c1810", textDecoration: item.completed ? "line-through" : "none" }}>{item.task}</div>
+                      <div style={{ fontSize: "0.85rem", color: item.completed ? "#b0a090" : "#5a3e2b", textDecoration: item.completed ? "line-through" : "none" }}>{item.task}</div>
                       <div style={{ display: "flex", gap: "8px", marginTop: "2px", flexWrap: "wrap" as const }}>
-                        <span style={{ fontSize: "0.7rem", color: isOverdue(item) ? "#c0392b" : "#8b7355" }}>{isOverdue(item) ? "⚠ " : ""}Due {formatDate(item.due_date)}</span>
-                        {item.assigned_to && <span style={{ fontSize: "0.7rem", color: "#b87333" }}>→ {item.assigned_to}</span>}
+                        <span style={{ fontSize: "0.7rem", color: isOverdue(item) ? "#c0392b" : "#6b5f54" }}>{isOverdue(item) ? "⚠ " : ""}Due {formatDate(item.due_date)}</span>
+                        {item.assigned_to && <span style={{ fontSize: "0.7rem", color: "#c4956a" }}>→ {item.assigned_to}</span>}
                         {item.notes && <span style={{ fontSize: "0.7rem", color: "#aaa", fontStyle: "italic" }}>{item.notes}</span>}
                       </div>
                     </div>
                   )}
                   {editing !== item.id && <div style={{ display: "flex", gap: "4px" }}>
-                    <button onClick={() => { setEditing(item.id); setEditData({ task: item.task, due_date: item.due_date || "", channel: item.channel, assigned_to: item.assigned_to || "", notes: item.notes || "" }); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#8b7355")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✎</button>
+                    <button onClick={() => { setEditing(item.id); setEditData({ task: item.task, due_date: item.due_date || "", channel: item.channel, assigned_to: item.assigned_to || "", notes: item.notes || "" }); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#6b5f54")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✎</button>
                     <button onClick={() => deleteItem(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✕</button>
                   </div>}
                 </div>

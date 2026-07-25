@@ -55,12 +55,12 @@ export default function BrandSales({ event, brandEmail }: Props) {
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   const formatCurrency = (n: number) => `$${Number(n).toFixed(2)}`;
 
-  if (loading) return <div style={{ fontSize: "0.85rem", color: "#8b7355", padding: "1rem" }}>Loading sales data...</div>;
+  if (loading) return <div style={{ fontSize: "0.85rem", color: "#6b5f54", padding: "1rem" }}>Loading sales data...</div>;
 
   if (sales.length === 0) return (
-    <div style={{ background: "#fff", borderRadius: "14px", padding: "3rem", textAlign: "center", border: "1px solid #e8e0d5" }}>
-      <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>No sales yet</div>
-      <div style={{ fontSize: "0.82rem", color: "#8b7355" }}>Your sales will appear here after the event begins.</div>
+    <div style={{ background: "#fff", borderRadius: "14px", padding: "3rem", textAlign: "center", border: "1px solid #e8e2da" }}>
+      <div style={{ fontSize: "1rem", color: "#5a3e2b", marginBottom: "0.5rem" }}>No sales yet</div>
+      <div style={{ fontSize: "0.82rem", color: "#6b5f54" }}>Your sales will appear here after the event begins.</div>
     </div>
   );
 
@@ -69,7 +69,7 @@ export default function BrandSales({ event, brandEmail }: Props) {
 
       {/* Payout summary */}
       {payout && (
-        <div style={{ background: "#2c1810", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "#fff" }}>
+        <div style={{ background: "#5a3e2b", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "#fff" }}>
           <div style={{ fontSize: "0.65rem", color: "#c8b89a", letterSpacing: "0.15em", marginBottom: "1rem" }}>YOUR SALES SUMMARY</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1.5rem" }}>
             <div>
@@ -99,40 +99,40 @@ export default function BrandSales({ event, brandEmail }: Props) {
 
       {/* Day filter */}
       <div style={{ display: "flex", gap: "6px", marginBottom: "1.5rem", flexWrap: "wrap" as const }}>
-        <button onClick={() => setActiveDay("all")} style={{ padding: "5px 14px", background: activeDay === "all" ? "#2c1810" : "#fff", color: activeDay === "all" ? "#fff" : "#8b7355", border: "1px solid " + (activeDay === "all" ? "#2c1810" : "#e8e0d5"), borderRadius: "20px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>All days</button>
+        <button onClick={() => setActiveDay("all")} style={{ padding: "5px 14px", background: activeDay === "all" ? "#5a3e2b" : "#fff", color: activeDay === "all" ? "#fff" : "#6b5f54", border: "1px solid " + (activeDay === "all" ? "#5a3e2b" : "#e8e2da"), borderRadius: "20px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>All days</button>
         {days.map(day => (
-          <button key={day} onClick={() => setActiveDay(day)} style={{ padding: "5px 14px", background: activeDay === day ? "#2c1810" : "#fff", color: activeDay === day ? "#fff" : "#8b7355", border: "1px solid " + (activeDay === day ? "#2c1810" : "#e8e0d5"), borderRadius: "20px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{formatDate(day)}</button>
+          <button key={day} onClick={() => setActiveDay(day)} style={{ padding: "5px 14px", background: activeDay === day ? "#5a3e2b" : "#fff", color: activeDay === day ? "#fff" : "#6b5f54", border: "1px solid " + (activeDay === day ? "#5a3e2b" : "#e8e2da"), borderRadius: "20px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{formatDate(day)}</button>
         ))}
       </div>
 
       {/* Day summary */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.12em", marginBottom: "8px" }}>UNITS SOLD</div>
-          <div style={{ fontSize: "2rem", color: "#2c1810", fontWeight: "normal" }}>{dayUnits}</div>
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e2da" }}>
+          <div style={{ fontSize: "0.6rem", color: "#6b5f54", letterSpacing: "0.12em", marginBottom: "8px" }}>UNITS SOLD</div>
+          <div style={{ fontSize: "2rem", color: "#5a3e2b", fontWeight: "normal" }}>{dayUnits}</div>
         </div>
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.12em", marginBottom: "8px" }}>REVENUE</div>
-          <div style={{ fontSize: "2rem", color: "#2c1810", fontWeight: "normal" }}>{formatCurrency(dayTotal)}</div>
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e2da" }}>
+          <div style={{ fontSize: "0.6rem", color: "#6b5f54", letterSpacing: "0.12em", marginBottom: "8px" }}>REVENUE</div>
+          <div style={{ fontSize: "2rem", color: "#5a3e2b", fontWeight: "normal" }}>{formatCurrency(dayTotal)}</div>
         </div>
       </div>
 
       {/* Sales table */}
-      <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e8e0d5", overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "10px 16px", background: "#faf8f5", fontSize: "0.68rem", color: "#8b7355", letterSpacing: "0.08em" }}>
+      <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e8e2da", overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "10px 16px", background: "#faf8f5", fontSize: "0.68rem", color: "#6b5f54", letterSpacing: "0.08em" }}>
           <div>PRODUCT</div><div>VARIATION</div><div>QTY</div><div>REVENUE</div>
         </div>
         {filteredSales.map(sale => (
-          <div key={sale.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "12px 16px", borderTop: "1px solid #f0ebe4", alignItems: "center" }}>
-            <div style={{ fontSize: "0.88rem", color: "#2c1810" }}>{sale.product_name}</div>
-            <div style={{ fontSize: "0.82rem", color: "#8b7355" }}>{sale.variation_name || "—"}</div>
-            <div style={{ fontSize: "0.88rem", color: "#2c1810" }}>{sale.quantity_sold}</div>
+          <div key={sale.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "12px 16px", borderTop: "1px solid #f0ece6", alignItems: "center" }}>
+            <div style={{ fontSize: "0.88rem", color: "#5a3e2b" }}>{sale.product_name}</div>
+            <div style={{ fontSize: "0.82rem", color: "#6b5f54" }}>{sale.variation_name || "—"}</div>
+            <div style={{ fontSize: "0.88rem", color: "#5a3e2b" }}>{sale.quantity_sold}</div>
             <div style={{ fontSize: "0.88rem", color: "#4a7c59" }}>{formatCurrency(Number(sale.total_revenue))}</div>
           </div>
         ))}
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #f0ebe4", display: "flex", justifyContent: "space-between" }}>
-          <span style={{ fontSize: "0.8rem", color: "#8b7355" }}>{filteredSales.length} line item{filteredSales.length !== 1 ? "s" : ""}</span>
-          <span style={{ fontSize: "0.88rem", color: "#2c1810", fontWeight: 500 }}>Total: {formatCurrency(dayTotal)}</span>
+        <div style={{ padding: "12px 16px", borderTop: "1px solid #f0ece6", display: "flex", justifyContent: "space-between" }}>
+          <span style={{ fontSize: "0.8rem", color: "#6b5f54" }}>{filteredSales.length} line item{filteredSales.length !== 1 ? "s" : ""}</span>
+          <span style={{ fontSize: "0.88rem", color: "#5a3e2b", fontWeight: 500 }}>Total: {formatCurrency(dayTotal)}</span>
         </div>
       </div>
     </div>

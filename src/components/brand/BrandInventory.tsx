@@ -184,9 +184,9 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
   const totalValue = products.reduce((s, p) => s + (p.variations || []).reduce((vs, v) => vs + (v.price || p.base_price) * v.quantity, 0), 0);
   const inSquare = products.filter(p => p.square_catalog_id).length;
 
-  const inp = (style?: object) => ({ padding: "7px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", ...style });
+  const inp = (style?: object) => ({ padding: "7px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", ...style });
 
-  if (loading) return <div style={{ fontSize: "0.85rem", color: "#8b7355", padding: "1rem" }}>Loading inventory...</div>;
+  if (loading) return <div style={{ fontSize: "0.85rem", color: "#6b5f54", padding: "1rem" }}>Loading inventory...</div>;
 
   return (
     <div style={{ fontFamily: "Georgia, serif" }}>
@@ -194,13 +194,13 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
         <div>
-          <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "4px" }}>Product catalogue</div>
-          <div style={{ fontSize: "0.8rem", color: "#8b7355" }}>Add all products you are sending to the pop-up. We will upload them to our Square POS terminal.</div>
+          <div style={{ fontSize: "1rem", color: "#5a3e2b", marginBottom: "4px" }}>Product catalogue</div>
+          <div style={{ fontSize: "0.8rem", color: "#6b5f54" }}>Add all products you are sending to the pop-up. We will upload them to our Square POS terminal.</div>
           {products.length > 0 && (
             <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
-              <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>{products.length} product{products.length !== 1 ? "s" : ""}</span>
-              <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>{totalUnits} units</span>
-              <span style={{ fontSize: "0.75rem", color: "#8b7355" }}>Total value: ${totalValue.toFixed(2)}</span>
+              <span style={{ fontSize: "0.75rem", color: "#6b5f54" }}>{products.length} product{products.length !== 1 ? "s" : ""}</span>
+              <span style={{ fontSize: "0.75rem", color: "#6b5f54" }}>{totalUnits} units</span>
+              <span style={{ fontSize: "0.75rem", color: "#6b5f54" }}>Total value: ${totalValue.toFixed(2)}</span>
               <span style={{ fontSize: "0.75rem", color: "#4a7c59" }}>{inSquare}/{products.length} in Square</span>
             </div>
           )}
@@ -211,14 +211,14 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
               {uploadingAllToSquare ? "Uploading..." : "↑ Upload all to Square"}
             </button>
           )}
-          <button onClick={() => setAddingProduct(true)} style={{ padding: "8px 14px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.8rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add product</button>
+          <button onClick={() => setAddingProduct(true)} style={{ padding: "8px 14px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.8rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add product</button>
         </div>
       </div>
 
       {/* Add product form */}
       {addingProduct && (
-        <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "0.9rem", color: "#2c1810", marginBottom: "1rem" }}>New product</div>
+        <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e2da" }}>
+          <div style={{ fontSize: "0.9rem", color: "#5a3e2b", marginBottom: "1rem" }}>New product</div>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "8px", marginBottom: "1rem" }}>
             <input placeholder="Product name e.g. Black Midi Dress" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} style={inp()} />
             <select value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})} style={inp()}>
@@ -229,37 +229,37 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
 
           {/* Photo upload */}
           <div style={{ marginBottom: "1rem" }}>
-            <div style={{ fontSize: "0.72rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "6px" }}>PRODUCT PHOTO</div>
+            <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "6px" }}>PRODUCT PHOTO</div>
             <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <div onClick={() => document.getElementById("product-photo-upload")?.click()} style={{ width: "100px", height: "100px", border: "2px dashed #e8e0d5", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: photoPreview ? "#000" : "#faf8f5", overflow: "hidden", flexShrink: 0 }}>
+              <div onClick={() => document.getElementById("product-photo-upload")?.click()} style={{ width: "100px", height: "100px", border: "2px dashed #e8e2da", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: photoPreview ? "#000" : "#faf8f5", overflow: "hidden", flexShrink: 0 }}>
                 <input id="product-photo-upload" type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files?.[0] && handlePhotoSelect(e.target.files[0])} />
                 {photoPreview ? (
                   <img src={photoPreview} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  <div style={{ textAlign: "center", fontSize: "0.72rem", color: "#8b7355" }}>📷<br/>Upload</div>
+                  <div style={{ textAlign: "center", fontSize: "0.72rem", color: "#6b5f54" }}>📷<br/>Upload</div>
                 )}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "0.75rem", color: "#8b7355", marginBottom: "4px" }}>Or paste a photo URL</div>
+                <div style={{ fontSize: "0.75rem", color: "#6b5f54", marginBottom: "4px" }}>Or paste a photo URL</div>
                 <input placeholder="https://..." value={newProduct.photo_url} onChange={e => { setNewProduct({...newProduct, photo_url: e.target.value}); if (e.target.value) { setSelectedFile(null); setPhotoPreview(null); } }} style={inp({ width: "100%", boxSizing: "border-box" as const })} />
               </div>
             </div>
           </div>
 
           <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={addProduct} disabled={uploadingPhoto} style={{ padding: "8px 18px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>
+            <button onClick={addProduct} disabled={uploadingPhoto} style={{ padding: "8px 18px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>
               {uploadingPhoto ? "Uploading photo..." : "Save product"}
             </button>
-            <button onClick={() => { setAddingProduct(false); setPhotoPreview(null); setSelectedFile(null); }} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
+            <button onClick={() => { setAddingProduct(false); setPhotoPreview(null); setSelectedFile(null); }} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
           </div>
         </div>
       )}
 
       {/* Products list */}
       {products.length === 0 && !addingProduct && (
-        <div style={{ background: "#fff", borderRadius: "14px", padding: "4rem", textAlign: "center", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>No products yet</div>
-          <div style={{ fontSize: "0.82rem", color: "#8b7355" }}>Add the products you plan to bring to the pop-up.</div>
+        <div style={{ background: "#fff", borderRadius: "14px", padding: "4rem", textAlign: "center", border: "1px solid #e8e2da" }}>
+          <div style={{ fontSize: "1rem", color: "#5a3e2b", marginBottom: "0.5rem" }}>No products yet</div>
+          <div style={{ fontSize: "0.82rem", color: "#6b5f54" }}>Add the products you plan to bring to the pop-up.</div>
         </div>
       )}
 
@@ -267,11 +267,11 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
         const productUnits = (product.variations || []).reduce((s, v) => s + v.quantity, 0);
         const productValue = (product.variations || []).reduce((s, v) => s + (v.price || product.base_price) * v.quantity, 0);
         return (
-          <div key={product.id} style={{ background: "#fff", borderRadius: "14px", marginBottom: "1rem", border: "1px solid #e8e0d5", overflow: "hidden" }}>
+          <div key={product.id} style={{ background: "#fff", borderRadius: "14px", marginBottom: "1rem", border: "1px solid #e8e2da", overflow: "hidden" }}>
             {/* Product header */}
             <div style={{ display: "flex", gap: "1rem", padding: "1.25rem", alignItems: "flex-start" }}>
               {/* Photo */}
-              <div style={{ width: "80px", height: "80px", borderRadius: "10px", background: "#f5f0ea", flexShrink: 0, overflow: "hidden", border: "1px solid #e8e0d5" }}>
+              <div style={{ width: "80px", height: "80px", borderRadius: "10px", background: "#faf8f5", flexShrink: 0, overflow: "hidden", border: "1px solid #e8e2da" }}>
                 {product.photo_url ? (
                   <img src={product.photo_url} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
@@ -282,15 +282,15 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div style={{ fontSize: "1rem", color: "#2c1810", marginBottom: "2px" }}>{product.name}</div>
-                    <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>{product.category} · Base price ${Number(product.base_price).toFixed(2)}</div>
+                    <div style={{ fontSize: "1rem", color: "#5a3e2b", marginBottom: "2px" }}>{product.name}</div>
+                    <div style={{ fontSize: "0.75rem", color: "#6b5f54" }}>{product.category} · Base price ${Number(product.base_price).toFixed(2)}</div>
                     <div style={{ display: "flex", gap: "12px", marginTop: "6px" }}>
-                      <span style={{ fontSize: "0.72rem", color: "#8b7355" }}>{productUnits} units</span>
-                      <span style={{ fontSize: "0.72rem", color: "#8b7355" }}>Value: ${productValue.toFixed(2)}</span>
+                      <span style={{ fontSize: "0.72rem", color: "#6b5f54" }}>{productUnits} units</span>
+                      <span style={{ fontSize: "0.72rem", color: "#6b5f54" }}>Value: ${productValue.toFixed(2)}</span>
                       {product.square_catalog_id ? (
                         <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>✓ In Square</span>
                       ) : (
-                        <span style={{ fontSize: "0.72rem", color: "#b87333" }}>Not in Square</span>
+                        <span style={{ fontSize: "0.72rem", color: "#c4956a" }}>Not in Square</span>
                       )}
                     </div>
                   </div>
@@ -308,16 +308,16 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
 
             {/* Variations table */}
             {(product.variations || []).length > 0 && (
-              <div style={{ borderTop: "1px solid #f0ebe4" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 40px", padding: "8px 16px", background: "#faf8f5", fontSize: "0.68rem", color: "#8b7355", letterSpacing: "0.08em" }}>
+              <div style={{ borderTop: "1px solid #f0ece6" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 40px", padding: "8px 16px", background: "#faf8f5", fontSize: "0.68rem", color: "#6b5f54", letterSpacing: "0.08em" }}>
                   <div>SIZE</div><div>COLOUR</div><div>QTY</div><div>PRICE</div><div></div>
                 </div>
                 {(product.variations || []).map(v => (
                   <div key={v.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 40px", padding: "8px 16px", borderTop: "1px solid #f5f2ee", alignItems: "center" }}>
-                    <div style={{ fontSize: "0.82rem", color: "#2c1810" }}>{v.size || "—"}</div>
-                    <div style={{ fontSize: "0.82rem", color: "#2c1810" }}>{v.colour || "—"}</div>
-                    <div style={{ fontSize: "0.82rem", color: "#2c1810" }}>{v.quantity}</div>
-                    <div style={{ fontSize: "0.82rem", color: "#2c1810" }}>${Number(v.price || product.base_price).toFixed(2)}</div>
+                    <div style={{ fontSize: "0.82rem", color: "#5a3e2b" }}>{v.size || "—"}</div>
+                    <div style={{ fontSize: "0.82rem", color: "#5a3e2b" }}>{v.colour || "—"}</div>
+                    <div style={{ fontSize: "0.82rem", color: "#5a3e2b" }}>{v.quantity}</div>
+                    <div style={{ fontSize: "0.82rem", color: "#5a3e2b" }}>${Number(v.price || product.base_price).toFixed(2)}</div>
                     <button onClick={() => deleteVariation(product.id, v.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                   </div>
                 ))}
@@ -326,7 +326,7 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
 
             {/* Add variation form */}
             {addingVariation === product.id ? (
-              <div style={{ borderTop: "1px solid #f0ebe4", padding: "1rem 1.25rem", background: "#faf8f5" }}>
+              <div style={{ borderTop: "1px solid #f0ece6", padding: "1rem 1.25rem", background: "#faf8f5" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: "8px", alignItems: "center" }}>
                   <select value={newVariation.size} onChange={e => setNewVariation({...newVariation, size: e.target.value})} style={inp()}>
                     {SIZES.map(s => <option key={s}>{s}</option>)}
@@ -337,14 +337,14 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
                   <input placeholder="Qty" type="number" value={newVariation.quantity} onChange={e => setNewVariation({...newVariation, quantity: e.target.value})} style={inp()} />
                   <input placeholder={`Price (default $${product.base_price})`} type="number" value={newVariation.price} onChange={e => setNewVariation({...newVariation, price: e.target.value})} style={inp()} />
                   <div style={{ display: "flex", gap: "6px" }}>
-                    <button onClick={() => addVariation(product.id)} style={{ padding: "7px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Add</button>
-                    <button onClick={() => setAddingVariation(null)} style={{ padding: "7px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>✕</button>
+                    <button onClick={() => addVariation(product.id)} style={{ padding: "7px 12px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Add</button>
+                    <button onClick={() => setAddingVariation(null)} style={{ padding: "7px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>✕</button>
                   </div>
                 </div>
               </div>
             ) : (
-              <div style={{ borderTop: "1px solid #f0ebe4", padding: "10px 16px" }}>
-                <button onClick={() => setAddingVariation(product.id)} style={{ fontSize: "0.78rem", color: "#b87333", background: "transparent", border: "none", cursor: "pointer", padding: 0 }}>+ Add variation (size / colour)</button>
+              <div style={{ borderTop: "1px solid #f0ece6", padding: "10px 16px" }}>
+                <button onClick={() => setAddingVariation(product.id)} style={{ fontSize: "0.78rem", color: "#c4956a", background: "transparent", border: "none", cursor: "pointer", padding: 0 }}>+ Add variation (size / colour)</button>
               </div>
             )}
           </div>
@@ -353,7 +353,7 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
 
       {/* Summary footer */}
       {products.length > 0 && (
-        <div style={{ background: "#2c1810", borderRadius: "12px", padding: "1rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", color: "#fff", marginTop: "1rem" }}>
+        <div style={{ background: "#5a3e2b", borderRadius: "12px", padding: "1rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", color: "#fff", marginTop: "1rem" }}>
           <div style={{ display: "flex", gap: "2rem" }}>
             <div><div style={{ fontSize: "0.6rem", color: "#c8b89a", letterSpacing: "0.1em" }}>PRODUCTS</div><div style={{ fontSize: "1.1rem" }}>{products.length}</div></div>
             <div><div style={{ fontSize: "0.6rem", color: "#c8b89a", letterSpacing: "0.1em" }}>TOTAL UNITS</div><div style={{ fontSize: "1.1rem" }}>{totalUnits}</div></div>

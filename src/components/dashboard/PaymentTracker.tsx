@@ -114,7 +114,7 @@ export default function PaymentTracker() {
 
   const statusColor = (s: string) => {
     if (s === "Paid") return { background: "#4a7c5922", color: "#4a7c59" };
-    if (s === "Partial") return { background: "#b8733322", color: "#b87333" };
+    if (s === "Partial") return { background: "#c4956a22", color: "#c4956a" };
     return { background: "#c0392b22", color: "#c0392b" };
   };
 
@@ -126,8 +126,8 @@ export default function PaymentTracker() {
     <button
       onClick={onClick}
       title={title}
-      style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px 5px", borderRadius: "5px", color: danger ? "#b87333" : "#b87333", display: "flex", alignItems: "center" }}
-      onMouseEnter={e => (e.currentTarget.style.background = "#f0ebe4")}
+      style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px 5px", borderRadius: "5px", color: danger ? "#c4956a" : "#c4956a", display: "flex", alignItems: "center" }}
+      onMouseEnter={e => (e.currentTarget.style.background = "#f0ece6")}
       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
     >
       {icon}
@@ -135,75 +135,75 @@ export default function PaymentTracker() {
   );
 
   return (
-    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5" }}>
+    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e2da" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
         <div>
-          <div style={{ fontSize: "1.1rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>Payment tracker</div>
-          <div style={{ fontSize: "0.8rem", color: "#8b7355", marginTop: "2px" }}>Brand fees for Atlanta pop-up</div>
+          <div style={{ fontSize: "1.1rem", color: "#5a3e2b", fontFamily: "Georgia, serif" }}>Payment tracker</div>
+          <div style={{ fontSize: "0.8rem", color: "#6b5f54", marginTop: "2px" }}>Brand fees for Atlanta pop-up</div>
         </div>
-        <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add brand</button>
+        <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add brand</button>
       </div>
 
       {/* Summary row */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "1.25rem" }}>
-        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "0.75rem 1rem", border: "1px solid #f0ebe4" }}>
-          <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "2px" }}>TOTAL FEES</div>
-          <div style={{ fontSize: "1.1rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>${totalFees.toFixed(2)}</div>
+        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "0.75rem 1rem", border: "1px solid #f0ece6" }}>
+          <div style={{ fontSize: "0.65rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "2px" }}>TOTAL FEES</div>
+          <div style={{ fontSize: "1.1rem", color: "#5a3e2b", fontFamily: "Georgia, serif" }}>${totalFees.toFixed(2)}</div>
         </div>
-        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "0.75rem 1rem", border: "1px solid #f0ebe4" }}>
-          <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "2px" }}>RECEIVED</div>
+        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "0.75rem 1rem", border: "1px solid #f0ece6" }}>
+          <div style={{ fontSize: "0.65rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "2px" }}>RECEIVED</div>
           <div style={{ fontSize: "1.1rem", color: "#4a7c59", fontFamily: "Georgia, serif" }}>${totalReceived.toFixed(2)}</div>
         </div>
-        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "0.75rem 1rem", border: "1px solid #f0ebe4" }}>
-          <div style={{ fontSize: "0.65rem", color: "#8b7355", letterSpacing: "0.08em", marginBottom: "2px" }}>OUTSTANDING</div>
+        <div style={{ background: "#faf8f5", borderRadius: "10px", padding: "0.75rem 1rem", border: "1px solid #f0ece6" }}>
+          <div style={{ fontSize: "0.65rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "2px" }}>OUTSTANDING</div>
           <div style={{ fontSize: "1.1rem", color: totalOutstanding > 0 ? "#c0392b" : "#4a7c59", fontFamily: "Georgia, serif" }}>${totalOutstanding.toFixed(2)}</div>
         </div>
       </div>
 
       {adding && (
-        <div style={{ background: "#faf8f5", borderRadius: "12px", padding: "1rem", marginBottom: "1rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "0.85rem", color: "#2c1810", marginBottom: "8px", fontFamily: "Georgia, serif" }}>Add new brand</div>
-          <input placeholder="Brand name" value={newBrand.name} onChange={e => setNewBrand({...newBrand, name: e.target.value})} style={{ width: "100%", padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
-          <input placeholder="Brand email" value={newBrand.email} onChange={e => setNewBrand({...newBrand, email: e.target.value})} style={{ width: "100%", padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
+        <div style={{ background: "#faf8f5", borderRadius: "12px", padding: "1rem", marginBottom: "1rem", border: "1px solid #e8e2da" }}>
+          <div style={{ fontSize: "0.85rem", color: "#5a3e2b", marginBottom: "8px", fontFamily: "Georgia, serif" }}>Add new brand</div>
+          <input placeholder="Brand name" value={newBrand.name} onChange={e => setNewBrand({...newBrand, name: e.target.value})} style={{ width: "100%", padding: "8px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
+          <input placeholder="Brand email" value={newBrand.email} onChange={e => setNewBrand({...newBrand, email: e.target.value})} style={{ width: "100%", padding: "8px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
-            <input placeholder="Fee owed" value={newBrand.fee_owed} onChange={e => setNewBrand({...newBrand, fee_owed: e.target.value})} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-            <input placeholder="Amount paid" value={newBrand.amount_paid} onChange={e => setNewBrand({...newBrand, amount_paid: e.target.value})} style={{ padding: "8px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+            <input placeholder="Fee owed" value={newBrand.fee_owed} onChange={e => setNewBrand({...newBrand, fee_owed: e.target.value})} style={{ padding: "8px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+            <input placeholder="Amount paid" value={newBrand.amount_paid} onChange={e => setNewBrand({...newBrand, amount_paid: e.target.value})} style={{ padding: "8px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={addBrand} style={{ padding: "7px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
-            <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+            <button onClick={addBrand} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
+            <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
           </div>
         </div>
       )}
 
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
         <thead>
-          <tr style={{ borderBottom: "1px solid #e8e0d5" }}>
+          <tr style={{ borderBottom: "1px solid #e8e2da" }}>
             {["Brand", "Fee Owed", "Amount Paid", "Balance", "Status", "Portal", ""].map((h, i) => (
-              <th key={i} style={{ textAlign: "left", padding: "8px 10px", fontSize: "11px", color: "#8b7355", fontWeight: 400 }}>{h}</th>
+              <th key={i} style={{ textAlign: "left", padding: "8px 10px", fontSize: "11px", color: "#6b5f54", fontWeight: 400 }}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {brands.map((brand) => (
-            <tr key={brand.id} style={{ borderBottom: "1px solid #f0ebe4" }}>
+            <tr key={brand.id} style={{ borderBottom: "1px solid #f0ece6" }}>
               <td style={{ padding: "10px", fontWeight: 500, fontFamily: "Georgia, serif" }}>
-                <a href={`/login/organizer/events/atlanta/brands/${encodeURIComponent(brand.name)}`} style={{ color: "#b87333", textDecoration: "none", borderBottom: "1px solid #b8733344" }} onMouseEnter={e => (e.currentTarget.style.color = "#2c1810")} onMouseLeave={e => (e.currentTarget.style.color = "#b87333")}>
+                <a href={`/login/organizer/events/atlanta/brands/${encodeURIComponent(brand.name)}`} style={{ color: "#c4956a", textDecoration: "none", borderBottom: "1px solid #c4956a44" }} onMouseEnter={e => (e.currentTarget.style.color = "#5a3e2b")} onMouseLeave={e => (e.currentTarget.style.color = "#c4956a")}>
                   {brand.name}
                 </a>
               </td>
-              <td style={{ padding: "10px", color: "#2c1810" }}>
+              <td style={{ padding: "10px", color: "#5a3e2b" }}>
                 {editing === brand.id ? (
-                  <input type="number" value={newFee} onChange={e => setNewFee(e.target.value)} style={{ width: "70px", padding: "4px", border: "1px solid #b87333", borderRadius: "4px", fontSize: "13px" }} autoFocus />
+                  <input type="number" value={newFee} onChange={e => setNewFee(e.target.value)} style={{ width: "70px", padding: "4px", border: "1px solid #c4956a", borderRadius: "4px", fontSize: "13px" }} autoFocus />
                 ) : (
                   <span>${Number(brand.fee_owed).toFixed(2)}</span>
                 )}
               </td>
               <td style={{ padding: "10px" }}>
                 {editing === brand.id ? (
-                  <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} style={{ width: "70px", padding: "4px", border: "1px solid #b87333", borderRadius: "4px", fontSize: "13px" }} />
+                  <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} style={{ width: "70px", padding: "4px", border: "1px solid #c4956a", borderRadius: "4px", fontSize: "13px" }} />
                 ) : (
-                  <span style={{ color: "#2c1810" }}>${Number(brand.amount_paid).toFixed(2)}</span>
+                  <span style={{ color: "#5a3e2b" }}>${Number(brand.amount_paid).toFixed(2)}</span>
                 )}
               </td>
               <td style={{ padding: "10px", fontWeight: 500, color: Number(brand.balance) > 0 ? "#c0392b" : "#4a7c59" }}>${Number(brand.balance).toFixed(2)}</td>
@@ -215,7 +215,7 @@ export default function PaymentTracker() {
                   brand.invited ? (
                     <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "#4a7c5922", color: "#4a7c59" }}>✓ Invited</span>
                   ) : (
-                    <button onClick={() => inviteBrand(brand)} disabled={inviting === brand.id} style={{ fontSize: "11px", padding: "3px 10px", background: "#b8733322", color: "#b87333", border: "1px solid #b8733344", borderRadius: "20px", cursor: "pointer" }}>
+                    <button onClick={() => inviteBrand(brand)} disabled={inviting === brand.id} style={{ fontSize: "11px", padding: "3px 10px", background: "#c4956a22", color: "#c4956a", border: "1px solid #c4956a44", borderRadius: "20px", cursor: "pointer" }}>
                       {inviting === brand.id ? "..." : "✉"}
                     </button>
                   )
@@ -226,8 +226,8 @@ export default function PaymentTracker() {
               <td style={{ padding: "10px" }}>
                 {editing === brand.id ? (
                   <div style={{ display: "flex", gap: "4px" }}>
-                    <button onClick={() => updatePayment(brand)} style={{ fontSize: "11px", padding: "4px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}>Save</button>
-                    <button onClick={() => setEditing(null)} style={{ fontSize: "11px", padding: "4px 10px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "4px", cursor: "pointer" }}>Cancel</button>
+                    <button onClick={() => updatePayment(brand)} style={{ fontSize: "11px", padding: "4px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}>Save</button>
+                    <button onClick={() => setEditing(null)} style={{ fontSize: "11px", padding: "4px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "4px", cursor: "pointer" }}>Cancel</button>
                   </div>
                 ) : (
                   <div style={{ display: "flex", gap: "2px" }}>

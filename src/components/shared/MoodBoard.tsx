@@ -127,29 +127,29 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
 
   const filteredPins = filter === "All" ? pins : pins.filter(p => p.category === filter);
 
-  if (loading) return <div style={{ padding: "2rem", textAlign: "center", color: "#8b7355", fontSize: "0.85rem" }}>Loading mood board...</div>;
+  if (loading) return <div style={{ padding: "2rem", textAlign: "center", color: "#6b5f54", fontSize: "0.85rem" }}>Loading mood board...</div>;
 
   return (
     <div>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
-          <div style={{ fontSize: "0.6rem", color: "#8b7355", letterSpacing: "0.2em", marginBottom: "4px" }}>SHARED INSPIRATION</div>
-          <div style={{ fontSize: "1rem", color: "#2c1810" }}>{pins.length} pin{pins.length !== 1 ? "s" : ""}</div>
+          <div style={{ fontSize: "0.6rem", color: "#6b5f54", letterSpacing: "0.2em", marginBottom: "4px" }}>SHARED INSPIRATION</div>
+          <div style={{ fontSize: "1rem", color: "#5a3e2b" }}>{pins.length} pin{pins.length !== 1 ? "s" : ""}</div>
         </div>
-        <button onClick={() => setAdding(!adding)} style={{ padding: "8px 18px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add pin</button>
+        <button onClick={() => setAdding(!adding)} style={{ padding: "8px 18px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add pin</button>
       </div>
 
       {/* Add pin form */}
       {adding && (
-        <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "0.82rem", color: "#2c1810", marginBottom: "1rem", fontWeight: 500 }}>Add to mood board</div>
+        <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e2da" }}>
+          <div style={{ fontSize: "0.82rem", color: "#5a3e2b", marginBottom: "1rem", fontWeight: 500 }}>Add to mood board</div>
 
           {/* Image upload or URL */}
           <div style={{ marginBottom: "1rem" }}>
             <div
               onClick={() => document.getElementById("mood-file-upload")?.click()}
-              style={{ border: "2px dashed #e8e0d5", borderRadius: "12px", padding: "1.5rem", textAlign: "center" as const, cursor: "pointer", marginBottom: "8px", background: preview ? "#000" : "#faf8f5", position: "relative" as const, overflow: "hidden", minHeight: "120px", display: "flex", alignItems: "center", justifyContent: "center" }}
+              style={{ border: "2px dashed #e8e2da", borderRadius: "12px", padding: "1.5rem", textAlign: "center" as const, cursor: "pointer", marginBottom: "8px", background: preview ? "#000" : "#faf8f5", position: "relative" as const, overflow: "hidden", minHeight: "120px", display: "flex", alignItems: "center", justifyContent: "center" }}
             >
               <input id="mood-file-upload" type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
               {preview ? (
@@ -157,31 +157,31 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
               ) : (
                 <div>
                   <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>🖼️</div>
-                  <div style={{ fontSize: "0.78rem", color: "#8b7355" }}>Click to upload an image</div>
+                  <div style={{ fontSize: "0.78rem", color: "#6b5f54" }}>Click to upload an image</div>
                 </div>
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-              <div style={{ flex: 1, height: "1px", background: "#e8e0d5" }} />
-              <span style={{ fontSize: "0.72rem", color: "#8b7355" }}>or paste a URL</span>
-              <div style={{ flex: 1, height: "1px", background: "#e8e0d5" }} />
+              <div style={{ flex: 1, height: "1px", background: "#e8e2da" }} />
+              <span style={{ fontSize: "0.72rem", color: "#6b5f54" }}>or paste a URL</span>
+              <div style={{ flex: 1, height: "1px", background: "#e8e2da" }} />
             </div>
-            <input placeholder="https://..." value={newPin.image_url} onChange={e => { setNewPin({...newPin, image_url: e.target.value}); if (e.target.value) { setSelectedFile(null); setPreview(null); } }} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
+            <input placeholder="https://..." value={newPin.image_url} onChange={e => { setNewPin({...newPin, image_url: e.target.value}); if (e.target.value) { setSelectedFile(null); setPreview(null); } }} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "8px", marginBottom: "8px" }}>
-            <input placeholder="Label e.g. Backdrop inspo" value={newPin.label} onChange={e => setNewPin({...newPin, label: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
-            <select value={newPin.category} onChange={e => setNewPin({...newPin, category: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }}>
+            <input placeholder="Label e.g. Backdrop inspo" value={newPin.label} onChange={e => setNewPin({...newPin, label: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+            <select value={newPin.category} onChange={e => setNewPin({...newPin, category: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }}>
               {ADD_CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
-          <input placeholder="Notes (optional)" value={newPin.notes} onChange={e => setNewPin({...newPin, notes: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
+          <input placeholder="Notes (optional)" value={newPin.notes} onChange={e => setNewPin({...newPin, notes: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
 
           <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={addPin} disabled={uploading || (!selectedFile && !newPin.image_url) || !newPin.label.trim()} style={{ padding: "8px 18px", background: (!selectedFile && !newPin.image_url) || !newPin.label.trim() ? "#d4c5b0" : "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+            <button onClick={addPin} disabled={uploading || (!selectedFile && !newPin.image_url) || !newPin.label.trim()} style={{ padding: "8px 18px", background: (!selectedFile && !newPin.image_url) || !newPin.label.trim() ? "#d4c5b0" : "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
               {uploading ? "Uploading..." : "Add to board"}
             </button>
-            <button onClick={() => { setAdding(false); setSelectedFile(null); setPreview(null); setNewPin({ label: "", category: "Decor", notes: "", image_url: "" }); }} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
+            <button onClick={() => { setAdding(false); setSelectedFile(null); setPreview(null); setNewPin({ label: "", category: "Decor", notes: "", image_url: "" }); }} style={{ padding: "8px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
           </div>
         </div>
       )}
@@ -189,13 +189,13 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
       {/* Category filter */}
       <div style={{ display: "flex", gap: "6px", marginBottom: "1.5rem", flexWrap: "wrap" as const }}>
         {CATEGORIES.map(cat => (
-          <button key={cat} onClick={() => setFilter(cat)} style={{ padding: "5px 14px", background: filter === cat ? "#2c1810" : "#fff", color: filter === cat ? "#fff" : "#8b7355", border: "1px solid " + (filter === cat ? "#2c1810" : "#e8e0d5"), borderRadius: "20px", fontSize: "0.75rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{cat}</button>
+          <button key={cat} onClick={() => setFilter(cat)} style={{ padding: "5px 14px", background: filter === cat ? "#5a3e2b" : "#fff", color: filter === cat ? "#fff" : "#6b5f54", border: "1px solid " + (filter === cat ? "#5a3e2b" : "#e8e2da"), borderRadius: "20px", fontSize: "0.75rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{cat}</button>
         ))}
       </div>
 
       {/* Pins grid */}
       {filteredPins.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "4rem", color: "#8b7355", fontSize: "0.85rem" }}>
+        <div style={{ textAlign: "center", padding: "4rem", color: "#6b5f54", fontSize: "0.85rem" }}>
           {filter === "All" ? "No pins yet. Add the first one!" : `No pins in ${filter} yet.`}
         </div>
       ) : (
@@ -206,22 +206,22 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
             const isActive = activePin === pin.id;
             const isOwner = pin.uploaded_by === userEmail;
             return (
-              <div key={pin.id} style={{ breakInside: "avoid", marginBottom: "1rem", background: "#fff", borderRadius: "14px", overflow: "hidden", border: "1px solid #e8e0d5" }}>
+              <div key={pin.id} style={{ breakInside: "avoid", marginBottom: "1rem", background: "#fff", borderRadius: "14px", overflow: "hidden", border: "1px solid #e8e2da" }}>
                 <div style={{ position: "relative" as const }}>
                   <img src={pin.image_url} alt={pin.label} style={{ width: "100%", display: "block", objectFit: "cover" as const }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   <div style={{ position: "absolute", top: "8px", right: "8px", display: "flex", gap: "4px" }}>
-                    <span style={{ fontSize: "0.65rem", padding: "2px 8px", borderRadius: "20px", background: "rgba(255,255,255,0.9)", color: "#8b7355" }}>{pin.category}</span>
+                    <span style={{ fontSize: "0.65rem", padding: "2px 8px", borderRadius: "20px", background: "rgba(255,255,255,0.9)", color: "#6b5f54" }}>{pin.category}</span>
                   </div>
                 </div>
                 <div style={{ padding: "0.75rem 1rem" }}>
-                  <div style={{ fontSize: "0.88rem", color: "#2c1810", fontWeight: 500, marginBottom: "2px" }}>{pin.label}</div>
-                  {pin.notes && <div style={{ fontSize: "0.75rem", color: "#8b7355", marginBottom: "6px", lineHeight: 1.4 }}>{pin.notes}</div>}
+                  <div style={{ fontSize: "0.88rem", color: "#5a3e2b", fontWeight: 500, marginBottom: "2px" }}>{pin.label}</div>
+                  {pin.notes && <div style={{ fontSize: "0.75rem", color: "#6b5f54", marginBottom: "6px", lineHeight: 1.4 }}>{pin.notes}</div>}
                   <div style={{ fontSize: "0.68rem", color: "#b0a090", marginBottom: "8px" }}>by {pin.uploaded_by_name}</div>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <button onClick={() => toggleLike(pin)} style={{ background: "transparent", border: "none", cursor: "pointer", color: isLiked ? "#c0392b" : "#b0a090", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "3px", padding: 0 }}>
                       {isLiked ? "♥" : "♡"} {(pin.liked_by || []).length > 0 ? (pin.liked_by || []).length : ""}
                     </button>
-                    <button onClick={() => setActivePin(isActive ? null : pin.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: pinComments.length > 0 ? "#b87333" : "#b0a090", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "3px", padding: 0 }}>
+                    <button onClick={() => setActivePin(isActive ? null : pin.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: pinComments.length > 0 ? "#c4956a" : "#b0a090", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "3px", padding: 0 }}>
                       ✏ {pinComments.length > 0 ? pinComments.length : ""}
                     </button>
                     {isOwner && (
@@ -230,16 +230,16 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
                   </div>
 
                   {isActive && (
-                    <div style={{ marginTop: "10px", borderTop: "1px solid #f0ebe4", paddingTop: "10px" }}>
+                    <div style={{ marginTop: "10px", borderTop: "1px solid #f0ece6", paddingTop: "10px" }}>
                       {pinComments.map(c => (
-                        <div key={c.id} style={{ marginBottom: "6px", padding: "6px 8px", background: "#faf8f5", borderRadius: "6px", borderLeft: c.sender_email === userEmail ? "2px solid #b87333" : "2px solid #e8e0d5" }}>
-                          <div style={{ fontSize: "0.65rem", color: "#8b7355", marginBottom: "2px" }}>{c.sender_name}</div>
-                          <div style={{ fontSize: "0.78rem", color: "#2c1810" }}>{c.message}</div>
+                        <div key={c.id} style={{ marginBottom: "6px", padding: "6px 8px", background: "#faf8f5", borderRadius: "6px", borderLeft: c.sender_email === userEmail ? "2px solid #c4956a" : "2px solid #e8e2da" }}>
+                          <div style={{ fontSize: "0.65rem", color: "#6b5f54", marginBottom: "2px" }}>{c.sender_name}</div>
+                          <div style={{ fontSize: "0.78rem", color: "#5a3e2b" }}>{c.message}</div>
                         </div>
                       ))}
                       <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
-                        <input placeholder="Add a comment..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(pin.id, pin.label)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.75rem", fontFamily: "Georgia, serif" }} autoFocus />
-                        <button onClick={() => sendComment(pin.id, pin.label)} style={{ padding: "5px 10px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>Send</button>
+                        <input placeholder="Add a comment..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(pin.id, pin.label)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "0.75rem", fontFamily: "Georgia, serif" }} autoFocus />
+                        <button onClick={() => sendComment(pin.id, pin.label)} style={{ padding: "5px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>Send</button>
                       </div>
                     </div>
                   )}

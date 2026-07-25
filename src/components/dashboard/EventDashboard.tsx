@@ -96,7 +96,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
       </div>
 
       {/* Dark brown stats box */}
-      <div style={{ background: "#2c1810", borderRadius: "16px", padding: "1.75rem 2rem", color: "#fff" }}>
+      <div style={{ background: "#5a3e2b", borderRadius: "16px", padding: "1.75rem 2rem", color: "#fff" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1.5rem", alignItems: "start" }}>
 
           {/* Spots to fill */}
@@ -104,9 +104,9 @@ export function EventDashboard({ event }: EventDashboardProps) {
             <div style={{ fontSize: "0.65rem", color: "#c8b89a", letterSpacing: "0.1em", marginBottom: "6px" }}>SPOTS TO FILL</div>
             {editingSpots ? (
               <div style={{ display: "flex", flexDirection: "column" as const, gap: "6px" }}>
-                <input type="number" value={newSpots} onChange={e => setNewSpots(e.target.value)} style={{ width: "60px", padding: "4px 6px", border: "1px solid #b87333", borderRadius: "4px", fontSize: "1.2rem", fontFamily: "Georgia, serif", background: "#3d2415", color: "#fff" }} autoFocus />
+                <input type="number" value={newSpots} onChange={e => setNewSpots(e.target.value)} style={{ width: "60px", padding: "4px 6px", border: "1px solid #c4956a", borderRadius: "4px", fontSize: "1.2rem", fontFamily: "Georgia, serif", background: "#6b4f3a", color: "#fff" }} autoFocus />
                 <div style={{ display: "flex", gap: "4px" }}>
-                  <button onClick={saveSpots} style={{ padding: "3px 8px", background: "#b87333", color: "#fff", border: "none", borderRadius: "4px", fontSize: "11px", cursor: "pointer" }}>Save</button>
+                  <button onClick={saveSpots} style={{ padding: "3px 8px", background: "#c4956a", color: "#fff", border: "none", borderRadius: "4px", fontSize: "11px", cursor: "pointer" }}>Save</button>
                   <button onClick={() => setEditingSpots(false)} style={{ padding: "3px 8px", background: "transparent", border: "1px solid #c8b89a44", color: "#c8b89a", borderRadius: "4px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
@@ -137,27 +137,27 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
           {/* Countdown */}
           <div style={{ background: "#fff", borderRadius: "10px", padding: "1rem", textAlign: "center" }}>
-            <div style={{ fontSize: "2.5rem", color: "#2c1810", fontFamily: "Georgia, serif", fontWeight: "normal", lineHeight: 1 }}>{daysToEvent}</div>
-            <div style={{ fontSize: "0.7rem", color: "#8b7355", marginTop: "6px", letterSpacing: "0.05em" }}>DAYS TO EVENT</div>
-            <div style={{ fontSize: "0.7rem", color: "#b87333", marginTop: "2px" }}>Sep 11–13, 2026</div>
+            <div style={{ fontSize: "2.5rem", color: "#5a3e2b", fontFamily: "Georgia, serif", fontWeight: "normal", lineHeight: 1 }}>{daysToEvent}</div>
+            <div style={{ fontSize: "0.7rem", color: "#6b5f54", marginTop: "6px", letterSpacing: "0.05em" }}>DAYS TO EVENT</div>
+            <div style={{ fontSize: "0.7rem", color: "#c4956a", marginTop: "2px" }}>Sep 11–13, 2026</div>
           </div>
 
         </div>
       </div>
 
       {/* Venue address */}
-      <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5", position: "relative" as const }}>
-        <div style={{ fontSize: "0.75rem", color: "#8b7355", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>VENUE ADDRESS</div>
+      <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e2da", position: "relative" as const }}>
+        <div style={{ fontSize: "0.75rem", color: "#6b5f54", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>VENUE ADDRESS</div>
         {editingAddress ? (
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <input type="text" value={newAddress} onChange={e => setNewAddress(e.target.value)} style={{ flex: 1, padding: "6px 10px", border: "1px solid #b87333", borderRadius: "6px", fontSize: "0.9rem", fontFamily: "Georgia, serif" }} autoFocus />
-            <button onClick={saveAddress} style={{ padding: "6px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "12px", cursor: "pointer" }}>Save</button>
-            <button onClick={() => setEditingAddress(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "12px", cursor: "pointer" }}>Cancel</button>
+            <input type="text" value={newAddress} onChange={e => setNewAddress(e.target.value)} style={{ flex: 1, padding: "6px 10px", border: "1px solid #c4956a", borderRadius: "6px", fontSize: "0.9rem", fontFamily: "Georgia, serif" }} autoFocus />
+            <button onClick={saveAddress} style={{ padding: "6px 12px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "12px", cursor: "pointer" }}>Save</button>
+            <button onClick={() => setEditingAddress(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "12px", cursor: "pointer" }}>Cancel</button>
           </div>
         ) : (
           <>
-            <div style={{ fontSize: "0.95rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>{venueAddress || "No address set yet"}</div>
-            <button onClick={() => setEditingAddress(true)} title="Edit address" style={{ position: "absolute" as const, top: "10px", right: "10px", background: "transparent", border: "none", cursor: "pointer", color: "#b87333" }}>
+            <div style={{ fontSize: "0.95rem", color: "#5a3e2b", fontFamily: "Georgia, serif" }}>{venueAddress || "No address set yet"}</div>
+            <button onClick={() => setEditingAddress(true)} title="Edit address" style={{ position: "absolute" as const, top: "10px", right: "10px", background: "transparent", border: "none", cursor: "pointer", color: "#c4956a" }}>
               <PencilIcon />
             </button>
           </>

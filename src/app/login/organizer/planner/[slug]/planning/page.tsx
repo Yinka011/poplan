@@ -256,7 +256,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
     const itemComments = comments.filter(c => c.item_name === itemName);
     const isActive = activeComment === itemName;
     return (
-      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
+      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ece6" }}>
         <div style={{ display: "flex", gap: "6px", marginBottom: "6px", flexWrap: "wrap" as const }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ fontSize: "0.72rem", color: "#6b5f54" }}>Share with brand</span>
@@ -269,16 +269,16 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
           </button>
         </div>
         {isActive && (
-          <div style={{ background: "#faf8f5", borderRadius: "8px", padding: "8px", border: "1px solid #f0ebe4" }}>
+          <div style={{ background: "#faf8f5", borderRadius: "8px", padding: "8px", border: "1px solid #f0ece6" }}>
             {itemComments.map(c => (
               <div key={c.id} style={{ marginBottom: "6px", padding: "6px 8px", background: "#fff", borderRadius: "6px", borderLeft: c.sender_email === userEmail ? "2px solid #c4956a" : "2px solid #e8e2da" }}>
                 <div style={{ fontSize: "0.68rem", color: "#6b5f54", marginBottom: "2px" }}>{c.sender_name} · {new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
-                <div style={{ fontSize: "0.82rem", color: "#2c2420" }}>{c.message}</div>
+                <div style={{ fontSize: "0.82rem", color: "#5a3e2b" }}>{c.message}</div>
               </div>
             ))}
             <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
               <input placeholder="Add a note or question..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(itemName)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }} autoFocus />
-              <button onClick={() => sendComment(itemName)} style={{ padding: "5px 10px", background: "#2c2420", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>Send</button>
+              <button onClick={() => sendComment(itemName)} style={{ padding: "5px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>Send</button>
             </div>
           </div>
         )}
@@ -290,16 +290,16 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
     const itemInvoices = getItemInvoices(itemName);
     const isActive = addingInvoice?.itemName === itemName;
     return (
-      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
+      <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ece6" }}>
         {itemInvoices.map(inv => (
           <div key={inv.id} style={{ background: "#faf8f5", borderRadius: "8px", padding: "8px 10px", marginBottom: "6px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: inv.rejection_note ? "4px" : "0" }}>
-              <span style={{ padding: "1px 6px", borderRadius: "10px", background: inv.status === "approved" ? "#4a7c5922" : inv.status === "rejected" ? "#c0392b22" : "#f0ebe4", color: inv.status === "approved" ? "#4a7c59" : inv.status === "rejected" ? "#c0392b" : "#6b5f54", fontSize: "0.68rem", flexShrink: 0 }}>
+              <span style={{ padding: "1px 6px", borderRadius: "10px", background: inv.status === "approved" ? "#4a7c5922" : inv.status === "rejected" ? "#c0392b22" : "#f0ece6", color: inv.status === "approved" ? "#4a7c59" : inv.status === "rejected" ? "#c0392b" : "#6b5f54", fontSize: "0.68rem", flexShrink: 0 }}>
                 {inv.status === "approved" ? "Approved" : inv.status === "rejected" ? "Rejected" : "Pending approval"}
               </span>
-              <span style={{ color: "#2c2420", flex: 1, fontSize: "0.82rem" }}>{inv.description}</span>
+              <span style={{ color: "#5a3e2b", flex: 1, fontSize: "0.82rem" }}>{inv.description}</span>
               <span style={{ color: "#c4956a", fontWeight: 500, fontSize: "0.85rem" }}>${Number(inv.amount).toFixed(2)}</span>
-              <a href={inv.file_url} download target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "0.72rem", textDecoration: "none", background: "#2c2420", padding: "3px 8px", borderRadius: "4px" }}>↓</a>
+              <a href={inv.file_url} download target="_blank" rel="noopener noreferrer" style={{ color: "#fff", fontSize: "0.72rem", textDecoration: "none", background: "#5a3e2b", padding: "3px 8px", borderRadius: "4px" }}>↓</a>
             </div>
             {inv.rejection_note && <div style={{ fontSize: "0.72rem", color: "#c0392b", marginTop: "4px" }}>Rejected: {inv.rejection_note}</div>}
           </div>
@@ -307,7 +307,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
 
         {isActive ? (
           <div style={{ marginTop: "8px", background: "#faf8f5", borderRadius: "10px", padding: "1rem", border: "1px solid #e8e2da" }}>
-            <div style={{ fontSize: "0.8rem", color: "#2c2420", marginBottom: "10px", fontWeight: 500 }}>Add invoice for {itemName}</div>
+            <div style={{ fontSize: "0.8rem", color: "#5a3e2b", marginBottom: "10px", fontWeight: 500 }}>Add invoice for {itemName}</div>
             <input
               key={`desc-${addingInvoice?.itemName}`}
               placeholder="Description e.g. Venue deposit invoice"
@@ -343,7 +343,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
               <button
                 onClick={() => { if (selectedFile) { uploadInvoice(selectedFile); setSelectedFile(null); } }}
                 disabled={uploadingInvoice || !newInvoice.description.trim() || !selectedFile}
-                style={{ padding: "8px 16px", background: selectedFile && newInvoice.description ? "#2c2420" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: selectedFile && newInvoice.description ? "pointer" : "not-allowed", fontFamily: "Georgia, serif" }}
+                style={{ padding: "8px 16px", background: selectedFile && newInvoice.description ? "#5a3e2b" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: selectedFile && newInvoice.description ? "pointer" : "not-allowed", fontFamily: "Georgia, serif" }}
               >
                 {uploadingInvoice ? "Uploading..." : "Upload invoice"}
               </button>
@@ -365,7 +365,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
 
         <div style={{ marginBottom: "1.5rem" }}>
           <Link href={`/login/organizer/planner/${eventSlug}`} style={{ fontSize: "0.85rem", color: "#6b5f54", textDecoration: "none" }}>← Back to planner</Link>
-          <h1 style={{ fontSize: "1.8rem", color: "#2c2420", fontWeight: "normal", marginTop: "0.5rem" }}>Planning Hub</h1>
+          <h1 style={{ fontSize: "1.8rem", color: "#5a3e2b", fontWeight: "normal", marginTop: "0.5rem" }}>Planning Hub</h1>
           <p style={{ color: "#6b5f54", fontSize: "0.9rem" }}>Decor, refreshments and staffing for this event</p>
         </div>
 
@@ -384,7 +384,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
 
         <div style={{ display: "flex", gap: "8px", marginBottom: "1.5rem" }}>
           {(["decor", "refreshments", "staff"] as const).map(t => (
-            <button key={t} onClick={() => { setTab(t); setAdding(false); setEditing(null); }} style={{ padding: "8px 20px", background: tab === t ? "#2c2420" : "#fff", color: tab === t ? "#fff" : "#6b5f54", border: "1px solid " + (tab === t ? "#2c2420" : "#e8e2da"), borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const }}>{t}</button>
+            <button key={t} onClick={() => { setTab(t); setAdding(false); setEditing(null); }} style={{ padding: "8px 20px", background: tab === t ? "#5a3e2b" : "#fff", color: tab === t ? "#fff" : "#6b5f54", border: "1px solid " + (tab === t ? "#5a3e2b" : "#e8e2da"), borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const }}>{t}</button>
           ))}
           <button onClick={() => setAdding(!adding)} style={{ marginLeft: "auto", padding: "8px 16px", background: "#c4956a", color: "#fff", border: "none", borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add</button>
         </div>
@@ -412,7 +412,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                   <input placeholder="Notes" value={newDecor.notes} onChange={e => setNewDecor({...newDecor, notes: e.target.value})} style={inp()} />
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={addDecor} style={{ padding: "7px 16px", background: "#2c2420", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
+                  <button onClick={addDecor} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
                   <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
@@ -427,7 +427,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                     {items.map(item => (
                       <div key={item.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem", border: "1px solid #e8e2da" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                          <div style={{ fontSize: "0.9rem", color: "#2c2420", fontWeight: 500 }}>
+                          <div style={{ fontSize: "0.9rem", color: "#5a3e2b", fontWeight: 500 }}>
                             {editing === item.id ? <input value={editData.item || ""} onChange={e => setEditData({...editData, item: e.target.value})} style={editInp({ width: "120px" })} /> : item.item}
                           </div>
                           {editing === item.id ? (
@@ -451,7 +451,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                             <input placeholder="Vendor" value={editData.vendor || ""} onChange={e => setEditData({...editData, vendor: e.target.value})} style={editInp({ width: "100%" })} />
                             <input placeholder="Notes" value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} style={editInp({ width: "100%" })} />
                             <div style={{ display: "flex", gap: "6px" }}>
-                              <button onClick={() => saveEdit("planning_decor", item.id)} style={{ padding: "4px 10px", background: "#2c2420", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
+                              <button onClick={() => saveEdit("planning_decor", item.id)} style={{ padding: "4px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
                               <button onClick={() => setEditing(null)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                             </div>
                           </div>
@@ -466,7 +466,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                               <div style={{ fontSize: "0.95rem", color: "#c4956a", fontWeight: 500, flexShrink: 0, marginLeft: "8px" }}>${Number(item.cost).toFixed(2)}</div>
                             </div>
                             <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "8px", paddingTop: "6px", borderTop: "1px solid #f5f2ee" }}>
-                              <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity > 0 ? (item.cost / item.quantity).toFixed(2) : item.cost}); }} title="Edit" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "14px", padding: "2px" }} onMouseEnter={e => (e.currentTarget.style.color = "#2c2420")} onMouseLeave={e => (e.currentTarget.style.color = "#6b5f54")}>✎</button>
+                              <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity > 0 ? (item.cost / item.quantity).toFixed(2) : item.cost}); }} title="Edit" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "14px", padding: "2px" }} onMouseEnter={e => (e.currentTarget.style.color = "#5a3e2b")} onMouseLeave={e => (e.currentTarget.style.color = "#6b5f54")}>✎</button>
                               <button onClick={() => deleteItem("planning_decor", item.id)} title="Remove" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "13px", padding: "2px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                               <div style={{ marginLeft: "auto", display: "flex", gap: "8px", alignItems: "center" }}>
                                 {item.brand_status === "approved" && <span style={{ fontSize: "0.68rem", color: "#4a7c59" }}>✓ Approved</span>}
@@ -501,7 +501,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                 </div>
                 <input placeholder="Notes" value={newRefresh.notes} onChange={e => setNewRefresh({...newRefresh, notes: e.target.value})} style={inp({ width: "100%", marginBottom: "8px", boxSizing: "border-box" })} />
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={addRefresh} style={{ padding: "7px 16px", background: "#2c2420", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
+                  <button onClick={addRefresh} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
                   <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
@@ -509,7 +509,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
             <div style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e8e2da", overflow: "hidden" }}>
               {refresh.length === 0 && <p style={{ padding: "1rem", fontSize: "0.85rem", color: "#6b5f54" }}>No refreshments added yet.</p>}
               {refresh.map((item, i) => (
-                <div key={item.id} style={{ padding: "12px 16px", borderBottom: i < refresh.length - 1 ? "1px solid #f0ebe4" : "none" }}>
+                <div key={item.id} style={{ padding: "12px 16px", borderBottom: i < refresh.length - 1 ? "1px solid #f0ece6" : "none" }}>
                   {editing === item.id ? (
                     <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
                       <input value={editData.item || ""} onChange={e => setEditData({...editData, item: e.target.value})} style={editInp({ width: "120px" })} />
@@ -517,14 +517,14 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                       <input value={editData.quantity_num || ""} onChange={e => setEditData({...editData, quantity_num: e.target.value})} placeholder="Qty" style={editInp({ width: "50px" })} />
                       <input value={editData.unit_cost || ""} onChange={e => setEditData({...editData, unit_cost: e.target.value})} placeholder="Unit $" style={editInp({ width: "60px" })} />
                       <input value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} placeholder="Notes" style={editInp({ width: "100px" })} />
-                      <button onClick={() => saveEdit("planning_refreshments", item.id)} style={{ padding: "3px 8px", background: "#2c2420", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
+                      <button onClick={() => saveEdit("planning_refreshments", item.id)} style={{ padding: "3px 8px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
                       <button onClick={() => setEditing(null)} style={{ padding: "3px 8px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                     </div>
                   ) : (
                     <>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
-                          <div style={{ fontSize: "0.9rem", color: "#2c2420" }}>{item.item}</div>
+                          <div style={{ fontSize: "0.9rem", color: "#5a3e2b" }}>{item.item}</div>
                           <div style={{ display: "flex", gap: "12px", marginTop: "2px" }}>
                             {item.vendor && item.vendor !== "TBD" && <span style={{ fontSize: "0.75rem", color: "#6b5f54" }}>Vendor: {item.vendor}</span>}
                             {item.quantity_num > 0 && <span style={{ fontSize: "0.75rem", color: "#6b5f54" }}>Qty: {item.quantity_num}</span>}
@@ -534,7 +534,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                         </div>
                         <div style={{ display: "flex", gap: "6px" }}>
                           <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity_num > 0 ? (item.cost / item.quantity_num).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", cursor: "pointer", color: "#6b5f54" }}>Edit</button>
-                          <button onClick={() => deleteItem("planning_refreshments", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
+                          <button onClick={() => deleteItem("planning_refreshments", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ece6", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                         </div>
                       </div>
                       <InvoiceSection itemName={item.item} category="Refreshments" />
@@ -564,7 +564,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                 </div>
                 <input placeholder="Notes" value={newStaff.notes} onChange={e => setNewStaff({...newStaff, notes: e.target.value})} style={inp({ width: "100%", marginBottom: "8px", boxSizing: "border-box" })} />
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={addStaff} style={{ padding: "7px 16px", background: "#2c2420", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
+                  <button onClick={addStaff} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
                   <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
@@ -578,7 +578,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                   <div key={member.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", border: "1px solid #e8e2da" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
                       <div>
-                        {editing === member.id ? <input value={editData.name || ""} onChange={e => setEditData({...editData, name: e.target.value})} style={editInp({ width: "140px", marginBottom: "4px" })} /> : <div style={{ fontSize: "1rem", color: "#2c2420", fontWeight: 500 }}>{member.name}</div>}
+                        {editing === member.id ? <input value={editData.name || ""} onChange={e => setEditData({...editData, name: e.target.value})} style={editInp({ width: "140px", marginBottom: "4px" })} /> : <div style={{ fontSize: "1rem", color: "#5a3e2b", fontWeight: 500 }}>{member.name}</div>}
                         <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: (roleColors[member.role] || "#c4956a") + "22", color: roleColors[member.role] || "#c4956a" }}>{member.role}</span>
                       </div>
                       <div style={{ textAlign: "right" as const }}>
@@ -597,7 +597,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                         <input placeholder="Email" value={editData.email || ""} onChange={e => setEditData({...editData, email: e.target.value})} style={editInp({ width: "100%" })} />
                         <input placeholder="Notes" value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} style={editInp({ width: "100%" })} />
                         <div style={{ display: "flex", gap: "6px" }}>
-                          <button onClick={() => saveEdit("planning_staff", member.id)} style={{ padding: "4px 10px", background: "#2c2420", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
+                          <button onClick={() => saveEdit("planning_staff", member.id)} style={{ padding: "4px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
                           <button onClick={() => setEditing(null)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                         </div>
                       </div>
@@ -606,11 +606,11 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                         {member.phone && <div style={{ fontSize: "0.78rem", color: "#6b5f54", marginBottom: "2px" }}>📞 {member.phone}</div>}
                         {member.email && <div style={{ fontSize: "0.78rem", color: "#6b5f54", marginBottom: "2px" }}>✉️ {member.email}</div>}
                         {member.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic", marginTop: "4px" }}>{member.notes}</div>}
-                        <div style={{ marginTop: "10px", borderTop: "1px solid #f0ebe4", paddingTop: "10px" }}>
+                        <div style={{ marginTop: "10px", borderTop: "1px solid #f0ece6", paddingTop: "10px" }}>
                           <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.05em", marginBottom: "6px" }}>SHIFTS</div>
                           {(member.shifts || []).map(shift => (
                             <div key={shift.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", borderBottom: "1px solid #f8f5f0", fontSize: "0.8rem" }}>
-                              <div style={{ color: "#2c2420" }}>{shift.shift_date}</div>
+                              <div style={{ color: "#5a3e2b" }}>{shift.shift_date}</div>
                               <div style={{ color: "#6b5f54" }}>{shift.start_time} – {shift.end_time}</div>
                               <div style={{ color: "#c4956a" }}>{shift.hours}hrs</div>
                               <button onClick={() => deleteShift(member.id, shift.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✕</button>
@@ -629,7 +629,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                                 <div style={{ fontSize: "11px", color: "#c4956a" }}>= {calcHours(newShift.start_time, newShift.end_time)} hrs · ${(calcHours(newShift.start_time, newShift.end_time) * Number(member.pay_rate)).toFixed(2)}</div>
                               )}
                               <div style={{ display: "flex", gap: "6px" }}>
-                                <button onClick={() => addShift(member.id)} style={{ padding: "4px 10px", background: "#2c2420", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Add shift</button>
+                                <button onClick={() => addShift(member.id)} style={{ padding: "4px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Add shift</button>
                                 <button onClick={() => setAddingShift(null)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                               </div>
                             </div>
@@ -639,7 +639,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                         </div>
                         <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
                           <button onClick={() => { setEditing(member.id); setEditData({...member}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", cursor: "pointer", color: "#6b5f54" }}>Edit</button>
-                          <button onClick={() => deleteItem("planning_staff", member.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
+                          <button onClick={() => deleteItem("planning_staff", member.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ece6", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                         </div>
                         <CommentThread itemName={member.name} table="planning_staff" itemId={member.id} currentStatus={member.brand_status} />
                         <InvoiceSection itemName={member.name} category="Staff" />

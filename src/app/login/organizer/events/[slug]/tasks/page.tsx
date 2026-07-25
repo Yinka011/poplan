@@ -15,7 +15,7 @@ type Deadline = {
 const CATEGORIES = ["Admin", "Marketing", "Operations", "Logistics"];
 
 const categoryColors: Record<string, string> = {
-  Admin: "#b87333",
+  Admin: "#c4956a",
   Marketing: "#4a7c59",
   Operations: "#5b7fa6",
   Logistics: "#8b6ab0",
@@ -111,7 +111,7 @@ export default function TasksPage() {
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
-      style={{ padding: "7px 10px", border: "1px solid #e8e0d5", borderRadius: "7px", fontSize: "0.85rem", fontFamily: "Georgia, serif", width: "100%", boxSizing: "border-box" as const }}
+      style={{ padding: "7px 10px", border: "1px solid #e8e2da", borderRadius: "7px", fontSize: "0.85rem", fontFamily: "Georgia, serif", width: "100%", boxSizing: "border-box" as const }}
     />
   );
 
@@ -119,30 +119,30 @@ export default function TasksPage() {
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
-      style={{ padding: "7px 10px", border: "1px solid #e8e0d5", borderRadius: "7px", fontSize: "0.85rem", fontFamily: "Georgia, serif", background: "#fff" }}
+      style={{ padding: "7px 10px", border: "1px solid #e8e2da", borderRadius: "7px", fontSize: "0.85rem", fontFamily: "Georgia, serif", background: "#fff" }}
     >
       {CATEGORIES.map(c => <option key={c}>{c}</option>)}
     </select>
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f0ea", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
+    <div style={{ minHeight: "100vh", background: "#faf8f5", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#8b7355", textDecoration: "none" }}>← Back to {city}</Link>
-          <h1 style={{ fontSize: "1.8rem", color: "#2c1810", fontWeight: "normal", marginTop: "0.5rem" }}>Brand To-Do List Manager</h1>
-          <p style={{ color: "#8b7355", fontSize: "0.9rem", marginTop: "4px" }}>Every task here appears in all brand portals automatically. {deadlines.length} tasks total.</p>
+          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#6b5f54", textDecoration: "none" }}>← Back to {city}</Link>
+          <h1 style={{ fontSize: "1.8rem", color: "#5a3e2b", fontWeight: "normal", marginTop: "0.5rem" }}>Brand To-Do List Manager</h1>
+          <p style={{ color: "#6b5f54", fontSize: "0.9rem", marginTop: "4px" }}>Every task here appears in all brand portals automatically. {deadlines.length} tasks total.</p>
         </div>
 
-        <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e0d5", marginBottom: "1.5rem" }}>
+        <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e2da", marginBottom: "1.5rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <div style={{ fontSize: "1rem", color: "#2c1810" }}>All tasks</div>
-            <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add task</button>
+            <div style={{ fontSize: "1rem", color: "#5a3e2b" }}>All tasks</div>
+            <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add task</button>
           </div>
 
           {adding && (
-            <div style={{ background: "#faf8f5", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem", border: "1px solid #e8e0d5" }}>
+            <div style={{ background: "#faf8f5", borderRadius: "12px", padding: "1rem", marginBottom: "1.25rem", border: "1px solid #e8e2da" }}>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginBottom: "8px" }}>
                 {inp(newItem.task, v => setNewItem({...newItem, task: v}), "Task description")}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
@@ -151,8 +151,8 @@ export default function TasksPage() {
                 </div>
               </div>
               <div style={{ display: "flex", gap: "8px" }}>
-                <button onClick={addDeadline} style={{ padding: "7px 16px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
-                <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+                <button onClick={addDeadline} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
+                <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
               </div>
             </div>
           )}
@@ -164,7 +164,7 @@ export default function TasksPage() {
               <div key={cat} style={{ marginBottom: "1.5rem" }}>
                 <div style={{ fontSize: "0.7rem", letterSpacing: "0.1em", color: categoryColors[cat], marginBottom: "8px", fontWeight: 600 }}>{cat.toUpperCase()} — {catDeadlines.length} tasks</div>
                 {catDeadlines.map(deadline => (
-                  <div key={deadline.id} style={{ borderRadius: "10px", border: "1px solid #f0ebe4", background: "#faf8f5", padding: "10px 12px", marginBottom: "6px" }}>
+                  <div key={deadline.id} style={{ borderRadius: "10px", border: "1px solid #f0ece6", background: "#faf8f5", padding: "10px 12px", marginBottom: "6px" }}>
                     {editing === deadline.id ? (
                       <div style={{ display: "flex", flexDirection: "column" as const, gap: "6px" }}>
                         {inp(editItem.task, v => setEditItem({...editItem, task: v}), "Task")}
@@ -173,21 +173,21 @@ export default function TasksPage() {
                           {sel(editItem.category, v => setEditItem({...editItem, category: v}))}
                         </div>
                         <div style={{ display: "flex", gap: "6px" }}>
-                          <button onClick={() => saveEdit(deadline.id)} style={{ padding: "5px 12px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.8rem", cursor: "pointer" }}>Save</button>
-                          <button onClick={() => setEditing(null)} style={{ padding: "5px 12px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
+                          <button onClick={() => saveEdit(deadline.id)} style={{ padding: "5px 12px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.8rem", cursor: "pointer" }}>Save</button>
+                          <button onClick={() => setEditing(null)} style={{ padding: "5px 12px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
                         </div>
                       </div>
                     ) : (
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
-                          <div style={{ fontSize: "0.88rem", color: "#2c1810", fontFamily: "Georgia, serif" }}>{deadline.task}</div>
-                          <div style={{ fontSize: "0.75rem", color: "#8b7355", marginTop: "2px" }}>Due {deadline.due_date}</div>
+                          <div style={{ fontSize: "0.88rem", color: "#5a3e2b", fontFamily: "Georgia, serif" }}>{deadline.task}</div>
+                          <div style={{ fontSize: "0.75rem", color: "#6b5f54", marginTop: "2px" }}>Due {deadline.due_date}</div>
                         </div>
                         <div style={{ display: "flex", gap: "4px" }}>
-                          <button onClick={() => startEdit(deadline)} title="Edit" style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px 5px", borderRadius: "5px", color: "#b87333", display: "flex", alignItems: "center", opacity: 0.7 }} onMouseEnter={e => { e.currentTarget.style.background = "#f0ebe4"; e.currentTarget.style.opacity = "1"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.opacity = "0.7"; }}>
+                          <button onClick={() => startEdit(deadline)} title="Edit" style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px 5px", borderRadius: "5px", color: "#c4956a", display: "flex", alignItems: "center", opacity: 0.7 }} onMouseEnter={e => { e.currentTarget.style.background = "#f0ece6"; e.currentTarget.style.opacity = "1"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.opacity = "0.7"; }}>
                             <PencilIcon />
                           </button>
-                          <button onClick={() => deleteDeadline(deadline.id)} title="Delete" style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px 5px", borderRadius: "5px", color: "#b87333", display: "flex", alignItems: "center", opacity: 0.7 }} onMouseEnter={e => { e.currentTarget.style.background = "#f0ebe4"; e.currentTarget.style.opacity = "1"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.opacity = "0.7"; }}>
+                          <button onClick={() => deleteDeadline(deadline.id)} title="Delete" style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px 5px", borderRadius: "5px", color: "#c4956a", display: "flex", alignItems: "center", opacity: 0.7 }} onMouseEnter={e => { e.currentTarget.style.background = "#f0ece6"; e.currentTarget.style.opacity = "1"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.opacity = "0.7"; }}>
                             <TrashIcon />
                           </button>
                         </div>
@@ -200,9 +200,9 @@ export default function TasksPage() {
           })}
         </div>
 
-        <div style={{ background: "#fdf8f3", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e0d5" }}>
-          <div style={{ fontSize: "0.85rem", color: "#b87333", marginBottom: "4px", fontWeight: 500 }}>How this works</div>
-          <div style={{ fontSize: "0.82rem", color: "#8b7355", lineHeight: 1.7 }}>
+        <div style={{ background: "#fdf8f3", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e2da" }}>
+          <div style={{ fontSize: "0.85rem", color: "#c4956a", marginBottom: "4px", fontWeight: 500 }}>How this works</div>
+          <div style={{ fontSize: "0.82rem", color: "#6b5f54", lineHeight: 1.7 }}>
             Every task you add here automatically appears in all brand portals under their to-do list. When a brand checks off a task it saves to the database and you can see their progress on each brand page. Deleting a task removes it from all brand portals.
           </div>
         </div>
