@@ -51,19 +51,21 @@ export default function AnnouncementManager({ event }: { event: string }) {
       setAnnouncements(prev => [data, ...prev]);
       // Notify all brands in this event
       const { data: brands, error: brandsError } = await supabase.from("brands").select("email").eq("event", event).not("email", "is", null);
-      console.log("brands to email:", brands, "error:", brandsError);
       if (brands) {
-        await Promise.all(brands.map(async brand => {
-          await sendNotification({
-            recipientEmail: brand.email,
-            eventSlug: event,
-            type: "announcement",
-            title: "New announcement",
-            message: newMessage.slice(0, 100),
-            link: "/brand/portal",
-          });
+        // Send individual notifications
+        await Promise.all(brands.map(brand => sendNotification({
+          recipientEmail: brand.email,
+          eventSlug: event,
+          type: "announcement",
+          title: "New announcement",
+          message: newMessage.slice(0, 100),
+          link: "/brand/portal",
+        })));
+        // Send one batch email to all brands
+        const emails = brands.map(b => b.email).filter(Boolean);
+        if (emails.length > 0) {
           await sendEmail({
-            to: brand.email,
+            to: emails,
             subject: `New announcement from AO Curates`,
             html: emailTemplate({
               title: "New announcement",
@@ -72,7 +74,7 @@ export default function AnnouncementManager({ event }: { event: string }) {
               buttonUrl: "https://nalpop.com/brand/portal",
             }),
           });
-        }));
+        }
       }
     }
     setNewMessage("");
