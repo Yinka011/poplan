@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import WelcomeTutorial from "@/components/shared/WelcomeTutorial";
 import MoodBoard from "@/components/shared/MoodBoard";
 
 type PlannerInfo = {
@@ -76,7 +75,6 @@ export default function BrandCityDashboard() {
   const [expenses, setExpenses] = useState<{id: number; category: string; item: string; cost: number; deposit: number;}[]>([]);
   const [comments, setComments] = useState<{id: number; item_name: string; sender_email: string; sender_name: string; message: string; created_at: string;}[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showTutorial, setShowTutorial] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "invoices" | "tasks" | "shipments" | "chat" | "moodboard">("overview");
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -143,12 +141,6 @@ export default function BrandCityDashboard() {
     if (commentsRes.data) setComments(commentsRes.data);
     setLoading(false);
 
-    // Show tutorial if first visit
-    const tutorialKey = `tutorial_seen_${slug}`;
-    if (!localStorage.getItem(tutorialKey)) {
-      setShowTutorial(true);
-      localStorage.setItem(tutorialKey, "true");
-    }
   };
 
   const toggleTask = async (task: Task, isMine: boolean) => {
@@ -270,7 +262,7 @@ export default function BrandCityDashboard() {
 
   const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e8e0d5", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", ...style });
 
-  const CommentThread = ({ itemName, table, itemId }: { itemName: string; table: string; itemId: number }) => {
+  const CommentThread = ({ itemName }: { itemName: string }) => {
     const itemComments = comments.filter(c => c.item_name === itemName);
     const isActive = activeComment === itemName;
     return (
@@ -320,7 +312,7 @@ export default function BrandCityDashboard() {
             <button onClick={() => updateBrandStatus(table, itemId, "suggested")} style={{ fontSize: "0.68rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer" }}>Undo</button>
           </div>
         )}
-        <CommentThread itemName={itemName} table={table} itemId={itemId} />
+        <CommentThread itemName={itemName} />
       </div>
     );
   };

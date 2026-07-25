@@ -259,7 +259,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
       <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #f0ebe4" }}>
         <div style={{ display: "flex", gap: "6px", marginBottom: "6px", flexWrap: "wrap" as const }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "0.72rem", color: "#8b7355" }}>Share with Wanni</span>
+            <span style={{ fontSize: "0.72rem", color: "#8b7355" }}>Share with brand</span>
             <div onClick={() => updateBrandStatus(table, itemId, currentStatus === "suggested" ? "pending" : "suggested")} style={{ width: "36px", height: "20px", borderRadius: "10px", background: currentStatus === "suggested" ? "#b87333" : "#e8e0d5", cursor: "pointer", position: "relative" as const, transition: "background 0.2s", flexShrink: 0 }}>
               <div style={{ position: "absolute" as const, top: "2px", left: currentStatus === "suggested" ? "18px" : "2px", width: "16px", height: "16px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px #0003" }} />
             </div>

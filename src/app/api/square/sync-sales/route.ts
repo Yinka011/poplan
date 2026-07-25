@@ -51,8 +51,8 @@ export async function POST(request: Request) {
       "Square-Version": "2024-01-18",
     },
   });
-  const catalogData = await catalogResponse.json();
-  const catalogItems = catalogData.objects || [];
+  // const catalogData = await catalogResponse.json();
+  // const catalogItems = catalogData.objects || [];
 
   // Get brand inventory from Supabase to match items to brands
   const { data: inventory } = await supabase
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       let brandEmail = "";
       let brandName = "";
       let productName = itemName;
-      let variationName = lineItem.variation_name || "";
+      const variationName = lineItem.variation_name || "";
 
       // Match by catalog ID or name pattern "BrandName — ProductName"
       if (itemName.includes(" — ")) {
