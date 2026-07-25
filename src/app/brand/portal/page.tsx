@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import Announcements from "@/components/brand/Announcements";
 import FileUpload from "@/components/brand/FileUpload";
 import BrandInventory from "@/components/brand/BrandInventory";
+import BrandSales from "@/components/brand/BrandSales";
 
 type Brand = {
   id: number;
@@ -67,7 +68,7 @@ export default function BrandPortal() {
   const [brandEmail, setBrandEmail] = useState("");
   const [venueAddress, setVenueAddress] = useState("");
   const [markingShipped, setMarkingShipped] = useState(false);
-  const [activeTab, setActiveTab] = useState<"home" | "tasks" | "files" | "messages" | "inventory" | "profile" | "faq">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "profile" | "faq">("home");
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({ instagram: "", website: "", bio: "" });
   const [savingProfile, setSavingProfile] = useState(false);
@@ -215,6 +216,7 @@ export default function BrandPortal() {
     { key: "files", label: "Files" },
     { key: "messages", label: `Messages${messages.length > 0 ? ` (${messages.length})` : ""}` },
     { key: "inventory", label: "Inventory" },
+    { key: "sales", label: "Sales & Payout" },
     { key: "profile", label: "Profile" },
     { key: "faq", label: "FAQ" },
   ];
@@ -252,7 +254,7 @@ export default function BrandPortal() {
       {/* Nav tabs */}
       <div style={{ background: "#fff", borderBottom: "1px solid #e4ebe6", padding: "0 1rem", display: "flex", gap: "0", overflowX: "auto" as const, scrollbarWidth: "none" as const }}>
         {tabs.map(tab => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key as "home" | "tasks" | "files" | "messages" | "inventory" | "profile" | "faq")} style={{ padding: "0.85rem 1.25rem", background: "transparent", border: "none", borderBottom: activeTab === tab.key ? "2px solid #E8C97A" : "2px solid transparent", color: activeTab === tab.key ? "#1B3A2D" : "#4a5a52", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const, transition: "all 0.15s" }}>
+          <button key={tab.key} onClick={() => setActiveTab(tab.key as "home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "profile" | "faq")} style={{ padding: "0.85rem 1.25rem", background: "transparent", border: "none", borderBottom: activeTab === tab.key ? "2px solid #E8C97A" : "2px solid transparent", color: activeTab === tab.key ? "#1B3A2D" : "#4a5a52", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const, transition: "all 0.15s" }}>
             {tab.label}
           </button>
         ))}
@@ -425,6 +427,11 @@ export default function BrandPortal() {
         {/* INVENTORY TAB */}
         {activeTab === "inventory" && (
           <BrandInventory event={brand.event || "Atlanta"} brandEmail={brandEmail} brandName={brand.name} />
+        )}
+
+        {/* SALES TAB */}
+        {activeTab === "sales" && (
+          <BrandSales event={brand.event || "Atlanta"} brandEmail={brandEmail} />
         )}
 
         {/* PROFILE TAB */}
