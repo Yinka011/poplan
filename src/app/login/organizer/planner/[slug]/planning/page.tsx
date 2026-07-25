@@ -457,19 +457,23 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                           </div>
                         ) : (
                           <div>
-                            {item.quantity > 0 && <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Qty: {item.quantity}</div>}
-                            {item.decision && item.decision !== "TBD" && <div style={{ fontSize: "0.8rem", color: "#2c1810", marginBottom: "4px" }}>→ {item.decision}</div>}
-                            {item.vendor && <div style={{ fontSize: "0.75rem", color: "#8b7355" }}>Vendor: {item.vendor}</div>}
-                            {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#b87333", fontWeight: 500, marginTop: "4px" }}>${Number(item.cost).toFixed(2)}</div>}
-                            {item.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", marginTop: "4px", fontStyle: "italic" }}>{item.notes}</div>}
-                            <div style={{ display: "flex", gap: "6px", marginTop: "8px", alignItems: "center" }}>
-                              <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity > 0 ? (item.cost / item.quantity).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e0d5", borderRadius: "6px", cursor: "pointer", color: "#8b7355" }}>Edit</button>
-                              <button onClick={() => deleteItem("planning_decor", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ebe4", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
-                              {item.brand_status === "approved" && <span style={{ fontSize: "0.68rem", color: "#4a7c59", background: "#4a7c5922", padding: "2px 6px", borderRadius: "10px" }}>✓ Approved</span>}
-                              {item.brand_status === "rejected" && <span style={{ fontSize: "0.68rem", color: "#c0392b", background: "#c0392b22", padding: "2px 6px", borderRadius: "10px" }}>✗ Removed by brand</span>}
-                              {item.brand_status === "suggested" && <span style={{ fontSize: "0.68rem", color: "#b87333", background: "#b8733322", padding: "2px 6px", borderRadius: "10px" }}>📤 Suggested</span>}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
+                              <div>
+                                {item.vendor && <div style={{ fontSize: "0.72rem", color: "#8b7355" }}>{item.vendor}{item.quantity > 0 ? ` · Qty ${item.quantity}` : ""}</div>}
+                                {item.decision && item.decision !== "TBD" && <div style={{ fontSize: "0.75rem", color: "#5a4a3a", marginTop: "3px", lineHeight: 1.4 }}>{item.decision}</div>}
+                                {item.notes && <div style={{ fontSize: "0.7rem", color: "#aaa", marginTop: "2px", fontStyle: "italic" }}>{item.notes}</div>}
+                              </div>
+                              <div style={{ fontSize: "0.95rem", color: "#b87333", fontWeight: 500, flexShrink: 0, marginLeft: "8px" }}>${Number(item.cost).toFixed(2)}</div>
                             </div>
-                            <CommentThread itemName={item.item} table="planning_decor" itemId={item.id} currentStatus={item.brand_status} />
+                            <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "8px", paddingTop: "6px", borderTop: "1px solid #f5f2ee" }}>
+                              <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity > 0 ? (item.cost / item.quantity).toFixed(2) : item.cost}); }} title="Edit" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#8b7355", fontSize: "14px", padding: "2px" }} onMouseEnter={e => (e.currentTarget.style.color = "#2c1810")} onMouseLeave={e => (e.currentTarget.style.color = "#8b7355")}>✎</button>
+                              <button onClick={() => deleteItem("planning_decor", item.id)} title="Remove" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "13px", padding: "2px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
+                              <div style={{ marginLeft: "auto", display: "flex", gap: "8px", alignItems: "center" }}>
+                                {item.brand_status === "approved" && <span style={{ fontSize: "0.68rem", color: "#4a7c59" }}>✓ Approved</span>}
+                                {item.brand_status === "rejected" && <span style={{ fontSize: "0.68rem", color: "#c0392b" }}>✕ Declined</span>}
+                                <CommentThread itemName={item.item} table="planning_decor" itemId={item.id} currentStatus={item.brand_status} />
+                              </div>
+                            </div>
                             <InvoiceSection itemName={item.item} category={cat} />
                           </div>
                         )}
