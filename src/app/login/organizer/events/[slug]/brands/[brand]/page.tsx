@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { sendNotification } from "@/lib/notifications";
+import { sendEmail, emailTemplate } from "@/lib/email";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 

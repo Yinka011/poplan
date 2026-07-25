@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { sendNotification } from "@/lib/notifications";
+import { sendEmail, emailTemplate } from "@/lib/email";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -72,7 +73,17 @@ export default function TasksPage() {
     if (data) {
       setDeadlines(prev => [...prev, data]);
       if (data.brand_email) {
-        await sendNotification({ recipientEmail: data.brand_email, eventSlug: slug as string, type: 'task', title: 'New task assigned', message: data.task, link: '/brand/portal' });
+        await sendNotification({ recipientEmail: data.brand_email, eventSlug: slug as string, type: "task", title: "New task assigned", message: data.task, link: "/brand/portal" });
+        await sendEmail({
+          to: data.brand_email,
+          subject: "New task assigned to you",
+          html: emailTemplate({
+            title: "You have a new task",
+            message: data.task,
+            buttonText: "View your tasks",
+            buttonUrl: "https://nalpop.com/brand/portal",
+          }),
+        });
       }
     }
     setNewItem({ task: "", due_date: "", category: "Admin" });

@@ -1,4 +1,5 @@
 "use client";
+import { sendEmail, emailTemplate } from "@/lib/email";
 import NotificationBell from "@/components/shared/NotificationBell";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -167,7 +168,20 @@ export default function BrandPortal() {
       organizer_email: "aocurates@gmail.com", sender_email: userEmail,
       sender_name: brand?.name || userEmail, message: newMessage,
     }).select().single();
-    if (data) setMessages(prev => [...prev, data]);
+    if (data) {
+      setMessages(prev => [...prev, data]);
+      // Email the organizer
+      await sendEmail({
+        to: "aocurates@gmail.com",
+        subject: `New message from ${brand?.name}`,
+        html: emailTemplate({
+          title: `Message from ${brand?.name}`,
+          message: newMessage,
+          buttonText: "Reply in Nalpop",
+          buttonUrl: `https://nalpop.com/login/organizer/events`,
+        }),
+      });
+    }
     setNewMessage("");
   };
 

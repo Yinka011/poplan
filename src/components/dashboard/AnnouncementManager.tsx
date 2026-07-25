@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { sendNotification } from "@/lib/notifications";
+import { sendEmail, emailTemplate } from "@/lib/email";
 
 type Announcement = {
   id: number;
@@ -51,16 +52,26 @@ export default function AnnouncementManager({ event }: { event: string }) {
       // Notify all brands in this event
       const { data: brands, error: brandsError } = await supabase.from("brands").select("email").eq("event", event).not("email", "is", null);
       if (brands) {
-        await Promise.all(brands.map(brand =>
-          sendNotification({
+        await Promise.all(brands.map(async brand => {
+          await sendNotification({
             recipientEmail: brand.email,
             eventSlug: event,
             type: "announcement",
             title: "New announcement",
             message: newMessage.slice(0, 100),
             link: "/brand/portal",
-          })
-        ));
+          });
+          await sendEmail({
+            to: brand.email,
+            subject: `New announcement from AO Curates`,
+            html: emailTemplate({
+              title: "New announcement",
+              message: newMessage,
+              buttonText: "View in portal",
+              buttonUrl: "https://nalpop.com/brand/portal",
+            }),
+          });
+        }));
       }
     }
     setNewMessage("");
