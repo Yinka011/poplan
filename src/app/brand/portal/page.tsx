@@ -7,6 +7,7 @@ import Announcements from "@/components/brand/Announcements";
 import FileUpload from "@/components/brand/FileUpload";
 import BrandInventory from "@/components/brand/BrandInventory";
 import BrandSales from "@/components/brand/BrandSales";
+import BrandTutorial from "@/components/brand/BrandTutorial";
 
 type Brand = {
   id: number;
@@ -68,6 +69,7 @@ export default function BrandPortal() {
   const [brandEmail, setBrandEmail] = useState("");
   const [venueAddress, setVenueAddress] = useState("");
   const [markingShipped, setMarkingShipped] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [activeTab, setActiveTab] = useState<"home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "profile" | "faq">("home");
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({ instagram: "", website: "", bio: "" });
@@ -126,6 +128,13 @@ export default function BrandPortal() {
       }
 
       setLoading(false);
+
+      // Show tutorial on first visit
+      const tutorialKey = `brand_tutorial_seen_${user.email}`;
+      if (!localStorage.getItem(tutorialKey)) {
+        setShowTutorial(true);
+        localStorage.setItem(tutorialKey, "true");
+      }
     };
     fetchAll();
   }, []);
@@ -237,6 +246,7 @@ export default function BrandPortal() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif" }}>
+      {showTutorial && brand && <BrandTutorial brandName={brand.name} eventName={eventName} onClose={() => setShowTutorial(false)} />}
 
       {/* Top bar */}
       <div style={{ background: "#fff", borderBottom: "1px solid #e4ebe6", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky" as const, top: 0, zIndex: 10 }}>
