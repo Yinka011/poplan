@@ -14,7 +14,7 @@ type Notification = {
 };
 
 export default function NotificationBell({ userEmail }: { userEmail: string }) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  
   const [unread, setUnread] = useState(0);
   const router = useRouter();
 
@@ -38,7 +38,6 @@ export default function NotificationBell({ userEmail }: { userEmail: string }) {
       .order("created_at", { ascending: false })
       .limit(50);
     if (data) {
-      setNotifications(data);
       setUnread(data.filter(n => !n.read).length);
     }
   };

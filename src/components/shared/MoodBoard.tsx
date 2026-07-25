@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -110,7 +109,7 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
     setPins(prev => prev.filter(p => p.id !== id));
   };
 
-  const sendComment = async (pinId: number, label: string) => {
+  const sendComment = async (pinId: number) => {
     if (!newComment.trim()) return;
     const { data } = await supabase.from("item_comments").insert({
       event_slug: eventSlug,
@@ -239,7 +238,7 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
                       ))}
                       <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
                         <input placeholder="Add a comment..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(pin.id, pin.label)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.75rem", fontFamily: "Georgia, serif" }} autoFocus />
-                        <button onClick={() => sendComment(pin.id, pin.label)} style={{ padding: "5px 10px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>Send</button>
+                        <button onClick={() => sendComment(pin.id)} style={{ padding: "5px 10px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>Send</button>
                       </div>
                     </div>
                   )}

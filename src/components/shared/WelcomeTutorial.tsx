@@ -2,7 +2,6 @@
 import { useState } from "react";
 
 type Props = {
-  cityName: string;
   onClose: () => void;
 };
 
@@ -49,7 +48,7 @@ const steps = [
   },
 ];
 
-export default function WelcomeTutorial({ cityName, onClose }: Props) {
+export default function WelcomeTutorial({ onClose }: Props) {
   const [step, setStep] = useState(0);
   const isLast = step === steps.length - 1;
   const current = steps[step];
