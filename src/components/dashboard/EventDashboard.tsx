@@ -86,6 +86,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
       {/* Header */}
       <div>
+        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
         <Link href="/login/organizer/events" className="text-sm font-medium text-brown-600/70 transition-colors hover:text-brown-800">
           ← All events
         </Link>
