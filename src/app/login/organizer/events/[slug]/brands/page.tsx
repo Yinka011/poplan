@@ -9,7 +9,7 @@ type Deadline = { id: number; task: string; due_date: string; category: string; 
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   Paid: { bg: "#4a7c5922", color: "#4a7c59" },
-  Partial: { bg: "#c4956a22", color: "#c4956a" },
+  Partial: { bg: "#E8C97A22", color: "#E8C97A" },
   Unpaid: { bg: "#c0392b22", color: "#c0392b" },
 };
 
@@ -45,7 +45,7 @@ export default function BrandsPage() {
 
   const getStatusLabel = (percent: number) => {
     if (percent === 100) return { label: "All done", color: "#4a7c59", bg: "#4a7c5922" };
-    if (percent >= 50) return { label: "In progress", color: "#c4956a", bg: "#c4956a22" };
+    if (percent >= 50) return { label: "In progress", color: "#E8C97A", bg: "#E8C97A22" };
     if (percent > 0) return { label: "Started", color: "#5b7fa6", bg: "#5b7fa622" };
     return { label: "Not started", color: "#c0392b", bg: "#c0392b22" };
   };
@@ -54,13 +54,13 @@ export default function BrandsPage() {
     tasks.filter(t => t.brand_email === email && t.completed).map(t => t.task);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#faf8f5", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <Link href="/login/organizer/events/atlanta" style={{ fontSize: "0.85rem", color: "#6b5f54", textDecoration: "none" }}>← Back to Atlanta</Link>
-          <h1 style={{ fontSize: "1.8rem", color: "#5a3e2b", fontWeight: "normal", marginTop: "0.5rem" }}>Brand Activity</h1>
-          <p style={{ color: "#6b5f54", fontSize: "0.9rem" }}>Track task completion across all Atlanta brands</p>
+          <Link href="/login/organizer/events/atlanta" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to Atlanta</Link>
+          <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", marginTop: "0.5rem" }}>Brand Activity</h1>
+          <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>Track task completion across all Atlanta brands</p>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: selected ? "1fr 1fr" : "1fr", gap: "1rem" }}>
@@ -70,11 +70,11 @@ export default function BrandsPage() {
               const progress = getStatusLabel(percent);
               const payStatus = statusColors[brand.status] || statusColors.Unpaid;
               return (
-                <div key={brand.id} onClick={() => setSelected(selected?.id === brand.id ? null : brand)} style={{ background: selected?.id === brand.id ? "#fdf8f3" : "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "10px", border: selected?.id === brand.id ? "1px solid #c4956a" : "1px solid #e8e2da", cursor: "pointer", transition: "all 0.15s" }}>
+                <div key={brand.id} onClick={() => setSelected(selected?.id === brand.id ? null : brand)} style={{ background: selected?.id === brand.id ? "#fdf8f3" : "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "10px", border: selected?.id === brand.id ? "1px solid #E8C97A" : "1px solid #e4ebe6", cursor: "pointer", transition: "all 0.15s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
                     <div>
-                      <div style={{ fontSize: "1rem", color: "#5a3e2b", fontWeight: 500 }}>{brand.name}</div>
-                      <div style={{ fontSize: "0.75rem", color: "#6b5f54", marginTop: "2px" }}>{brand.email || "No portal access"}</div>
+                      <div style={{ fontSize: "1rem", color: "#1B3A2D", fontWeight: 500 }}>{brand.name}</div>
+                      <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginTop: "2px" }}>{brand.email || "No portal access"}</div>
                     </div>
                     <div style={{ display: "flex", gap: "6px" }}>
                       <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "20px", ...payStatus }}>{brand.status}</span>
@@ -82,15 +82,15 @@ export default function BrandsPage() {
                     </div>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                    <div style={{ fontSize: "0.8rem", color: "#6b5f54" }}>{completed} of {total} tasks complete</div>
-                    <div style={{ fontSize: "0.8rem", color: "#5a3e2b", fontWeight: 500 }}>{percent}%</div>
+                    <div style={{ fontSize: "0.8rem", color: "#4a5a52" }}>{completed} of {total} tasks complete</div>
+                    <div style={{ fontSize: "0.8rem", color: "#1B3A2D", fontWeight: 500 }}>{percent}%</div>
                   </div>
-                  <div style={{ height: "5px", background: "#f0ece6", borderRadius: "3px", overflow: "hidden" }}>
+                  <div style={{ height: "5px", background: "#f0f4f1", borderRadius: "3px", overflow: "hidden" }}>
                     <div style={{ height: "100%", width: `${percent}%`, background: progress.color, borderRadius: "3px", transition: "width 0.3s" }} />
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px", fontSize: "0.8rem" }}>
-                    <span style={{ color: "#6b5f54" }}>Balance: <strong style={{ color: Number(brand.balance) > 0 ? "#c0392b" : "#4a7c59" }}>${Number(brand.balance).toFixed(2)}</strong></span>
-                    <span style={{ color: "#c4956a" }}>Click to view tasks →</span>
+                    <span style={{ color: "#4a5a52" }}>Balance: <strong style={{ color: Number(brand.balance) > 0 ? "#c0392b" : "#4a7c59" }}>${Number(brand.balance).toFixed(2)}</strong></span>
+                    <span style={{ color: "#E8C97A" }}>Click to view tasks →</span>
                   </div>
                 </div>
               );
@@ -98,23 +98,23 @@ export default function BrandsPage() {
           </div>
 
           {selected && (
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e8e2da", height: "fit-content", position: "sticky", top: "1rem" }}>
+            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6", height: "fit-content", position: "sticky", top: "1rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                <div style={{ fontSize: "1rem", color: "#5a3e2b" }}>{selected.name}</div>
-                <button onClick={() => setSelected(null)} style={{ background: "transparent", border: "none", color: "#6b5f54", cursor: "pointer", fontSize: "1.2rem" }}>×</button>
+                <div style={{ fontSize: "1rem", color: "#1B3A2D" }}>{selected.name}</div>
+                <button onClick={() => setSelected(null)} style={{ background: "transparent", border: "none", color: "#4a5a52", cursor: "pointer", fontSize: "1.2rem" }}>×</button>
               </div>
-              <div style={{ fontSize: "0.75rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>TASK COMPLETION</div>
+              <div style={{ fontSize: "0.75rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>TASK COMPLETION</div>
               {deadlines.map(deadline => {
                 const completedTasks = getCompletedTasks(selected.email);
                 const done = completedTasks.includes(deadline.task);
                 return (
-                  <div key={deadline.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 0", borderBottom: "1px solid #f0ece6" }}>
-                    <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: done ? "#c4956a" : "#f0ece6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div key={deadline.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 0", borderBottom: "1px solid #f0f4f1" }}>
+                    <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: done ? "#E8C97A" : "#f0f4f1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       {done && <span style={{ color: "#fff", fontSize: "9px" }}>✓</span>}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "0.82rem", color: done ? "#b0a090" : "#5a3e2b", textDecoration: done ? "line-through" : "none" }}>{deadline.task}</div>
-                      <div style={{ fontSize: "0.72rem", color: "#6b5f54" }}>Due {deadline.due_date}</div>
+                      <div style={{ fontSize: "0.82rem", color: done ? "#b0a090" : "#1B3A2D", textDecoration: done ? "line-through" : "none" }}>{deadline.task}</div>
+                      <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>Due {deadline.due_date}</div>
                     </div>
                   </div>
                 );

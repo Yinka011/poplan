@@ -45,29 +45,29 @@ export default function HomePage() {
     setLoading(false);
   };
 
-  const inp = { width: "100%", padding: "12px 14px", border: "1px solid #e8e2da", borderRadius: "10px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#fff", boxSizing: "border-box" as const, color: "#1c1714", outline: "none" };
-  const btn = { width: "100%", padding: "12px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: "0.03em" };
+  const inp = { width: "100%", padding: "12px 14px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#fff", boxSizing: "border-box" as const, color: "#1c1714", outline: "none" };
+  const btn = { width: "100%", padding: "12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: "0.03em" };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#faf8f5", display: "flex", fontFamily: "Georgia, serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", fontFamily: "Georgia, serif" }}>
       
       {/* Left panel - branding */}
-      <div style={{ width: "45%", background: "#5a3e2b", display: "flex", flexDirection: "column" as const, justifyContent: "space-between", padding: "3rem", position: "relative" as const, overflow: "hidden" }}>
-        <div style={{ position: "absolute" as const, top: 0, left: 0, right: 0, bottom: 0, background: "radial-gradient(ellipse at top right, #6b4f3a 0%, #5a3e2b 50%, #3d2820 100%)", zIndex: 0 }} />
+      <div style={{ width: "45%", background: "#1B3A2D", display: "flex", flexDirection: "column" as const, justifyContent: "space-between", padding: "3rem", position: "relative" as const, overflow: "hidden" }}>
+        <div style={{ position: "absolute" as const, top: 0, left: 0, right: 0, bottom: 0, background: "radial-gradient(ellipse at top right, #2a4d3e 0%, #1B3A2D 50%, #142d22 100%)", zIndex: 0 }} />
         <div style={{ position: "relative" as const, zIndex: 1 }}>
           <div style={{ fontSize: "1.5rem", letterSpacing: "0.2em", color: "#fff" }}>NALPOP</div>
-          <div style={{ width: "2rem", height: "1px", background: "#c4956a", marginTop: "8px" }} />
+          <div style={{ width: "2rem", height: "1px", background: "#E8C97A", marginTop: "8px" }} />
         </div>
         <div style={{ position: "relative" as const, zIndex: 1 }}>
           <div style={{ fontSize: "2.2rem", color: "#fff", lineHeight: 1.3, fontWeight: "normal", marginBottom: "1.5rem" }}>
             The platform built for<br />
-            <span style={{ color: "#c4956a", fontStyle: "italic" }}>pop-up culture.</span>
+            <span style={{ color: "#E8C97A", fontStyle: "italic" }}>pop-up culture.</span>
           </div>
-          <div style={{ fontSize: "0.88rem", color: "#c8b89a", lineHeight: 1.8 }}>
+          <div style={{ fontSize: "0.88rem", color: "#d4c87a", lineHeight: 1.8 }}>
             Manage brands, inventory, planning and payouts — all in one place.
           </div>
         </div>
-        <div style={{ position: "relative" as const, zIndex: 1, fontSize: "0.72rem", color: "#8b6a4a", letterSpacing: "0.1em" }}>
+        <div style={{ position: "relative" as const, zIndex: 1, fontSize: "0.72rem", color: "#4a7a5e", letterSpacing: "0.1em" }}>
           © 2026 NALPOP
         </div>
       </div>
@@ -80,14 +80,14 @@ export default function HomePage() {
             <div>
               <div style={{ marginBottom: "2.5rem" }}>
                 <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "8px" }}>Welcome back</h1>
-                <p style={{ fontSize: "0.9rem", color: "#6b5f54", margin: 0 }}>Sign in to your Nalpop account.</p>
+                <p style={{ fontSize: "0.9rem", color: "#4a5a52", margin: 0 }}>Sign in to your Nalpop account.</p>
               </div>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
-                <button onClick={() => { setMode("organizer-login"); setError(""); }} style={{ ...btn, background: "#5a3e2b" }}>Sign in as Organizer</button>
-                <button onClick={() => { setMode("brand-login"); setError(""); }} style={{ ...btn, background: "#fff", color: "#5a3e2b", border: "1px solid #5a3e2b" }}>Sign in as Brand</button>
+                <button onClick={() => { setMode("organizer-login"); setError(""); }} style={{ ...btn, background: "#1B3A2D" }}>Sign in as Organizer</button>
+                <button onClick={() => { setMode("brand-login"); setError(""); }} style={{ ...btn, background: "#fff", color: "#1B3A2D", border: "1px solid #1B3A2D" }}>Sign in as Brand</button>
               </div>
-              <div style={{ marginTop: "2rem", padding: "1.25rem", background: "#fff", borderRadius: "12px", border: "1px solid #e8e2da" }}>
-                <div style={{ fontSize: "0.78rem", color: "#6b5f54", marginBottom: "4px" }}>New to Nalpop?</div>
+              <div style={{ marginTop: "2rem", padding: "1.25rem", background: "#fff", borderRadius: "12px", border: "1px solid #e4ebe6" }}>
+                <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "4px" }}>New to Nalpop?</div>
                 <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>Access is by invitation only. Contact your event organizer to get started.</div>
               </div>
             </div>
@@ -95,66 +95,66 @@ export default function HomePage() {
 
           {mode === "organizer-login" && (
             <div>
-              <button onClick={() => { setMode("home"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
+              <button onClick={() => { setMode("home"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
               <div style={{ marginBottom: "2rem" }}>
                 <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "6px" }}>Organizer sign in</h1>
-                <p style={{ fontSize: "0.88rem", color: "#6b5f54", margin: 0 }}>Welcome back. Enter your credentials below.</p>
+                <p style={{ fontSize: "0.88rem", color: "#4a5a52", margin: 0 }}>Welcome back. Enter your credentials below.</p>
               </div>
               <form onSubmit={handleOrganizerLogin} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
                 <div>
-                  <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={inp} />
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "5px" }}>PASSWORD</div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>PASSWORD</div>
                   <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required style={inp} />
                 </div>
                 {error && <div style={{ fontSize: "0.82rem", color: "#c0392b", padding: "8px 12px", background: "#c0392b11", borderRadius: "8px" }}>{error}</div>}
                 <button type="submit" disabled={loading} style={{ ...btn, marginTop: "4px", opacity: loading ? 0.7 : 1 }}>{loading ? "Signing in..." : "Sign in"}</button>
-                <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "0.82rem", fontFamily: "Georgia, serif", textAlign: "center" as const }}>Forgot password?</button>
+                <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "0.82rem", fontFamily: "Georgia, serif", textAlign: "center" as const }}>Forgot password?</button>
               </form>
             </div>
           )}
 
           {mode === "brand-login" && (
             <div>
-              <button onClick={() => { setMode("home"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
+              <button onClick={() => { setMode("home"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
               <div style={{ marginBottom: "2rem" }}>
                 <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "6px" }}>Brand sign in</h1>
-                <p style={{ fontSize: "0.88rem", color: "#6b5f54", margin: 0 }}>Access your brand portal below.</p>
+                <p style={{ fontSize: "0.88rem", color: "#4a5a52", margin: 0 }}>Access your brand portal below.</p>
               </div>
               <form onSubmit={handleBrandLogin} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
                 <div>
-                  <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={inp} />
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "5px" }}>PASSWORD</div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>PASSWORD</div>
                   <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required style={inp} />
                 </div>
                 {error && <div style={{ fontSize: "0.82rem", color: "#c0392b", padding: "8px 12px", background: "#c0392b11", borderRadius: "8px" }}>{error}</div>}
                 <button type="submit" disabled={loading} style={{ ...btn, marginTop: "4px", opacity: loading ? 0.7 : 1 }}>{loading ? "Signing in..." : "Sign in"}</button>
-                <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "0.82rem", fontFamily: "Georgia, serif", textAlign: "center" as const }}>Forgot password?</button>
+                <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "0.82rem", fontFamily: "Georgia, serif", textAlign: "center" as const }}>Forgot password?</button>
               </form>
             </div>
           )}
 
           {mode === "forgot" && (
             <div>
-              <button onClick={() => { setMode("home"); setError(""); setSent(false); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
+              <button onClick={() => { setMode("home"); setError(""); setSent(false); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
               <div style={{ marginBottom: "2rem" }}>
                 <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "6px" }}>Reset password</h1>
-                <p style={{ fontSize: "0.88rem", color: "#6b5f54", margin: 0 }}>Enter your email and we will send you a reset link.</p>
+                <p style={{ fontSize: "0.88rem", color: "#4a5a52", margin: 0 }}>Enter your email and we will send you a reset link.</p>
               </div>
               {sent ? (
                 <div style={{ padding: "1.25rem", background: "#4a7c5922", borderRadius: "12px", border: "1px solid #4a7c5944" }}>
                   <div style={{ fontSize: "0.9rem", color: "#4a7c59", marginBottom: "4px" }}>Reset link sent ✓</div>
-                  <div style={{ fontSize: "0.82rem", color: "#6b5f54" }}>Check your email for the password reset link.</div>
+                  <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>Check your email for the password reset link.</div>
                 </div>
               ) : (
                 <form onSubmit={handleForgotPassword} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
                   <div>
-                    <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
+                    <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={inp} />
                   </div>
                   <button type="submit" disabled={loading} style={{ ...btn, opacity: loading ? 0.7 : 1 }}>{loading ? "Sending..." : "Send reset link"}</button>

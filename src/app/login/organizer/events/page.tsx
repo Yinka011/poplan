@@ -35,8 +35,8 @@ type PlannerEvent = {
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   Active: { bg: "#4a7c5922", color: "#4a7c59" },
-  Planning: { bg: "#c4956a22", color: "#c4956a" },
-  Completed: { bg: "#6b5f5422", color: "#6b5f54" },
+  Planning: { bg: "#E8C97A22", color: "#E8C97A" },
+  Completed: { bg: "#4a5a5222", color: "#4a5a52" },
 };
 
 const formatDatesLabel = (label: string) => {
@@ -185,7 +185,7 @@ export default function EventsPage() {
 
   if (loading) return (
     <DashboardShell>
-      <div style={{ fontFamily: "Georgia, serif", color: "#6b5f54" }}>Loading events...</div>
+      <div style={{ fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading events...</div>
     </DashboardShell>
   );
 
@@ -195,72 +195,72 @@ export default function EventsPage() {
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
           <div>
-            <h1 style={{ fontSize: "1.8rem", color: "#5a3e2b", fontWeight: "normal", margin: 0 }}>Welcome back{userName ? `, ${userName}` : ""}</h1>
-            <p style={{ color: "#6b5f54", fontSize: "0.9rem", marginTop: "4px" }}>Manage all your pop-up events in one place.</p>
+            <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", margin: 0 }}>Welcome back{userName ? `, ${userName}` : ""}</h1>
+            <p style={{ color: "#4a5a52", fontSize: "0.9rem", marginTop: "4px" }}>Manage all your pop-up events in one place.</p>
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={() => { setAdding(!adding); setAddingType("my_event"); }} style={{ padding: "8px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ My event</button>
-            <button onClick={() => { setAdding(!adding); setAddingType("planner_event"); }} style={{ padding: "8px 16px", background: "transparent", color: "#5a3e2b", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Planning for a brand</button>
+            <button onClick={() => { setAdding(!adding); setAddingType("my_event"); }} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ My event</button>
+            <button onClick={() => { setAdding(!adding); setAddingType("planner_event"); }} style={{ padding: "8px 16px", background: "transparent", color: "#1B3A2D", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Planning for a brand</button>
           </div>
         </div>
 
         {adding && addingType === "my_event" && (
-          <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e2da" }}>
-            <div style={{ fontSize: "0.9rem", color: "#5a3e2b", marginBottom: "1rem" }}>New event I am organizing</div>
+          <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
+            <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "1rem" }}>New event I am organizing</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
-              <input placeholder="Event name e.g. Atlanta Pop-up" value={newEvent.name} onChange={e => setNewEvent({...newEvent, name: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input placeholder="City e.g. Atlanta" value={newEvent.city} onChange={e => setNewEvent({...newEvent, city: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input placeholder="Dates e.g. Sep 11-13, 2026" value={newEvent.dates_label} onChange={e => setNewEvent({...newEvent, dates_label: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <select value={newEvent.status} onChange={e => setNewEvent({...newEvent, status: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
+              <input placeholder="Event name e.g. Atlanta Pop-up" value={newEvent.name} onChange={e => setNewEvent({...newEvent, name: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="City e.g. Atlanta" value={newEvent.city} onChange={e => setNewEvent({...newEvent, city: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="Dates e.g. Sep 11-13, 2026" value={newEvent.dates_label} onChange={e => setNewEvent({...newEvent, dates_label: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <select value={newEvent.status} onChange={e => setNewEvent({...newEvent, status: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
                 <option>Planning</option>
                 <option>Active</option>
                 <option>Completed</option>
               </select>
-              <input type="date" value={newEvent.start_date} onChange={e => setNewEvent({...newEvent, start_date: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input type="date" value={newEvent.end_date} onChange={e => setNewEvent({...newEvent, end_date: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input type="date" value={newEvent.start_date} onChange={e => setNewEvent({...newEvent, start_date: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input type="date" value={newEvent.end_date} onChange={e => setNewEvent({...newEvent, end_date: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={addEvent} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
-              <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+              <button onClick={addEvent} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
+              <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
             </div>
           </div>
         )}
 
         {adding && addingType === "planner_event" && (
-          <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e2da" }}>
-            <div style={{ fontSize: "0.9rem", color: "#5a3e2b", marginBottom: "0.5rem" }}>Event I am planning for a brand</div>
-            <div style={{ fontSize: "0.8rem", color: "#6b5f54", marginBottom: "1rem" }}>Enter the event details and the brand you are planning for.</div>
+          <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
+            <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>Event I am planning for a brand</div>
+            <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginBottom: "1rem" }}>Enter the event details and the brand you are planning for.</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
-              <input placeholder="Brand name e.g. Wanni Fuga" value={newPlannerEvent.brand_name} onChange={e => setNewPlannerEvent({...newPlannerEvent, brand_name: e.target.value, event_slug: e.target.value.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now()})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input placeholder="City e.g. Houston" value={newPlannerEvent.city} onChange={e => setNewPlannerEvent({...newPlannerEvent, city: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input placeholder="Brand email (optional)" value={newPlannerEvent.brand_email} onChange={e => setNewPlannerEvent({...newPlannerEvent, brand_email: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input type="date" value={newPlannerEvent.start_date} onChange={e => setNewPlannerEvent({...newPlannerEvent, start_date: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input type="date" value={newPlannerEvent.end_date} onChange={e => setNewPlannerEvent({...newPlannerEvent, end_date: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="Brand name e.g. Wanni Fuga" value={newPlannerEvent.brand_name} onChange={e => setNewPlannerEvent({...newPlannerEvent, brand_name: e.target.value, event_slug: e.target.value.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now()})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="City e.g. Houston" value={newPlannerEvent.city} onChange={e => setNewPlannerEvent({...newPlannerEvent, city: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="Brand email (optional)" value={newPlannerEvent.brand_email} onChange={e => setNewPlannerEvent({...newPlannerEvent, brand_email: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input type="date" value={newPlannerEvent.start_date} onChange={e => setNewPlannerEvent({...newPlannerEvent, start_date: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input type="date" value={newPlannerEvent.end_date} onChange={e => setNewPlannerEvent({...newPlannerEvent, end_date: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={addPlannerEvent} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
-              <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+              <button onClick={addPlannerEvent} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
+              <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
             </div>
           </div>
         )}
 
         {/* My Events */}
         <div style={{ marginBottom: "2.5rem" }}>
-          <div style={{ fontSize: "0.75rem", color: "#6b5f54", letterSpacing: "0.1em", marginBottom: "1rem" }}>MY EVENTS</div>
+          <div style={{ fontSize: "0.75rem", color: "#4a5a52", letterSpacing: "0.1em", marginBottom: "1rem" }}>MY EVENTS</div>
           {myEvents.length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "2rem", textAlign: "center", border: "1px solid #e8e2da" }}>
-              <p style={{ color: "#6b5f54", fontSize: "0.85rem" }}>No events yet. Click + My event to add one.</p>
+            <div style={{ background: "#fff", borderRadius: "12px", padding: "2rem", textAlign: "center", border: "1px solid #e4ebe6" }}>
+              <p style={{ color: "#4a5a52", fontSize: "0.85rem" }}>No events yet. Click + My event to add one.</p>
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
               {myEvents.map(event => {
                 const statusStyle = STATUS_COLORS[event.status] || STATUS_COLORS.Planning;
                 return (
-                  <div key={event.id} style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e2da", position: "relative" as const }}>
+                  <div key={event.id} style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6", position: "relative" as const }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
                       <Link href={`/login/organizer/events/${event.slug}`} style={{ textDecoration: "none" }}>
-                        <div style={{ fontSize: "1.15rem", color: "#5a3e2b" }}>{event.name}</div>
-                        <div style={{ fontSize: "0.8rem", color: "#6b5f54", marginTop: "2px" }}>{event.city}</div>
+                        <div style={{ fontSize: "1.15rem", color: "#1B3A2D" }}>{event.name}</div>
+                        <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginTop: "2px" }}>{event.city}</div>
                       </Link>
                       <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                         <select value={event.status} onChange={e => updateStatus(event, e.target.value)} style={{ fontSize: "0.7rem", padding: "2px 6px", borderRadius: "20px", background: statusStyle.bg, color: statusStyle.color, border: "none", cursor: "pointer", fontFamily: "Georgia, serif" }}>
@@ -271,22 +271,22 @@ export default function EventsPage() {
                         <button onClick={() => deleteEvent(event.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "12px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                       </div>
                     </div>
-                    <input value={event.dates_label} onChange={e => setMyEvents(prev => prev.map(ev => ev.id === event.id ? { ...ev, dates_label: e.target.value } : ev))} onBlur={e => updateDates(event, e.target.value)} style={{ fontSize: "0.85rem", color: "#c4956a", border: "none", background: "transparent", fontFamily: "Georgia, serif", padding: "4px 0", marginBottom: "1rem", outline: "none", width: "100%" }} placeholder="Add dates..." />
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", borderTop: "1px solid #f0ece6", paddingTop: "1rem" }}>
+                    <input value={event.dates_label} onChange={e => setMyEvents(prev => prev.map(ev => ev.id === event.id ? { ...ev, dates_label: e.target.value } : ev))} onBlur={e => updateDates(event, e.target.value)} style={{ fontSize: "0.85rem", color: "#E8C97A", border: "none", background: "transparent", fontFamily: "Georgia, serif", padding: "4px 0", marginBottom: "1rem", outline: "none", width: "100%" }} placeholder="Add dates..." />
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", borderTop: "1px solid #f0f4f1", paddingTop: "1rem" }}>
                       <div>
-                        <div style={{ fontSize: "0.65rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "2px" }}>BRANDS</div>
-                        <div style={{ fontSize: "1.2rem", color: "#5a3e2b" }}>{event.brandsCount}</div>
+                        <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "2px" }}>BRANDS</div>
+                        <div style={{ fontSize: "1.2rem", color: "#1B3A2D" }}>{event.brandsCount}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: "0.65rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "2px" }}>COLLECTED</div>
+                        <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "2px" }}>COLLECTED</div>
                         <div style={{ fontSize: "1.2rem", color: "#4a7c59" }}>${Number(event.feesCollected).toFixed(2)}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: "0.65rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "2px" }}>OUTSTANDING</div>
+                        <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "2px" }}>OUTSTANDING</div>
                         <div style={{ fontSize: "1.2rem", color: "#c0392b" }}>${Number(event.outstandingBalance).toFixed(2)}</div>
                       </div>
                     </div>
-                    <Link href={`/login/organizer/events/${event.slug}`} style={{ marginTop: "1rem", fontSize: "0.78rem", color: "#6b5f54", textDecoration: "none", display: "block" }}>View dashboard →</Link>
+                    <Link href={`/login/organizer/events/${event.slug}`} style={{ marginTop: "1rem", fontSize: "0.78rem", color: "#4a5a52", textDecoration: "none", display: "block" }}>View dashboard →</Link>
                   </div>
                 );
               })}
@@ -296,28 +296,28 @@ export default function EventsPage() {
 
         {/* Events I am Planning for Others */}
         <div>
-          <div style={{ fontSize: "0.75rem", color: "#6b5f54", letterSpacing: "0.1em", marginBottom: "1rem" }}>EVENTS I AM PLANNING FOR OTHERS</div>
+          <div style={{ fontSize: "0.75rem", color: "#4a5a52", letterSpacing: "0.1em", marginBottom: "1rem" }}>EVENTS I AM PLANNING FOR OTHERS</div>
           {plannerEvents.length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "2rem", textAlign: "center", border: "1px solid #e8e2da" }}>
-              <p style={{ color: "#6b5f54", fontSize: "0.85rem" }}>No planning assignments yet. Click + Planning for a brand to add one.</p>
+            <div style={{ background: "#fff", borderRadius: "12px", padding: "2rem", textAlign: "center", border: "1px solid #e4ebe6" }}>
+              <p style={{ color: "#4a5a52", fontSize: "0.85rem" }}>No planning assignments yet. Click + Planning for a brand to add one.</p>
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
               {plannerEvents.map(pe => (
-                <div key={pe.id} style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e2da", borderLeft: "3px solid #c4956a" }}>
+                <div key={pe.id} style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6", borderLeft: "3px solid #E8C97A" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
                     <div>
-                      <div style={{ fontSize: "0.65rem", color: "#c4956a", letterSpacing: "0.08em", marginBottom: "4px" }}>PLANNING FOR</div>
-                      <div style={{ fontSize: "1.1rem", color: "#5a3e2b" }}>{pe.brand_name}</div>
-                      <div style={{ fontSize: "0.8rem", color: "#6b5f54", marginTop: "2px" }}>{pe.city || pe.event_slug}</div>
-                      {pe.dates_label && <div style={{ fontSize: "0.78rem", color: "#c4956a", marginTop: "2px" }}>{formatDatesLabel(pe.dates_label)}</div>}
+                      <div style={{ fontSize: "0.65rem", color: "#E8C97A", letterSpacing: "0.08em", marginBottom: "4px" }}>PLANNING FOR</div>
+                      <div style={{ fontSize: "1.1rem", color: "#1B3A2D" }}>{pe.brand_name}</div>
+                      <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginTop: "2px" }}>{pe.city || pe.event_slug}</div>
+                      {pe.dates_label && <div style={{ fontSize: "0.78rem", color: "#E8C97A", marginTop: "2px" }}>{formatDatesLabel(pe.dates_label)}</div>}
                     </div>
                     <button onClick={() => deletePlannerEvent(pe.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "12px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                   </div>
                   <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" as const }}>
-                    <Link href={`/login/organizer/planner/${pe.event_slug}`} style={{ fontSize: "0.78rem", color: "#c4956a", textDecoration: "none" }}>View dashboard →</Link>
+                    <Link href={`/login/organizer/planner/${pe.event_slug}`} style={{ fontSize: "0.78rem", color: "#E8C97A", textDecoration: "none" }}>View dashboard →</Link>
                     {pe.brand_email && (
-                      <button onClick={() => invitePlannerBrand(pe.brand_email, pe.id)} disabled={inviting === pe.id} style={{ fontSize: "0.72rem", padding: "3px 10px", background: "transparent", border: "1px solid #c4956a", borderRadius: "6px", cursor: "pointer", color: "#c4956a", fontFamily: "Georgia, serif" }}>
+                      <button onClick={() => invitePlannerBrand(pe.brand_email, pe.id)} disabled={inviting === pe.id} style={{ fontSize: "0.72rem", padding: "3px 10px", background: "transparent", border: "1px solid #E8C97A", borderRadius: "6px", cursor: "pointer", color: "#E8C97A", fontFamily: "Georgia, serif" }}>
                         {inviting === pe.id ? "Sending..." : "✉ Invite brand"}
                       </button>
                     )}

@@ -2,5 +2,5 @@
 import { useEffect } from "react";
 export default function LolaRedirect() {
   useEffect(() => { window.location.href = "/brand/portal"; }, []);
-  return <div style={{ minHeight: "100vh", background: "#faf8f5", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#6b5f54" }}>Loading...</div>;
+  return <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>;
 }

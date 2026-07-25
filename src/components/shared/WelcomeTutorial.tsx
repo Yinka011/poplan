@@ -61,7 +61,7 @@ export default function WelcomeTutorial({ cityName, onClose }: Props) {
         {/* Progress dots */}
         <div style={{ display: "flex", gap: "6px", marginBottom: "2rem", justifyContent: "center" }}>
           {steps.map((_, i) => (
-            <div key={i} style={{ width: i === step ? "20px" : "6px", height: "6px", borderRadius: "3px", background: i === step ? "#5a3e2b" : "#e8e2da", transition: "all 0.3s" }} />
+            <div key={i} style={{ width: i === step ? "20px" : "6px", height: "6px", borderRadius: "3px", background: i === step ? "#1B3A2D" : "#e4ebe6", transition: "all 0.3s" }} />
           ))}
         </div>
 
@@ -70,16 +70,16 @@ export default function WelcomeTutorial({ cityName, onClose }: Props) {
 
         {/* Content */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div style={{ fontSize: "1.2rem", color: "#5a3e2b", marginBottom: "0.75rem", lineHeight: 1.3 }}>{current.title}</div>
-          <div style={{ fontSize: "0.88rem", color: "#6b5f54", lineHeight: 1.7 }}>{current.desc}</div>
+          <div style={{ fontSize: "1.2rem", color: "#1B3A2D", marginBottom: "0.75rem", lineHeight: 1.3 }}>{current.title}</div>
+          <div style={{ fontSize: "0.88rem", color: "#4a5a52", lineHeight: 1.7 }}>{current.desc}</div>
         </div>
 
         {/* Buttons */}
         <div style={{ display: "flex", gap: "10px" }}>
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: "10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#6b5f54", fontFamily: "Georgia, serif" }}>Back</button>
+            <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: "10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#4a5a52", fontFamily: "Georgia, serif" }}>Back</button>
           )}
-          <button onClick={isLast ? onClose : () => setStep(step + 1)} style={{ flex: 2, padding: "10px", background: "#5a3e2b", border: "none", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#fff", fontFamily: "Georgia, serif" }}>
+          <button onClick={isLast ? onClose : () => setStep(step + 1)} style={{ flex: 2, padding: "10px", background: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#fff", fontFamily: "Georgia, serif" }}>
             {isLast ? `Let's go →` : "Next →"}
           </button>
         </div>

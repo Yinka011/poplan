@@ -36,40 +36,40 @@ export default function BrandProgress() {
 
   const getStatus = (percent: number) => {
     if (percent === 100) return { label: "Complete", color: "#4a7c59", bg: "#4a7c5922" };
-    if (percent >= 50) return { label: "In progress", color: "#c4956a", bg: "#c4956a22" };
+    if (percent >= 50) return { label: "In progress", color: "#E8C97A", bg: "#E8C97A22" };
     if (percent > 0) return { label: "Started", color: "#5b7fa6", bg: "#5b7fa622" };
     return { label: "Not started", color: "#c0392b", bg: "#c0392b22" };
   };
 
   return (
-    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e2da" }}>
-      <div style={{ fontSize: "1.1rem", color: "#5a3e2b", marginBottom: "0.3rem", fontFamily: "Georgia, serif" }}>Brand progress</div>
-      <div style={{ fontSize: "0.8rem", color: "#6b5f54", marginBottom: "1.25rem" }}>Task completion across all Atlanta brands</div>
+    <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+      <div style={{ fontSize: "1.1rem", color: "#1B3A2D", marginBottom: "0.3rem", fontFamily: "Georgia, serif" }}>Brand progress</div>
+      <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginBottom: "1.25rem" }}>Task completion across all Atlanta brands</div>
       {brands.filter(b => b.email).map(brand => {
         const { completed, total, percent } = getProgress(brand.email);
         const status = getStatus(percent);
         return (
-          <div key={brand.id} style={{ marginBottom: "1rem", paddingBottom: "1rem", borderBottom: "1px solid #f0ece6" }}>
+          <div key={brand.id} style={{ marginBottom: "1rem", paddingBottom: "1rem", borderBottom: "1px solid #f0f4f1" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-              <div style={{ fontSize: "0.9rem", color: "#5a3e2b", fontFamily: "Georgia, serif" }}>{brand.name}</div>
+              <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontFamily: "Georgia, serif" }}>{brand.name}</div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "0.75rem", color: "#6b5f54" }}>{completed}/{total} tasks</span>
+                <span style={{ fontSize: "0.75rem", color: "#4a5a52" }}>{completed}/{total} tasks</span>
                 <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "20px", background: status.bg, color: status.color }}>{status.label}</span>
               </div>
             </div>
-            <div style={{ height: "5px", background: "#f0ece6", borderRadius: "3px", overflow: "hidden" }}>
+            <div style={{ height: "5px", background: "#f0f4f1", borderRadius: "3px", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${percent}%`, background: status.color, borderRadius: "3px", transition: "width 0.3s" }} />
             </div>
           </div>
         );
       })}
       {brands.filter(b => !b.email).map(brand => (
-        <div key={brand.id} style={{ marginBottom: "1rem", paddingBottom: "1rem", borderBottom: "1px solid #f0ece6" }}>
+        <div key={brand.id} style={{ marginBottom: "1rem", paddingBottom: "1rem", borderBottom: "1px solid #f0f4f1" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-            <div style={{ fontSize: "0.9rem", color: "#5a3e2b", fontFamily: "Georgia, serif" }}>{brand.name}</div>
-            <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "20px", background: "#f0ece6", color: "#6b5f54" }}>No portal access</span>
+            <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontFamily: "Georgia, serif" }}>{brand.name}</div>
+            <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "20px", background: "#f0f4f1", color: "#4a5a52" }}>No portal access</span>
           </div>
-          <div style={{ height: "5px", background: "#f0ece6", borderRadius: "3px" }} />
+          <div style={{ height: "5px", background: "#f0f4f1", borderRadius: "3px" }} />
         </div>
       ))}
     </div>

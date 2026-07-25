@@ -52,7 +52,7 @@ const CATEGORY_TASK_MAP: Record<string, number> = {
 
 const statusColor = (s: string) => {
   if (s === "Paid") return { background: "#4a7c5922", color: "#4a7c59" };
-  if (s === "Partial") return { background: "#c4956a22", color: "#c4956a" };
+  if (s === "Partial") return { background: "#E8C97A22", color: "#E8C97A" };
   return { background: "#c0392b22", color: "#c0392b" };
 };
 
@@ -292,37 +292,37 @@ export default function OrganizerBrandPage() {
   const approvalBadge = (status: string) => {
     if (status === "approved") return { background: "#4a7c5922", color: "#4a7c59", label: "Approved" };
     if (status === "revision") return { background: "#c0392b22", color: "#c0392b", label: "Needs revision" };
-    return { background: "#f0ece6", color: "#6b5f54", label: "Pending" };
+    return { background: "#f0f4f1", color: "#4a5a52", label: "Pending" };
   };
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#faf8f5", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#6b5f54" }}>Loading...</div>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>
   );
 
   if (!brand) return (
-    <div style={{ minHeight: "100vh", background: "#faf8f5", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
       <div style={{ textAlign: "center" }}>
-        <p style={{ color: "#6b5f54" }}>Brand not found</p>
-        <Link href={`/login/organizer/events/${slug}`} style={{ color: "#c4956a" }}>Back to dashboard</Link>
+        <p style={{ color: "#4a5a52" }}>Brand not found</p>
+        <Link href={`/login/organizer/events/${slug}`} style={{ color: "#E8C97A" }}>Back to dashboard</Link>
       </div>
     </div>
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#faf8f5", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
 
         {/* Header */}
         <div style={{ marginBottom: "1.5rem" }}>
-          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#6b5f54", textDecoration: "none" }}>← Back to Atlanta</Link>
+          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to Atlanta</Link>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.5rem" }}>
             <div>
-              <h1 style={{ fontSize: "2rem", color: "#5a3e2b", fontWeight: "normal", fontFamily: "Didot, 'Playfair Display', serif", fontStyle: "italic", margin: 0 }}>{brand.name}</h1>
+              <h1 style={{ fontSize: "2rem", color: "#1B3A2D", fontWeight: "normal", fontFamily: "Didot, 'Playfair Display', serif", fontStyle: "italic", margin: 0 }}>{brand.name}</h1>
               <span style={{ fontSize: "0.8rem", padding: "3px 10px", borderRadius: "20px", ...statusColor(brand.status) }}>{brand.status}</span>
             </div>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               {!brand.invited ? (
-                <button onClick={inviteBrand} disabled={inviting} title="Send invite" style={{ background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", padding: "8px 12px", cursor: "pointer", color: "#6b5f54", fontSize: "1rem" }}>
+                <button onClick={inviteBrand} disabled={inviting} title="Send invite" style={{ background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "8px 12px", cursor: "pointer", color: "#4a5a52", fontSize: "1rem" }}>
                   {inviting ? "..." : "✉"}
                 </button>
               ) : (
@@ -333,35 +333,35 @@ export default function OrganizerBrandPage() {
         </div>
 
         {/* Payment card */}
-        <div style={{ background: "#5a3e2b", borderRadius: "12px", padding: "1.5rem 2rem", marginBottom: "1.5rem", color: "#fff", display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "1rem", alignItems: "center" }}>
+        <div style={{ background: "#1B3A2D", borderRadius: "12px", padding: "1.5rem 2rem", marginBottom: "1.5rem", color: "#fff", display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "1rem", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PARTICIPATION FEE</div>
+            <div style={{ fontSize: "0.7rem", color: "#d4c87a", marginBottom: "4px" }}>PARTICIPATION FEE</div>
             {editingPayment ? (
-              <input type="number" value={newFee} onChange={e => setNewFee(e.target.value)} style={{ width: "80px", padding: "4px", border: "1px solid #c4956a", borderRadius: "4px", fontSize: "1rem", background: "#fff", color: "#5a3e2b" }} placeholder="Fee" />
+              <input type="number" value={newFee} onChange={e => setNewFee(e.target.value)} style={{ width: "80px", padding: "4px", border: "1px solid #E8C97A", borderRadius: "4px", fontSize: "1rem", background: "#fff", color: "#1B3A2D" }} placeholder="Fee" />
             ) : (
               <div style={{ fontSize: "1.4rem" }}>${Number(brand.fee_owed).toFixed(2)}</div>
             )}
           </div>
           <div>
-            <div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>PAID</div>
+            <div style={{ fontSize: "0.7rem", color: "#d4c87a", marginBottom: "4px" }}>PAID</div>
             {editingPayment ? (
-              <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} style={{ width: "80px", padding: "4px", border: "1px solid #c4956a", borderRadius: "4px", fontSize: "1rem", background: "#fff", color: "#5a3e2b" }} placeholder="Paid" autoFocus />
+              <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} style={{ width: "80px", padding: "4px", border: "1px solid #E8C97A", borderRadius: "4px", fontSize: "1rem", background: "#fff", color: "#1B3A2D" }} placeholder="Paid" autoFocus />
             ) : (
               <div style={{ fontSize: "1.4rem" }}>${Number(brand.amount_paid).toFixed(2)}</div>
             )}
           </div>
           <div>
-            <div style={{ fontSize: "0.7rem", color: "#c8b89a", marginBottom: "4px" }}>BALANCE</div>
+            <div style={{ fontSize: "0.7rem", color: "#d4c87a", marginBottom: "4px" }}>BALANCE</div>
             <div style={{ fontSize: "1.4rem", color: Number(brand.balance) > 0 ? "#e8c97a" : "#90c9a0" }}>${Number(brand.balance).toFixed(2)}</div>
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
             {editingPayment ? (
               <>
-                <button onClick={updatePayment} style={{ padding: "6px 12px", background: "#c4956a", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>Save</button>
-                <button onClick={() => setEditingPayment(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #c8b89a44", color: "#c8b89a", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>Cancel</button>
+                <button onClick={updatePayment} style={{ padding: "6px 12px", background: "#E8C97A", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>Save</button>
+                <button onClick={() => setEditingPayment(false)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #d4c87a44", color: "#d4c87a", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>Cancel</button>
               </>
             ) : (
-              <button onClick={() => { setEditingPayment(true); setNewAmount(String(brand.amount_paid)); setNewFee(String(brand.fee_owed)); }} title="Edit payment" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#c8b89a", padding: "4px" }}>
+              <button onClick={() => { setEditingPayment(true); setNewAmount(String(brand.amount_paid)); setNewFee(String(brand.fee_owed)); }} title="Edit payment" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c87a", padding: "4px" }}>
                 <PencilIcon />
               </button>
             )}
@@ -369,33 +369,33 @@ export default function OrganizerBrandPage() {
         </div>
 
         {/* Shipping status */}
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e2da", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: "0.75rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "4px" }}>SHIPMENT STATUS</div>
+            <div style={{ fontSize: "0.75rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "4px" }}>SHIPMENT STATUS</div>
             {brand.shipped ? (
               <div>
                 <div style={{ fontSize: "0.95rem", color: "#4a7c59", fontFamily: "Georgia, serif" }}>Products shipped ✓</div>
-                <div style={{ fontSize: "0.75rem", color: "#6b5f54", marginTop: "2px" }}>Marked on {formatDate(brand.shipped_at)}</div>
+                <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginTop: "2px" }}>Marked on {formatDate(brand.shipped_at)}</div>
               </div>
             ) : (
-              <div style={{ fontSize: "0.95rem", color: "#c4956a", fontFamily: "Georgia, serif" }}>Not yet shipped</div>
+              <div style={{ fontSize: "0.95rem", color: "#E8C97A", fontFamily: "Georgia, serif" }}>Not yet shipped</div>
             )}
           </div>
-          <span style={{ fontSize: "0.8rem", padding: "4px 12px", borderRadius: "20px", background: brand.shipped ? "#4a7c5922" : "#c4956a22", color: brand.shipped ? "#4a7c59" : "#c4956a" }}>
+          <span style={{ fontSize: "0.8rem", padding: "4px 12px", borderRadius: "20px", background: brand.shipped ? "#4a7c5922" : "#E8C97A22", color: brand.shipped ? "#4a7c59" : "#E8C97A" }}>
             {brand.shipped ? "Shipped" : "Pending"}
           </span>
         </div>
 
         {/* Portal Access */}
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e2da" }}>
-          <div style={{ fontSize: "0.9rem", color: "#5a3e2b", fontFamily: "Georgia, serif", marginBottom: "1rem" }}>Portal access</div>
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
+          <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontFamily: "Georgia, serif", marginBottom: "1rem" }}>Portal access</div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1rem" }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "0.75rem", color: "#6b5f54", marginBottom: "2px" }}>PRIMARY EMAIL</div>
-              <div style={{ fontSize: "0.9rem", color: "#5a3e2b" }}>{brand.email || "No email set"}</div>
+              <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginBottom: "2px" }}>PRIMARY EMAIL</div>
+              <div style={{ fontSize: "0.9rem", color: "#1B3A2D" }}>{brand.email || "No email set"}</div>
             </div>
             {brand.email && !brand.invited && (
-              <button onClick={inviteBrand} disabled={inviting} title="Send invite" style={{ background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", padding: "6px 10px", cursor: "pointer", color: "#6b5f54", fontSize: "1rem" }}>
+              <button onClick={inviteBrand} disabled={inviting} title="Send invite" style={{ background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "6px 10px", cursor: "pointer", color: "#4a5a52", fontSize: "1rem" }}>
                 {inviting ? "..." : "✉"}
               </button>
             )}
@@ -404,9 +404,9 @@ export default function OrganizerBrandPage() {
 
           {members.length > 0 && (
             <div style={{ marginBottom: "1rem" }}>
-              <div style={{ fontSize: "0.75rem", color: "#6b5f54", marginBottom: "6px" }}>TEAM MEMBERS</div>
+              <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginBottom: "6px" }}>TEAM MEMBERS</div>
               {members.map(m => (
-                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0", borderBottom: "1px solid #f0ece6", fontSize: "0.85rem", color: "#5a3e2b" }}>
+                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0", borderBottom: "1px solid #f0f4f1", fontSize: "0.85rem", color: "#1B3A2D" }}>
                   <span style={{ color: "#4a7c59" }}>✓</span>
                   {m.member_email}
                 </div>
@@ -415,67 +415,67 @@ export default function OrganizerBrandPage() {
           )}
 
           <div style={{ display: "flex", gap: "8px", marginTop: "0.5rem" }}>
-            <input type="email" placeholder="Add team member email" value={newMemberEmail} onChange={e => setNewMemberEmail(e.target.value)} style={{ flex: 1, padding: "8px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-            <button onClick={addMember} disabled={addingMember} title="Send invite" style={{ background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", padding: "8px 12px", cursor: "pointer", color: "#6b5f54", fontSize: "1rem" }}>
+            <input type="email" placeholder="Add team member email" value={newMemberEmail} onChange={e => setNewMemberEmail(e.target.value)} style={{ flex: 1, padding: "8px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+            <button onClick={addMember} disabled={addingMember} title="Send invite" style={{ background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "8px 12px", cursor: "pointer", color: "#4a5a52", fontSize: "1rem" }}>
               {addingMember ? "..." : "✉"}
             </button>
           </div>
         </div>
 
         {/* Checklist Progress */}
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e2da" }}>
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-            <div style={{ fontSize: "0.9rem", color: "#5a3e2b", fontFamily: "Georgia, serif" }}>Checklist progress</div>
-            <div style={{ fontSize: "0.8rem", color: "#6b5f54" }}>{completed} of {deadlines.length} complete · {progress}%</div>
+            <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontFamily: "Georgia, serif" }}>Checklist progress</div>
+            <div style={{ fontSize: "0.8rem", color: "#4a5a52" }}>{completed} of {deadlines.length} complete · {progress}%</div>
           </div>
-          <div style={{ height: "5px", background: "#f0ece6", borderRadius: "3px", marginBottom: "1.25rem", overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${progress}%`, background: "#c4956a", borderRadius: "3px", transition: "width 0.3s" }} />
+          <div style={{ height: "5px", background: "#f0f4f1", borderRadius: "3px", marginBottom: "1.25rem", overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${progress}%`, background: "#E8C97A", borderRadius: "3px", transition: "width 0.3s" }} />
           </div>
           {deadlines.map(deadline => {
             const done = isCompleted(deadline.id);
             return (
               <div key={deadline.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "8px", borderRadius: "8px", marginBottom: "2px" }}>
-                <div style={{ width: "16px", height: "16px", borderRadius: "50%", border: done ? "none" : "2px solid #d4c5b0", background: done ? "#c4956a" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: "16px", height: "16px", borderRadius: "50%", border: done ? "none" : "2px solid #d4c5b0", background: done ? "#E8C97A" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {done && <span style={{ color: "#fff", fontSize: "9px" }}>✓</span>}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.85rem", color: done ? "#b0a090" : "#5a3e2b", textDecoration: done ? "line-through" : "none" }}>{deadline.task}</div>
-                  <div style={{ fontSize: "0.72rem", color: "#6b5f54" }}>Due {deadline.due_date}</div>
+                  <div style={{ fontSize: "0.85rem", color: done ? "#b0a090" : "#1B3A2D", textDecoration: done ? "line-through" : "none" }}>{deadline.task}</div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>Due {deadline.due_date}</div>
                 </div>
-                <span style={{ fontSize: "0.7rem", padding: "1px 6px", borderRadius: "10px", background: done ? "#4a7c5922" : "#f0ece6", color: done ? "#4a7c59" : "#6b5f54" }}>{done ? "Done" : "Pending"}</span>
+                <span style={{ fontSize: "0.7rem", padding: "1px 6px", borderRadius: "10px", background: done ? "#4a7c5922" : "#f0f4f1", color: done ? "#4a7c59" : "#4a5a52" }}>{done ? "Done" : "Pending"}</span>
               </div>
             );
           })}
         </div>
 
         {/* Uploaded Files */}
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e2da" }}>
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <div style={{ fontSize: "0.9rem", color: "#5a3e2b", fontFamily: "Georgia, serif" }}>Uploaded files</div>
-            <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} style={{ padding: "5px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.8rem", fontFamily: "Georgia, serif", color: "#5a3e2b", background: "#faf8f5" }}>
+            <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontFamily: "Georgia, serif" }}>Uploaded files</div>
+            <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} style={{ padding: "5px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.8rem", fontFamily: "Georgia, serif", color: "#1B3A2D", background: "#f8faf8" }}>
               <option>All</option>
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
           {filteredFiles.length === 0 ? (
-            <p style={{ fontSize: "0.85rem", color: "#6b5f54" }}>No files uploaded yet.</p>
+            <p style={{ fontSize: "0.85rem", color: "#4a5a52" }}>No files uploaded yet.</p>
           ) : (
             filteredFiles.map((file, i) => {
               const approval = getApprovalStatus(file.name);
               const badge = approvalBadge(approval);
               return (
-                <div key={i} style={{ padding: "10px 12px", borderRadius: "10px", background: "#faf8f5", marginBottom: "8px", border: "1px solid #f0ece6" }}>
+                <div key={i} style={{ padding: "10px 12px", borderRadius: "10px", background: "#f8faf8", marginBottom: "8px", border: "1px solid #f0f4f1" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <span style={{ fontSize: "0.85rem", color: "#c8bfb5" }}>
                       {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "▣" : file.name.match(/\.pdf$/i) ? "▤" : file.name.match(/\.(xlsx|csv|xls)$/i) ? "▦" : "▢"}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "0.85rem", color: "#5a3e2b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
-                      <div style={{ fontSize: "0.72rem", color: "#6b5f54" }}>{file.category} · {formatSize(file.size)} · {formatDate(file.uploaded_at)}</div>
+                      <div style={{ fontSize: "0.85rem", color: "#1B3A2D", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
+                      <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>{file.category} · {formatSize(file.size)} · {formatDate(file.uploaded_at)}</div>
                     </div>
                     <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: badge.background, color: badge.color, whiteSpace: "nowrap" as const }}>{badge.label}</span>
-                    <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", color: "#6b5f54", textDecoration: "none" }}>View</a>
-                    <a href={file.url} download target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "#5a3e2b", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>↓</a>
+                    <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", color: "#4a5a52", textDecoration: "none" }}>View</a>
+                    <a href={file.url} download target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "#1B3A2D", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>↓</a>
                   </div>
                   <div style={{ display: "flex", gap: "6px", marginTop: "8px", paddingLeft: "27px", alignItems: "center" }}>
                     <button onClick={() => setApprovalStatus(file.name, "approved", file.category)} title="Approve" style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: approval === "approved" ? "#4a7c59" : "transparent", color: approval === "approved" ? "#fff" : "#4a7c59", border: "1px solid #4a7c5944", borderRadius: "6px", cursor: "pointer" }}>
@@ -484,7 +484,7 @@ export default function OrganizerBrandPage() {
                     <button onClick={() => setApprovalStatus(file.name, "revision", file.category)} title="Needs revision" style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: approval === "revision" ? "#c0392b" : "transparent", color: approval === "revision" ? "#fff" : "#c0392b", border: "1px solid #c0392b44", borderRadius: "6px", cursor: "pointer" }}>
                       <XIcon />
                     </button>
-                    <button onClick={() => setApprovalStatus(file.name, "pending", file.category)} title="Reset" style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", color: "#6b5f54", border: "1px solid #6b5f5422", borderRadius: "6px", cursor: "pointer" }}>
+                    <button onClick={() => setApprovalStatus(file.name, "pending", file.category)} title="Reset" style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", color: "#4a5a52", border: "1px solid #4a5a5222", borderRadius: "6px", cursor: "pointer" }}>
                       <ResetIcon />
                     </button>
                   </div>
@@ -495,24 +495,24 @@ export default function OrganizerBrandPage() {
         </div>
 
         {/* Notes */}
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e8e2da" }}>
-          <div style={{ fontSize: "0.9rem", color: "#5a3e2b", fontFamily: "Georgia, serif", marginBottom: "1rem" }}>Private notes</div>
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+          <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontFamily: "Georgia, serif", marginBottom: "1rem" }}>Private notes</div>
           <div style={{ display: "flex", gap: "8px", marginBottom: "1rem" }}>
-            <input type="text" placeholder="Add a note about this brand..." value={newNote} onChange={e => setNewNote(e.target.value)} onKeyDown={e => e.key === "Enter" && addNote()} style={{ flex: 1, padding: "8px 12px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-            <button onClick={addNote} disabled={savingNote} style={{ padding: "8px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+            <input type="text" placeholder="Add a note about this brand..." value={newNote} onChange={e => setNewNote(e.target.value)} onKeyDown={e => e.key === "Enter" && addNote()} style={{ flex: 1, padding: "8px 12px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+            <button onClick={addNote} disabled={savingNote} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
               {savingNote ? "..." : "Add"}
             </button>
           </div>
           {notes.length === 0 ? (
-            <p style={{ fontSize: "0.85rem", color: "#6b5f54" }}>No notes yet.</p>
+            <p style={{ fontSize: "0.85rem", color: "#4a5a52" }}>No notes yet.</p>
           ) : (
             notes.map(note => (
-              <div key={note.id} style={{ display: "flex", gap: "10px", padding: "10px", borderRadius: "8px", background: "#faf8f5", marginBottom: "6px" }}>
+              <div key={note.id} style={{ display: "flex", gap: "10px", padding: "10px", borderRadius: "8px", background: "#f8faf8", marginBottom: "6px" }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.85rem", color: "#5a3e2b" }}>{note.content}</div>
-                  <div style={{ fontSize: "0.72rem", color: "#6b5f54", marginTop: "2px" }}>{formatDate(note.created_at)}</div>
+                  <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>{note.content}</div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>{formatDate(note.created_at)}</div>
                 </div>
-                <button onClick={() => deleteNote(note.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px", padding: "2px 4px" }} onMouseEnter={e => (e.currentTarget.style.color = "#6b5f54")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✕</button>
+                <button onClick={() => deleteNote(note.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px", padding: "2px 4px" }} onMouseEnter={e => (e.currentTarget.style.color = "#4a5a52")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✕</button>
               </div>
             ))
           )}

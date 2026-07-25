@@ -16,13 +16,13 @@ const EVENT_DAYS = ["Fri Sep 11", "Sat Sep 12", "Sun Sep 13"];
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   Confirmed: { bg: "#4a7c5922", color: "#4a7c59" },
-  "In Progress": { bg: "#c4956a22", color: "#c4956a" },
-  Pending: { bg: "#6b5f5422", color: "#6b5f54" },
+  "In Progress": { bg: "#E8C97A22", color: "#E8C97A" },
+  Pending: { bg: "#4a5a5222", color: "#4a5a52" },
   Cancelled: { bg: "#c0392b22", color: "#c0392b" },
 };
 
 const roleColors: Record<string, string> = {
-  Cashier: "#c4956a", Stylist: "#4a7c59", Runner: "#5b7fa6",
+  Cashier: "#E8C97A", Stylist: "#4a7c59", Runner: "#5b7fa6",
   "Check-in": "#8b6ab0", Security: "#c0392b", Inventory: "#2c7873",
   "Brand liaison": "#a0522d", Photographer: "#6b8e23",
 };
@@ -178,8 +178,8 @@ export default function PlanningHub() {
     if (table === "planning_staff") setStaff(prev => prev.filter(i => i.id !== id));
   };
 
-  const inp = (style?: any) => ({ padding: "7px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", ...style });
-  const editInp = (style?: any) => ({ padding: "4px 7px", border: "1px solid #c4956a", borderRadius: "6px", fontSize: "12px", ...style });
+  const inp = (style?: any) => ({ padding: "7px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", ...style });
+  const editInp = (style?: any) => ({ padding: "4px 7px", border: "1px solid #E8C97A", borderRadius: "6px", fontSize: "12px", ...style });
 
   const totalStaffCost = staff.reduce((s, m) => {
     const totalHours = (m.shifts || []).reduce((h, sh) => h + Number(sh.hours), 0);
@@ -189,23 +189,23 @@ export default function PlanningHub() {
   const totalDecorCost = decor.reduce((s, x) => s + Number(x.cost), 0);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#faf8f5", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <Link href="/login/organizer/events/atlanta" style={{ fontSize: "0.85rem", color: "#6b5f54", textDecoration: "none" }}>← Back to Atlanta</Link>
-          <h1 style={{ fontSize: "1.8rem", color: "#5a3e2b", fontWeight: "normal", marginTop: "0.5rem" }}>Planning Hub</h1>
-          <p style={{ color: "#6b5f54", fontSize: "0.9rem" }}>Decor, refreshments and staffing for Atlanta</p>
+          <Link href="/login/organizer/events/atlanta" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to Atlanta</Link>
+          <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", marginTop: "0.5rem" }}>Planning Hub</h1>
+          <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>Decor, refreshments and staffing for Atlanta</p>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "12px", marginBottom: "1.5rem" }}>
           {[
-            { label: "DECOR BUDGET", value: `$${totalDecorCost.toFixed(2)}`, color: "#c4956a" },
+            { label: "DECOR BUDGET", value: `$${totalDecorCost.toFixed(2)}`, color: "#E8C97A" },
             { label: "REFRESHMENTS", value: `$${totalRefreshCost.toFixed(2)}`, color: "#4a7c59" },
             { label: "STAFFING COST", value: `$${totalStaffCost.toFixed(2)}`, color: "#5b7fa6" },
           ].map((c, i) => (
-            <div key={i} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", border: "1px solid #e8e2da" }}>
-              <div style={{ fontSize: "0.7rem", color: "#6b5f54", marginBottom: "4px" }}>{c.label}</div>
+            <div key={i} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", border: "1px solid #e4ebe6" }}>
+              <div style={{ fontSize: "0.7rem", color: "#4a5a52", marginBottom: "4px" }}>{c.label}</div>
               <div style={{ fontSize: "1.3rem", color: c.color }}>{c.value}</div>
             </div>
           ))}
@@ -213,15 +213,15 @@ export default function PlanningHub() {
 
         <div style={{ display: "flex", gap: "8px", marginBottom: "1.5rem" }}>
           {(["decor", "refreshments", "staff"] as const).map(t => (
-            <button key={t} onClick={() => { setTab(t); setAdding(false); setEditing(null); }} style={{ padding: "8px 20px", background: tab === t ? "#5a3e2b" : "#fff", color: tab === t ? "#fff" : "#6b5f54", border: "1px solid " + (tab === t ? "#5a3e2b" : "#e8e2da"), borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const }}>{t}</button>
+            <button key={t} onClick={() => { setTab(t); setAdding(false); setEditing(null); }} style={{ padding: "8px 20px", background: tab === t ? "#1B3A2D" : "#fff", color: tab === t ? "#fff" : "#4a5a52", border: "1px solid " + (tab === t ? "#1B3A2D" : "#e4ebe6"), borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const }}>{t}</button>
           ))}
-          <button onClick={() => setAdding(!adding)} style={{ marginLeft: "auto", padding: "8px 16px", background: "#c4956a", color: "#fff", border: "none", borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add</button>
+          <button onClick={() => setAdding(!adding)} style={{ marginLeft: "auto", padding: "8px 16px", background: "#E8C97A", color: "#fff", border: "none", borderRadius: "20px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add</button>
         </div>
 
         {tab === "decor" && (
           <div>
             {adding && (
-              <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e2da" }}>
+              <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e4ebe6" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
                   <select value={newDecor.category} onChange={e => setNewDecor({...newDecor, category: e.target.value})} style={inp()}>
                     {DECOR_CATEGORIES.map(c => <option key={c}>{c}</option>)}
@@ -229,7 +229,7 @@ export default function PlanningHub() {
                   <input placeholder="Item" value={newDecor.item} onChange={e => setNewDecor({...newDecor, item: e.target.value})} style={inp()} />
                   <input placeholder="Qty" value={newDecor.quantity} onChange={e => setNewDecor({...newDecor, quantity: e.target.value})} style={inp()} />
                   <input placeholder="Unit cost $" value={newDecor.cost} onChange={e => setNewDecor({...newDecor, cost: e.target.value})} style={inp()} />
-                  <div style={{ display: "flex", alignItems: "center", padding: "7px 10px", background: "#faf8f5", borderRadius: "8px", fontSize: "0.82rem", color: "#c4956a", border: "1px solid #e8e2da" }}>
+                  <div style={{ display: "flex", alignItems: "center", padding: "7px 10px", background: "#f8faf8", borderRadius: "8px", fontSize: "0.82rem", color: "#E8C97A", border: "1px solid #e4ebe6" }}>
                     = ${((parseFloat(newDecor.quantity) || 0) * (parseFloat(newDecor.cost) || 0)).toFixed(2)}
                   </div>
                 </div>
@@ -241,8 +241,8 @@ export default function PlanningHub() {
                   <input placeholder="Notes" value={newDecor.notes} onChange={e => setNewDecor({...newDecor, notes: e.target.value})} style={inp()} />
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={addDecor} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
-                  <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+                  <button onClick={addDecor} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
+                  <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
             )}
@@ -251,12 +251,12 @@ export default function PlanningHub() {
               if (!items.length) return null;
               return (
                 <div key={cat} style={{ marginBottom: "1rem" }}>
-                  <div style={{ fontSize: "0.75rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "8px" }}>{cat.toUpperCase()}</div>
+                  <div style={{ fontSize: "0.75rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "8px" }}>{cat.toUpperCase()}</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "10px" }}>
                     {items.map(item => (
-                      <div key={item.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem", border: "1px solid #e8e2da" }}>
+                      <div key={item.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem", border: "1px solid #e4ebe6" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                          <div style={{ fontSize: "0.9rem", color: "#5a3e2b", fontWeight: 500 }}>
+                          <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontWeight: 500 }}>
                             {editing === item.id ? <input value={editData.item || ""} onChange={e => setEditData({...editData, item: e.target.value})} style={editInp({ width: "120px" })} /> : item.item}
                           </div>
                           {editing === item.id ? (
@@ -272,7 +272,7 @@ export default function PlanningHub() {
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px" }}>
                               <input placeholder="Qty" value={editData.quantity || ""} onChange={e => setEditData({...editData, quantity: e.target.value})} style={editInp()} />
                               <input placeholder="Unit cost" value={editData.unit_cost || ""} onChange={e => setEditData({...editData, unit_cost: e.target.value})} style={editInp()} />
-                              <div style={{ padding: "4px 7px", background: "#faf8f5", borderRadius: "6px", fontSize: "12px", color: "#c4956a" }}>
+                              <div style={{ padding: "4px 7px", background: "#f8faf8", borderRadius: "6px", fontSize: "12px", color: "#E8C97A" }}>
                                 = ${((parseFloat(editData.quantity) || 0) * (parseFloat(editData.unit_cost) || 0)).toFixed(2)}
                               </div>
                             </div>
@@ -280,20 +280,20 @@ export default function PlanningHub() {
                             <input placeholder="Vendor" value={editData.vendor || ""} onChange={e => setEditData({...editData, vendor: e.target.value})} style={editInp({ width: "100%" })} />
                             <input placeholder="Notes" value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} style={editInp({ width: "100%" })} />
                             <div style={{ display: "flex", gap: "6px" }}>
-                              <button onClick={() => saveEdit("planning_decor", item.id)} style={{ padding: "4px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
-                              <button onClick={() => setEditing(null)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
+                              <button onClick={() => saveEdit("planning_decor", item.id)} style={{ padding: "4px 10px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
+                              <button onClick={() => setEditing(null)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                             </div>
                           </div>
                         ) : (
                           <div>
-                            {item.quantity > 0 && <div style={{ fontSize: "0.75rem", color: "#6b5f54" }}>Qty: {item.quantity}</div>}
-                            {item.decision && item.decision !== "TBD" && <div style={{ fontSize: "0.8rem", color: "#5a3e2b", marginBottom: "4px" }}>→ {item.decision}</div>}
-                            {item.vendor && <div style={{ fontSize: "0.75rem", color: "#6b5f54" }}>Vendor: {item.vendor}</div>}
-                            {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#c4956a", fontWeight: 500, marginTop: "4px" }}>${Number(item.cost).toFixed(2)}</div>}
+                            {item.quantity > 0 && <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Qty: {item.quantity}</div>}
+                            {item.decision && item.decision !== "TBD" && <div style={{ fontSize: "0.8rem", color: "#1B3A2D", marginBottom: "4px" }}>→ {item.decision}</div>}
+                            {item.vendor && <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Vendor: {item.vendor}</div>}
+                            {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#E8C97A", fontWeight: 500, marginTop: "4px" }}>${Number(item.cost).toFixed(2)}</div>}
                             {item.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", marginTop: "4px", fontStyle: "italic" }}>{item.notes}</div>}
                             <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
-                              <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity > 0 ? (item.cost / item.quantity).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", cursor: "pointer", color: "#6b5f54" }}>Edit</button>
-                              <button onClick={() => deleteItem("planning_decor", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ece6", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
+                              <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity > 0 ? (item.cost / item.quantity).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>Edit</button>
+                              <button onClick={() => deleteItem("planning_decor", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0f4f1", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                             </div>
                           </div>
                         )}
@@ -309,27 +309,27 @@ export default function PlanningHub() {
         {tab === "refreshments" && (
           <div>
             {adding && (
-              <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e2da" }}>
+              <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e4ebe6" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
                   <input placeholder="Item" value={newRefresh.item} onChange={e => setNewRefresh({...newRefresh, item: e.target.value})} style={inp()} />
                   <input placeholder="Vendor" value={newRefresh.vendor} onChange={e => setNewRefresh({...newRefresh, vendor: e.target.value})} style={inp()} />
                   <input placeholder="Qty" value={newRefresh.quantity_num} onChange={e => setNewRefresh({...newRefresh, quantity_num: e.target.value})} style={inp()} />
                   <input placeholder="Unit cost $" value={newRefresh.cost} onChange={e => setNewRefresh({...newRefresh, cost: e.target.value})} style={inp()} />
-                  <div style={{ display: "flex", alignItems: "center", padding: "7px 10px", background: "#faf8f5", borderRadius: "8px", fontSize: "0.82rem", color: "#4a7c59", border: "1px solid #e8e2da" }}>
+                  <div style={{ display: "flex", alignItems: "center", padding: "7px 10px", background: "#f8faf8", borderRadius: "8px", fontSize: "0.82rem", color: "#4a7c59", border: "1px solid #e4ebe6" }}>
                     = ${((parseFloat(newRefresh.quantity_num) || 0) * (parseFloat(newRefresh.cost) || 0)).toFixed(2)}
                   </div>
                 </div>
                 <input placeholder="Notes" value={newRefresh.notes} onChange={e => setNewRefresh({...newRefresh, notes: e.target.value})} style={inp({ width: "100%", marginBottom: "8px", boxSizing: "border-box" })} />
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={addRefresh} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
-                  <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+                  <button onClick={addRefresh} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
+                  <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
             )}
-            <div style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e8e2da", overflow: "hidden" }}>
-              {refresh.length === 0 && <p style={{ padding: "1rem", fontSize: "0.85rem", color: "#6b5f54" }}>No refreshments added yet.</p>}
+            <div style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e4ebe6", overflow: "hidden" }}>
+              {refresh.length === 0 && <p style={{ padding: "1rem", fontSize: "0.85rem", color: "#4a5a52" }}>No refreshments added yet.</p>}
               {refresh.map((item, i) => (
-                <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: i < refresh.length - 1 ? "1px solid #f0ece6" : "none" }}>
+                <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: i < refresh.length - 1 ? "1px solid #f0f4f1" : "none" }}>
                   <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#4a7c59", flexShrink: 0 }} />
                   {editing === item.id ? (
                     <div style={{ display: "flex", gap: "6px", flex: 1, flexWrap: "wrap" as const }}>
@@ -337,27 +337,27 @@ export default function PlanningHub() {
                       <input value={editData.vendor || ""} onChange={e => setEditData({...editData, vendor: e.target.value})} placeholder="Vendor" style={editInp({ width: "100px" })} />
                       <input value={editData.quantity_num || ""} onChange={e => setEditData({...editData, quantity_num: e.target.value})} placeholder="Qty" style={editInp({ width: "50px" })} />
                       <input value={editData.unit_cost || ""} onChange={e => setEditData({...editData, unit_cost: e.target.value})} placeholder="Unit $" style={editInp({ width: "60px" })} />
-                      <div style={{ padding: "4px 7px", background: "#faf8f5", borderRadius: "6px", fontSize: "12px", color: "#4a7c59" }}>
+                      <div style={{ padding: "4px 7px", background: "#f8faf8", borderRadius: "6px", fontSize: "12px", color: "#4a7c59" }}>
                         = ${((parseFloat(editData.quantity_num) || 0) * (parseFloat(editData.unit_cost) || 0)).toFixed(2)}
                       </div>
                       <input value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} placeholder="Notes" style={editInp({ width: "100px" })} />
-                      <button onClick={() => saveEdit("planning_refreshments", item.id)} style={{ padding: "3px 8px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
-                      <button onClick={() => setEditing(null)} style={{ padding: "3px 8px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
+                      <button onClick={() => saveEdit("planning_refreshments", item.id)} style={{ padding: "3px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
+                      <button onClick={() => setEditing(null)} style={{ padding: "3px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                     </div>
                   ) : (
                     <>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "0.9rem", color: "#5a3e2b" }}>{item.item}</div>
+                        <div style={{ fontSize: "0.9rem", color: "#1B3A2D" }}>{item.item}</div>
                         <div style={{ display: "flex", gap: "12px", marginTop: "2px" }}>
-                          {item.vendor && item.vendor !== "TBD" && <span style={{ fontSize: "0.75rem", color: "#6b5f54" }}>Vendor: {item.vendor}</span>}
-                          {item.quantity_num > 0 && <span style={{ fontSize: "0.75rem", color: "#6b5f54" }}>Qty: {item.quantity_num}</span>}
+                          {item.vendor && item.vendor !== "TBD" && <span style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Vendor: {item.vendor}</span>}
+                          {item.quantity_num > 0 && <span style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Qty: {item.quantity_num}</span>}
                           {item.cost > 0 && <span style={{ fontSize: "0.85rem", color: "#4a7c59", fontWeight: 500 }}>${Number(item.cost).toFixed(2)}</span>}
                           {item.notes && <span style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic" }}>{item.notes}</span>}
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: "6px" }}>
-                        <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity_num > 0 ? (item.cost / item.quantity_num).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", cursor: "pointer", color: "#6b5f54" }}>Edit</button>
-                        <button onClick={() => deleteItem("planning_refreshments", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ece6", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
+                        <button onClick={() => { setEditing(item.id); setEditData({...item, unit_cost: item.quantity_num > 0 ? (item.cost / item.quantity_num).toFixed(2) : item.cost}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>Edit</button>
+                        <button onClick={() => deleteItem("planning_refreshments", item.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0f4f1", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                       </div>
                     </>
                   )}
@@ -370,7 +370,7 @@ export default function PlanningHub() {
         {tab === "staff" && (
           <div>
             {adding && (
-              <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e8e2da" }}>
+              <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #e4ebe6" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
                   <input placeholder="Full name" value={newStaff.name} onChange={e => setNewStaff({...newStaff, name: e.target.value})} style={inp()} />
                   <select value={newStaff.role} onChange={e => setNewStaff({...newStaff, role: e.target.value})} style={inp()}>
@@ -385,27 +385,27 @@ export default function PlanningHub() {
                 </div>
                 <input placeholder="Notes" value={newStaff.notes} onChange={e => setNewStaff({...newStaff, notes: e.target.value})} style={inp({ width: "100%", marginBottom: "8px", boxSizing: "border-box" })} />
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={addStaff} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
-                  <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+                  <button onClick={addStaff} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Save</button>
+                  <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
             )}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "10px" }}>
-              {staff.length === 0 && <p style={{ fontSize: "0.85rem", color: "#6b5f54" }}>No staff added yet.</p>}
+              {staff.length === 0 && <p style={{ fontSize: "0.85rem", color: "#4a5a52" }}>No staff added yet.</p>}
               {staff.map(member => {
                 const totalHours = (member.shifts || []).reduce((h, s) => h + Number(s.hours), 0);
                 const totalPay = totalHours * Number(member.pay_rate);
                 return (
-                  <div key={member.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", border: "1px solid #e8e2da" }}>
+                  <div key={member.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", border: "1px solid #e4ebe6" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
                       <div>
-                        {editing === member.id ? <input value={editData.name || ""} onChange={e => setEditData({...editData, name: e.target.value})} style={editInp({ width: "140px", marginBottom: "4px" })} /> : <div style={{ fontSize: "1rem", color: "#5a3e2b", fontWeight: 500 }}>{member.name}</div>}
-                        <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: (roleColors[member.role] || "#c4956a") + "22", color: roleColors[member.role] || "#c4956a" }}>{member.role}</span>
+                        {editing === member.id ? <input value={editData.name || ""} onChange={e => setEditData({...editData, name: e.target.value})} style={editInp({ width: "140px", marginBottom: "4px" })} /> : <div style={{ fontSize: "1rem", color: "#1B3A2D", fontWeight: 500 }}>{member.name}</div>}
+                        <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: (roleColors[member.role] || "#E8C97A") + "22", color: roleColors[member.role] || "#E8C97A" }}>{member.role}</span>
                       </div>
                       <div style={{ textAlign: "right" as const }}>
-                        <div style={{ fontSize: "0.85rem", color: "#6b5f54" }}>${Number(member.pay_rate).toFixed(0)}/hr</div>
-                        {totalHours > 0 && <div style={{ fontSize: "1rem", color: "#c4956a", fontWeight: 500 }}>${totalPay.toFixed(2)}</div>}
-                        {totalHours > 0 && <div style={{ fontSize: "0.72rem", color: "#6b5f54" }}>{totalHours}hrs total</div>}
+                        <div style={{ fontSize: "0.85rem", color: "#4a5a52" }}>${Number(member.pay_rate).toFixed(0)}/hr</div>
+                        {totalHours > 0 && <div style={{ fontSize: "1rem", color: "#E8C97A", fontWeight: 500 }}>${totalPay.toFixed(2)}</div>}
+                        {totalHours > 0 && <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>{totalHours}hrs total</div>}
                       </div>
                     </div>
 
@@ -420,24 +420,24 @@ export default function PlanningHub() {
                         <input placeholder="Instagram @" value={editData.instagram || ""} onChange={e => setEditData({...editData, instagram: e.target.value})} style={editInp({ width: "100%" })} />
                         <input placeholder="Notes" value={editData.notes || ""} onChange={e => setEditData({...editData, notes: e.target.value})} style={editInp({ width: "100%" })} />
                         <div style={{ display: "flex", gap: "6px" }}>
-                          <button onClick={() => saveEdit("planning_staff", member.id)} style={{ padding: "4px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
-                          <button onClick={() => setEditing(null)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
+                          <button onClick={() => saveEdit("planning_staff", member.id)} style={{ padding: "4px 10px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Save</button>
+                          <button onClick={() => setEditing(null)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                         </div>
                       </div>
                     ) : (
                       <div>
-                        {member.phone && <div style={{ fontSize: "0.78rem", color: "#6b5f54", marginBottom: "2px" }}>📞 {member.phone}</div>}
-                        {member.email && <div style={{ fontSize: "0.78rem", color: "#6b5f54", marginBottom: "2px" }}>✉️ {member.email}</div>}
-                        {member.instagram && <div style={{ fontSize: "0.78rem", color: "#6b5f54", marginBottom: "2px" }}>📸 {member.instagram}</div>}
+                        {member.phone && <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "2px" }}>📞 {member.phone}</div>}
+                        {member.email && <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "2px" }}>✉️ {member.email}</div>}
+                        {member.instagram && <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "2px" }}>📸 {member.instagram}</div>}
                         {member.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic", marginTop: "4px" }}>{member.notes}</div>}
 
-                        <div style={{ marginTop: "10px", borderTop: "1px solid #f0ece6", paddingTop: "10px" }}>
-                          <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.05em", marginBottom: "6px" }}>SHIFTS</div>
+                        <div style={{ marginTop: "10px", borderTop: "1px solid #f0f4f1", paddingTop: "10px" }}>
+                          <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.05em", marginBottom: "6px" }}>SHIFTS</div>
                           {(member.shifts || []).map(shift => (
                             <div key={shift.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", borderBottom: "1px solid #f8f5f0", fontSize: "0.8rem" }}>
-                              <div style={{ color: "#5a3e2b" }}>{shift.shift_date}</div>
-                              <div style={{ color: "#6b5f54" }}>{shift.start_time} – {shift.end_time}</div>
-                              <div style={{ color: "#c4956a" }}>{shift.hours}hrs</div>
+                              <div style={{ color: "#1B3A2D" }}>{shift.shift_date}</div>
+                              <div style={{ color: "#4a5a52" }}>{shift.start_time} – {shift.end_time}</div>
+                              <div style={{ color: "#E8C97A" }}>{shift.hours}hrs</div>
                               <button onClick={() => deleteShift(member.id, shift.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✕</button>
                             </div>
                           ))}
@@ -452,21 +452,21 @@ export default function PlanningHub() {
                                 <input placeholder="End e.g. 6pm" value={newShift.end_time} onChange={e => setNewShift({...newShift, end_time: e.target.value})} style={editInp()} />
                               </div>
                               {newShift.start_time && newShift.end_time && (
-                                <div style={{ fontSize: "11px", color: "#c4956a" }}>= {calcHours(newShift.start_time, newShift.end_time)} hrs · ${(calcHours(newShift.start_time, newShift.end_time) * Number(member.pay_rate)).toFixed(2)}</div>
+                                <div style={{ fontSize: "11px", color: "#E8C97A" }}>= {calcHours(newShift.start_time, newShift.end_time)} hrs · ${(calcHours(newShift.start_time, newShift.end_time) * Number(member.pay_rate)).toFixed(2)}</div>
                               )}
                               <div style={{ display: "flex", gap: "6px" }}>
-                                <button onClick={() => addShift(member.id)} style={{ padding: "4px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Add shift</button>
-                                <button onClick={() => setAddingShift(null)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
+                                <button onClick={() => addShift(member.id)} style={{ padding: "4px 10px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Add shift</button>
+                                <button onClick={() => setAddingShift(null)} style={{ padding: "4px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Cancel</button>
                               </div>
                             </div>
                           ) : (
-                            <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: "Fri Sep 11", start_time: "", end_time: "" }); }} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", cursor: "pointer", color: "#6b5f54" }}>+ Add shift</button>
+                            <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: "Fri Sep 11", start_time: "", end_time: "" }); }} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>+ Add shift</button>
                           )}
                         </div>
 
                         <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
-                          <button onClick={() => { setEditing(member.id); setEditData({...member}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", cursor: "pointer", color: "#6b5f54" }}>Edit</button>
-                          <button onClick={() => deleteItem("planning_staff", member.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0ece6", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
+                          <button onClick={() => { setEditing(member.id); setEditData({...member}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>Edit</button>
+                          <button onClick={() => deleteItem("planning_staff", member.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0f4f1", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
                         </div>
                       </div>
                     )}

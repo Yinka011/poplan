@@ -36,8 +36,8 @@ type PlannerAssignment = {
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   Active: { bg: "#4a7c5922", color: "#4a7c59" },
-  Planning: { bg: "#c4956a22", color: "#c4956a" },
-  Completed: { bg: "#6b5f5422", color: "#6b5f54" },
+  Planning: { bg: "#E8C97A22", color: "#E8C97A" },
+  Completed: { bg: "#4a5a5222", color: "#4a5a52" },
 };
 
 export default function BrandOrganizerDashboard() {
@@ -131,7 +131,7 @@ export default function BrandOrganizerDashboard() {
   };
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#faf8f5", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#6b5f54" }}>Loading...</div>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>
   );
 
   const allEvents = [
@@ -140,54 +140,54 @@ export default function BrandOrganizerDashboard() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: "#faf8f5", fontFamily: "Georgia, serif" }}>
-      <div style={{ background: "#5a3e2b", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif" }}>
+      <div style={{ background: "#1B3A2D", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: "1.2rem", letterSpacing: "0.15em", color: "#fff" }}>NALPOP</div>
-          <div style={{ width: "1.5rem", height: "1px", background: "#c4956a", marginTop: "2px" }}></div>
+          <div style={{ width: "1.5rem", height: "1px", background: "#E8C97A", marginTop: "2px" }}></div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span style={{ fontSize: "0.85rem", color: "#c8b89a" }}>{userName || userEmail}</span>
-          <button onClick={handleLogout} style={{ fontSize: "0.8rem", padding: "5px 12px", background: "transparent", border: "1px solid #c8b89a44", borderRadius: "8px", cursor: "pointer", color: "#c8b89a", fontFamily: "Georgia, serif" }}>Sign out</button>
+          <span style={{ fontSize: "0.85rem", color: "#d4c87a" }}>{userName || userEmail}</span>
+          <button onClick={handleLogout} style={{ fontSize: "0.8rem", padding: "5px 12px", background: "transparent", border: "1px solid #d4c87a44", borderRadius: "8px", cursor: "pointer", color: "#d4c87a", fontFamily: "Georgia, serif" }}>Sign out</button>
         </div>
       </div>
 
       <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "2.5rem 1.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
           <div>
-            <h1 style={{ fontSize: "1.8rem", color: "#5a3e2b", fontWeight: "normal", margin: 0 }}>Welcome back{userName ? `, ${userName}` : ""}</h1>
-            <p style={{ color: "#6b5f54", fontSize: "0.9rem", marginTop: "4px" }}>Manage your pop-ups across all cities.</p>
+            <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", margin: 0 }}>Welcome back{userName ? `, ${userName}` : ""}</h1>
+            <p style={{ color: "#4a5a52", fontSize: "0.9rem", marginTop: "4px" }}>Manage your pop-ups across all cities.</p>
           </div>
-          <button onClick={() => setAdding(!adding)} style={{ padding: "8px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add city</button>
+          <button onClick={() => setAdding(!adding)} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add city</button>
         </div>
 
         {adding && (
-          <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e8e2da" }}>
-            <div style={{ fontSize: "0.9rem", color: "#5a3e2b", marginBottom: "1rem" }}>New city pop-up</div>
+          <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
+            <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "1rem" }}>New city pop-up</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
-              <input placeholder="Event name e.g. Wanni Fuga Houston" value={newEvent.name} onChange={e => setNewEvent({...newEvent, name: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input placeholder="City e.g. Houston" value={newEvent.city} onChange={e => setNewEvent({...newEvent, city: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input placeholder="Dates e.g. Aug 7-9, 2026" value={newEvent.dates_label} onChange={e => setNewEvent({...newEvent, dates_label: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <select value={newEvent.status} onChange={e => setNewEvent({...newEvent, status: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
+              <input placeholder="Event name e.g. Wanni Fuga Houston" value={newEvent.name} onChange={e => setNewEvent({...newEvent, name: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="City e.g. Houston" value={newEvent.city} onChange={e => setNewEvent({...newEvent, city: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="Dates e.g. Aug 7-9, 2026" value={newEvent.dates_label} onChange={e => setNewEvent({...newEvent, dates_label: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <select value={newEvent.status} onChange={e => setNewEvent({...newEvent, status: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
                 <option>Planning</option>
                 <option>Active</option>
                 <option>Completed</option>
               </select>
-              <input placeholder="Venue name e.g. Lumen Room" value={newEvent.venue_name} onChange={e => setNewEvent({...newEvent, venue_name: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input placeholder="Venue address" value={newEvent.venue_address} onChange={e => setNewEvent({...newEvent, venue_address: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="Venue name e.g. Lumen Room" value={newEvent.venue_name} onChange={e => setNewEvent({...newEvent, venue_name: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <input placeholder="Venue address" value={newEvent.venue_address} onChange={e => setNewEvent({...newEvent, venue_address: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={addEvent} style={{ padding: "7px 16px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
-              <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+              <button onClick={addEvent} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
+              <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
             </div>
           </div>
         )}
 
         {allEvents.length === 0 ? (
-          <div style={{ background: "#fff", borderRadius: "16px", padding: "3rem", textAlign: "center", border: "1px solid #e8e2da" }}>
+          <div style={{ background: "#fff", borderRadius: "16px", padding: "3rem", textAlign: "center", border: "1px solid #e4ebe6" }}>
             <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>✈️</div>
-            <div style={{ fontSize: "1rem", color: "#5a3e2b", marginBottom: "0.5rem" }}>No cities yet</div>
-            <div style={{ fontSize: "0.85rem", color: "#6b5f54" }}>Click + Add city to add your first pop-up location.</div>
+            <div style={{ fontSize: "1rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>No cities yet</div>
+            <div style={{ fontSize: "0.85rem", color: "#4a5a52" }}>Click + Add city to add your first pop-up location.</div>
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
@@ -196,11 +196,11 @@ export default function BrandOrganizerDashboard() {
               const statusStyle = STATUS_COLORS[event.status] || STATUS_COLORS.Planning;
               const isManaged = event.type === "managed";
               return (
-                <div key={event.id} style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e8e2da", borderTop: isManaged ? "3px solid #c4956a" : "1px solid #e8e2da" }}>
+                <div key={event.id} style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6", borderTop: isManaged ? "3px solid #E8C97A" : "1px solid #e4ebe6" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
                     <div>
-                      <div style={{ fontSize: "1.1rem", color: "#5a3e2b" }}>{event.city || event.name}</div>
-                      {isManaged && <div style={{ fontSize: "0.72rem", color: "#c4956a", marginTop: "2px" }}>Managed by planner</div>}
+                      <div style={{ fontSize: "1.1rem", color: "#1B3A2D" }}>{event.city || event.name}</div>
+                      {isManaged && <div style={{ fontSize: "0.72rem", color: "#E8C97A", marginTop: "2px" }}>Managed by planner</div>}
                     </div>
                     <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                       <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: statusStyle.bg, color: statusStyle.color }}>{event.status}</span>
@@ -208,36 +208,36 @@ export default function BrandOrganizerDashboard() {
                     </div>
                   </div>
 
-                  {event.dates_label && event.dates_label !== "TBD" && <div style={{ fontSize: "0.82rem", color: "#c4956a", marginBottom: "6px" }}>{event.dates_label}</div>}
-                  {event.venue_name && <div style={{ fontSize: "0.78rem", color: "#6b5f54", marginBottom: "2px" }}>📍 {event.venue_name}</div>}
+                  {event.dates_label && event.dates_label !== "TBD" && <div style={{ fontSize: "0.82rem", color: "#E8C97A", marginBottom: "6px" }}>{event.dates_label}</div>}
+                  {event.venue_name && <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "2px" }}>📍 {event.venue_name}</div>}
                   {event.venue_address && <div style={{ fontSize: "0.75rem", color: "#aaa", marginBottom: "8px" }}>{event.venue_address}</div>}
 
                   {!isManaged && (
-                    <div style={{ borderTop: "1px solid #f0ece6", paddingTop: "1rem", marginTop: "0.5rem" }}>
-                      <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "6px" }}>SHIPMENTS</div>
+                    <div style={{ borderTop: "1px solid #f0f4f1", paddingTop: "1rem", marginTop: "0.5rem" }}>
+                      <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "6px" }}>SHIPMENTS</div>
                       {eventShipments.map(shipment => (
                         <div key={shipment.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0", borderBottom: "1px solid #f8f5f0", fontSize: "0.8rem" }}>
                           <div onClick={() => toggleShipped(shipment)} style={{ width: "16px", height: "16px", borderRadius: "50%", border: shipment.shipped ? "none" : "2px solid #d4c5b0", background: shipment.shipped ? "#4a7c59" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
                             {shipment.shipped && <span style={{ color: "#fff", fontSize: "9px" }}>✓</span>}
                           </div>
-                          <div style={{ flex: 1, color: shipment.shipped ? "#b0a090" : "#5a3e2b", textDecoration: shipment.shipped ? "line-through" : "none" }}>{shipment.notes}</div>
+                          <div style={{ flex: 1, color: shipment.shipped ? "#b0a090" : "#1B3A2D", textDecoration: shipment.shipped ? "line-through" : "none" }}>{shipment.notes}</div>
                           <button onClick={() => deleteShipment(shipment.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✕</button>
                         </div>
                       ))}
                       {addingShipment === event.slug ? (
                         <div style={{ marginTop: "8px", display: "flex", gap: "6px" }}>
-                          <input placeholder="e.g. 12 dresses, 5 bags..." value={newShipment.notes} onChange={e => setNewShipment({ notes: e.target.value })} style={{ flex: 1, padding: "6px 8px", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} autoFocus />
-                          <button onClick={() => addShipment(event.slug)} style={{ padding: "6px 10px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Add</button>
-                          <button onClick={() => setAddingShipment(null)} style={{ padding: "6px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>✕</button>
+                          <input placeholder="e.g. 12 dresses, 5 bags..." value={newShipment.notes} onChange={e => setNewShipment({ notes: e.target.value })} style={{ flex: 1, padding: "6px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} autoFocus />
+                          <button onClick={() => addShipment(event.slug)} style={{ padding: "6px 10px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Add</button>
+                          <button onClick={() => setAddingShipment(null)} style={{ padding: "6px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>✕</button>
                         </div>
                       ) : (
-                        <button onClick={() => setAddingShipment(event.slug)} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e8e2da", borderRadius: "6px", cursor: "pointer", color: "#6b5f54" }}>+ Add shipment note</button>
+                        <button onClick={() => setAddingShipment(event.slug)} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>+ Add shipment note</button>
                       )}
                     </div>
                   )}
 
-                  <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #f0ece6" }}>
-                    <a href={`/brand-organizer/${event.slug}`} style={{ fontSize: "0.78rem", color: "#c4956a", textDecoration: "none" }}>Open dashboard →</a>
+                  <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #f0f4f1" }}>
+                    <a href={`/brand-organizer/${event.slug}`} style={{ fontSize: "0.78rem", color: "#E8C97A", textDecoration: "none" }}>Open dashboard →</a>
                   </div>
                 </div>
               );
