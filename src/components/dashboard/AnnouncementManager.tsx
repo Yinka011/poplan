@@ -51,6 +51,7 @@ export default function AnnouncementManager({ event }: { event: string }) {
       setAnnouncements(prev => [data, ...prev]);
       // Notify all brands in this event
       const { data: brands, error: brandsError } = await supabase.from("brands").select("email").eq("event", event).not("email", "is", null);
+      console.log("brands to email:", brands, "error:", brandsError);
       if (brands) {
         await Promise.all(brands.map(async brand => {
           await sendNotification({
