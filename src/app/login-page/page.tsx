@@ -11,7 +11,7 @@ export default function LandingPage() {
           <a href="#features" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>Features</a>
           <a href="#how" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>How it works</a>
           <a href="#pricing" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>Pricing</a>
-          <Link href="/login-page" style={{ fontSize: "0.85rem", padding: "8px 20px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none" }}>Sign in</Link>
+          <Link href="/login" style={{ fontSize: "0.85rem", padding: "8px 20px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none" }}>Sign in</Link>
         </div>
       </nav>
 
@@ -28,7 +28,7 @@ export default function LandingPage() {
               Manage brands, inventory, planning and payouts — all in one place. Built by a pop-up organizer, for pop-up organizers.
             </p>
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" as const }}>
-              <Link href="/login-page" style={{ padding: "14px 32px", background: "#1B3A2D", color: "#fff", borderRadius: "10px", textDecoration: "none", fontSize: "0.95rem" }}>Get started</Link>
+              <Link href="/login" style={{ padding: "14px 32px", background: "#1B3A2D", color: "#fff", borderRadius: "10px", textDecoration: "none", fontSize: "0.95rem" }}>Get started</Link>
               <a href="#how" style={{ padding: "14px 32px", background: "transparent", color: "#1B3A2D", borderRadius: "10px", textDecoration: "none", fontSize: "0.95rem", border: "1px solid #1B3A2D" }}>See how it works</a>
             </div>
             <div style={{ marginTop: "2.5rem", display: "flex", gap: "2rem" }}>
@@ -159,7 +159,7 @@ export default function LandingPage() {
                     <span style={{ fontSize: "0.85rem", color: plan.highlight ? "#ffffff88" : "#4a5a52" }}>{f}</span>
                   </div>
                 ))}
-                <Link href="/login-page" style={{ display: "block", marginTop: "1.5rem", padding: "10px", background: plan.highlight ? "#E8C97A" : "#1B3A2D", color: plan.highlight ? "#1B3A2D" : "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.88rem", textAlign: "center" as const }}>Get started</Link>
+                <Link href="/login" style={{ display: "block", marginTop: "1.5rem", padding: "10px", background: plan.highlight ? "#E8C97A" : "#1B3A2D", color: plan.highlight ? "#1B3A2D" : "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.88rem", textAlign: "center" as const }}>Get started</Link>
               </div>
             ))}
           </div>
@@ -184,7 +184,7 @@ export default function LandingPage() {
                     <span style={{ fontSize: "0.85rem", color: "#4a5a52" }}>{f}</span>
                   </div>
                 ))}
-                <Link href="/login-page" style={{ display: "block", marginTop: "1.5rem", padding: "10px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.88rem", textAlign: "center" as const }}>Get started</Link>
+                <Link href="/login" style={{ display: "block", marginTop: "1.5rem", padding: "10px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.88rem", textAlign: "center" as const }}>Get started</Link>
               </div>
             ))}
           </div>
@@ -201,7 +201,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: "600px", margin: "0 auto" }}>
           <h2 style={{ fontSize: "2.5rem", color: "#fff", fontWeight: "normal", marginBottom: "1rem" }}>Ready to run better pop-ups?</h2>
           <p style={{ fontSize: "1rem", color: "#ffffff88", lineHeight: 1.7, marginBottom: "2.5rem" }}>Join the organizers and brands already using Nalpop to manage their events with less chaos and more clarity.</p>
-          <Link href="/login-page" style={{ display: "inline-block", padding: "16px 40px", background: "#E8C97A", color: "#1B3A2D", borderRadius: "10px", textDecoration: "none", fontSize: "1rem" }}>Get started today</Link>
+          <Link href="/login" style={{ display: "inline-block", padding: "16px 40px", background: "#E8C97A", color: "#1B3A2D", borderRadius: "10px", textDecoration: "none", fontSize: "1rem" }}>Get started today</Link>
         </div>
       </section>
 
@@ -212,7 +212,7 @@ export default function LandingPage() {
           <div style={{ fontSize: "0.78rem", color: "#ffffff55" }}>© 2026 Nalpop. All rights reserved.</div>
         </div>
         <div style={{ display: "flex", gap: "2rem" }}>
-          <Link href="/login-page" style={{ fontSize: "0.82rem", color: "#ffffff88", textDecoration: "none" }}>Sign in</Link>
+          <Link href="/login" style={{ fontSize: "0.82rem", color: "#ffffff88", textDecoration: "none" }}>Sign in</Link>
           <a href="mailto:hello@nalpop.com" style={{ fontSize: "0.82rem", color: "#ffffff88", textDecoration: "none" }}>Contact</a>
           <a href="#pricing" style={{ fontSize: "0.82rem", color: "#ffffff88", textDecoration: "none" }}>Pricing</a>
         </div>
