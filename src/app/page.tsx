@@ -16,16 +16,10 @@ export default function HomePage() {
     setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { setError("Invalid email or password"); setLoading(false); return; }
-
     const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_email", email).single();
-
-    if (!roleData) {
-      window.location.href = "/onboarding";
-    } else if (roleData.role === "brand_organizer") {
-      window.location.href = "/brand-organizer";
-    } else {
-      window.location.href = "/login/organizer/events";
-    }
+    if (!roleData) { window.location.href = "/onboarding"; }
+    else if (roleData.role === "brand_organizer") { window.location.href = "/brand-organizer"; }
+    else { window.location.href = "/login/organizer/events"; }
   };
 
   const handleBrandLogin = async (e: React.FormEvent) => {
@@ -34,10 +28,8 @@ export default function HomePage() {
     setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { setError("Invalid email or password"); setLoading(false); return; }
-
     const { data: ownEvents } = await supabase.from("events").select("id").eq("organizer_email", email).limit(1);
     const { data: soloEvents } = await supabase.from("brand_solo_events").select("id").eq("brand_email", email).limit(1);
-
     if ((ownEvents && ownEvents.length > 0) || (soloEvents && soloEvents.length > 0)) {
       window.location.href = "/brand-hub";
     } else {
@@ -48,92 +40,127 @@ export default function HomePage() {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://nalpop.com/reset-password",
-    });
-    if (error) { setError(error.message); setLoading(false); return; }
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo: "https://nalpop.com/reset-password" });
     setSent(true);
     setLoading(false);
   };
 
-  const inp = {
-    width: "100%", padding: "0.75rem", border: "1px solid #e8e2da", borderRadius: "8px",
-    fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#faf8f5", outline: "none",
-    boxSizing: "border-box" as const, marginBottom: "1rem",
-  };
-
-  const btn = (bg: string, color: string = "#fff") => ({
-    width: "100%", padding: "0.85rem", background: bg, color,
-    border: bg === "#fff" ? "1px solid #5a3e2b" : "none", borderRadius: "8px",
-    fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer",
-    letterSpacing: "0.05em", marginBottom: "10px",
-  });
+  const inp = { width: "100%", padding: "12px 14px", border: "1px solid #e8e2da", borderRadius: "10px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#fff", boxSizing: "border-box" as const, color: "#1c1714", outline: "none" };
+  const btn = { width: "100%", padding: "12px", background: "#5a3e2b", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: "0.03em" };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#faf8f5", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: "100%", maxWidth: "420px", padding: "0 1.5rem" }}>
-        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#5a3e2b" }}>NALPOP</div>
-          <div style={{ width: "2rem", height: "1px", background: "#c4956a", margin: "0.5rem auto" }}></div>
-          <p style={{ color: "#6b5f54", fontSize: "0.9rem" }}>Pop-up planning, beautifully simple</p>
+    <div style={{ minHeight: "100vh", background: "#faf8f5", display: "flex", fontFamily: "Georgia, serif" }}>
+      
+      {/* Left panel - branding */}
+      <div style={{ width: "45%", background: "#5a3e2b", display: "flex", flexDirection: "column" as const, justifyContent: "space-between", padding: "3rem", position: "relative" as const, overflow: "hidden" }}>
+        <div style={{ position: "absolute" as const, top: 0, left: 0, right: 0, bottom: 0, background: "radial-gradient(ellipse at top right, #6b4f3a 0%, #5a3e2b 50%, #3d2820 100%)", zIndex: 0 }} />
+        <div style={{ position: "relative" as const, zIndex: 1 }}>
+          <div style={{ fontSize: "1.5rem", letterSpacing: "0.2em", color: "#fff" }}>NALPOP</div>
+          <div style={{ width: "2rem", height: "1px", background: "#c4956a", marginTop: "8px" }} />
         </div>
+        <div style={{ position: "relative" as const, zIndex: 1 }}>
+          <div style={{ fontSize: "2.2rem", color: "#fff", lineHeight: 1.3, fontWeight: "normal", marginBottom: "1.5rem" }}>
+            The platform built for<br />
+            <span style={{ color: "#c4956a", fontStyle: "italic" }}>pop-up culture.</span>
+          </div>
+          <div style={{ fontSize: "0.88rem", color: "#c8b89a", lineHeight: 1.8 }}>
+            Manage brands, inventory, planning and payouts — all in one place.
+          </div>
+        </div>
+        <div style={{ position: "relative" as const, zIndex: 1, fontSize: "0.72rem", color: "#8b6a4a", letterSpacing: "0.1em" }}>
+          © 2026 NALPOP
+        </div>
+      </div>
 
-        <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e8e2da" }}>
+      {/* Right panel - login */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+        <div style={{ width: "100%", maxWidth: "400px" }}>
 
           {mode === "home" && (
             <div>
-              <h2 style={{ fontSize: "1.3rem", color: "#5a3e2b", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Welcome</h2>
-              <p style={{ fontSize: "0.85rem", color: "#6b5f54", textAlign: "center", marginBottom: "1.5rem" }}>How are you signing in today?</p>
-              <button onClick={() => { setMode("organizer-login"); setError(""); setEmail(""); setPassword(""); }} style={btn("#5a3e2b")}>I am an Organizer</button>
-              <button onClick={() => { setMode("brand-login"); setError(""); setEmail(""); setPassword(""); }} style={btn("#fff", "#5a3e2b")}>I am a Brand</button>
+              <div style={{ marginBottom: "2.5rem" }}>
+                <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "8px" }}>Welcome back</h1>
+                <p style={{ fontSize: "0.9rem", color: "#6b5f54", margin: 0 }}>Sign in to your Nalpop account.</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+                <button onClick={() => { setMode("organizer-login"); setError(""); }} style={{ ...btn, background: "#5a3e2b" }}>Sign in as Organizer</button>
+                <button onClick={() => { setMode("brand-login"); setError(""); }} style={{ ...btn, background: "#fff", color: "#5a3e2b", border: "1px solid #5a3e2b" }}>Sign in as Brand</button>
+              </div>
+              <div style={{ marginTop: "2rem", padding: "1.25rem", background: "#fff", borderRadius: "12px", border: "1px solid #e8e2da" }}>
+                <div style={{ fontSize: "0.78rem", color: "#6b5f54", marginBottom: "4px" }}>New to Nalpop?</div>
+                <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>Access is by invitation only. Contact your event organizer to get started.</div>
+              </div>
             </div>
           )}
 
           {mode === "organizer-login" && (
-            <form onSubmit={handleOrganizerLogin}>
-              <h2 style={{ fontSize: "1.3rem", color: "#5a3e2b", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Organizer sign in</h2>
-              <p style={{ fontSize: "0.85rem", color: "#6b5f54", textAlign: "center", marginBottom: "1.5rem" }}>Sign in to manage your events</p>
-              <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={inp} />
-              <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={inp} />
-              {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
-              <button type="submit" disabled={loading} style={btn("#5a3e2b")}>{loading ? "Signing in..." : "Sign in"}</button>
-              <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#6b5f54", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer", marginBottom: "6px" }}>Forgot password?</button>
-              <button type="button" onClick={() => setMode("home")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#6b5f54", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>Back</button>
-            </form>
+            <div>
+              <button onClick={() => { setMode("home"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "6px" }}>Organizer sign in</h1>
+                <p style={{ fontSize: "0.88rem", color: "#6b5f54", margin: 0 }}>Welcome back. Enter your credentials below.</p>
+              </div>
+              <form onSubmit={handleOrganizerLogin} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+                <div>
+                  <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={inp} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "5px" }}>PASSWORD</div>
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required style={inp} />
+                </div>
+                {error && <div style={{ fontSize: "0.82rem", color: "#c0392b", padding: "8px 12px", background: "#c0392b11", borderRadius: "8px" }}>{error}</div>}
+                <button type="submit" disabled={loading} style={{ ...btn, marginTop: "4px", opacity: loading ? 0.7 : 1 }}>{loading ? "Signing in..." : "Sign in"}</button>
+                <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "0.82rem", fontFamily: "Georgia, serif", textAlign: "center" as const }}>Forgot password?</button>
+              </form>
+            </div>
           )}
 
           {mode === "brand-login" && (
-            <form onSubmit={handleBrandLogin}>
-              <h2 style={{ fontSize: "1.3rem", color: "#5a3e2b", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Brand sign in</h2>
-              <p style={{ fontSize: "0.85rem", color: "#6b5f54", textAlign: "center", marginBottom: "1.5rem" }}>Sign in to access your portal</p>
-              <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={inp} />
-              <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={inp} />
-              {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
-              <button type="submit" disabled={loading} style={btn("#5a3e2b")}>{loading ? "Signing in..." : "Sign in"}</button>
-              <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#6b5f54", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer", marginBottom: "6px" }}>Forgot password?</button>
-              <button type="button" onClick={() => setMode("home")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#6b5f54", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>Back</button>
-            </form>
+            <div>
+              <button onClick={() => { setMode("home"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "6px" }}>Brand sign in</h1>
+                <p style={{ fontSize: "0.88rem", color: "#6b5f54", margin: 0 }}>Access your brand portal below.</p>
+              </div>
+              <form onSubmit={handleBrandLogin} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+                <div>
+                  <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={inp} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "5px" }}>PASSWORD</div>
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required style={inp} />
+                </div>
+                {error && <div style={{ fontSize: "0.82rem", color: "#c0392b", padding: "8px 12px", background: "#c0392b11", borderRadius: "8px" }}>{error}</div>}
+                <button type="submit" disabled={loading} style={{ ...btn, marginTop: "4px", opacity: loading ? 0.7 : 1 }}>{loading ? "Signing in..." : "Sign in"}</button>
+                <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "0.82rem", fontFamily: "Georgia, serif", textAlign: "center" as const }}>Forgot password?</button>
+              </form>
+            </div>
           )}
 
           {mode === "forgot" && (
-            sent ? (
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>📬</div>
-                <h2 style={{ fontSize: "1.3rem", color: "#5a3e2b", fontWeight: "normal", marginBottom: "0.75rem" }}>Check your email</h2>
-                <p style={{ fontSize: "0.85rem", color: "#6b5f54", lineHeight: 1.7, marginBottom: "1.5rem" }}>We sent a reset link to <strong>{email}</strong>. Click it to set a new password.</p>
-                <button onClick={() => { setMode("home"); setSent(false); setEmail(""); }} style={btn("#5a3e2b")}>Back to sign in</button>
+            <div>
+              <button onClick={() => { setMode("home"); setError(""); setSent(false); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6b5f54", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "6px" }}>Reset password</h1>
+                <p style={{ fontSize: "0.88rem", color: "#6b5f54", margin: 0 }}>Enter your email and we will send you a reset link.</p>
               </div>
-            ) : (
-              <form onSubmit={handleForgotPassword}>
-                <h2 style={{ fontSize: "1.3rem", color: "#5a3e2b", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Reset password</h2>
-                <p style={{ fontSize: "0.85rem", color: "#6b5f54", textAlign: "center", marginBottom: "1.5rem" }}>Enter your email and we will send you a reset link</p>
-                <input type="email" placeholder="Your email address" value={email} onChange={e => setEmail(e.target.value)} required style={inp} />
-                {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
-                <button type="submit" disabled={loading} style={btn("#5a3e2b")}>{loading ? "Sending..." : "Send reset link"}</button>
-                <button type="button" onClick={() => setMode("home")} style={{ width: "100%", padding: "0.5rem", background: "transparent", color: "#6b5f54", border: "none", fontSize: "0.85rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>Back</button>
-              </form>
-            )
+              {sent ? (
+                <div style={{ padding: "1.25rem", background: "#4a7c5922", borderRadius: "12px", border: "1px solid #4a7c5944" }}>
+                  <div style={{ fontSize: "0.9rem", color: "#4a7c59", marginBottom: "4px" }}>Reset link sent ✓</div>
+                  <div style={{ fontSize: "0.82rem", color: "#6b5f54" }}>Check your email for the password reset link.</div>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+                  <div>
+                    <div style={{ fontSize: "0.72rem", color: "#6b5f54", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={inp} />
+                  </div>
+                  <button type="submit" disabled={loading} style={{ ...btn, opacity: loading ? 0.7 : 1 }}>{loading ? "Sending..." : "Send reset link"}</button>
+                </form>
+              )}
+            </div>
           )}
 
         </div>
