@@ -106,7 +106,7 @@ export default function LandingPage() {
       <section id="features" style={{ padding: "6rem 4rem", maxWidth: "1200px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "4rem" }}>
           <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.2em", marginBottom: "1rem" }}>FEATURES</div>
-          <h2 style={{ fontSize: "2.5rem", color: "#1c1714", fontWeight: "normal", margin: 0 }}>Everything you need, nothing you don't</h2>
+          <h2 style={{ fontSize: "2.5rem", color: "#1c1714", fontWeight: "normal", margin: 0 }}>Everything you need, nothing you do not</h2>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.5rem" }}>
           {[
