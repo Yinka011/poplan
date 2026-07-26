@@ -138,8 +138,24 @@ export default function LandingPage() {
             <p style={{ fontSize: "0.95rem", color: "#4a5a52", margin: 0 }}>Organizers pay. Brands are always free.</p>
           </div>
 
+          {/* Who is it for */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem", marginBottom: "3rem" }}>
+            {[
+              { who: "Event Organizer", desc: "You host pop-ups and invite brands to participate", color: "#1B3A2D" },
+              { who: "Brand Organizer", desc: "You run your own pop-ups across multiple cities", color: "#2a4d3e" },
+              { who: "Participating Brand", desc: "You are invited to attend someone else's pop-up", color: "#E8C97A", text: "#1B3A2D" },
+            ].map((item, i) => (
+              <div key={i} style={{ background: item.color, borderRadius: "12px", padding: "1.25rem 1.5rem", border: i === 2 ? "none" : "none" }}>
+                <div style={{ fontSize: "0.95rem", color: i === 2 ? "#1B3A2D" : "#fff", marginBottom: "4px" }}>{item.who}</div>
+                <div style={{ fontSize: "0.82rem", color: i === 2 ? "#1B3A2D99" : "#ffffff88", lineHeight: 1.5 }}>{item.desc}</div>
+              </div>
+            ))}
+          </div>
+
           {/* Organizer plans */}
-          <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.15em", marginBottom: "1rem", textAlign: "center" }}>FOR ORGANIZERS</div>
+          <div style={{ background: "#1B3A2D", borderRadius: "12px", padding: "8px 16px", marginBottom: "1rem", display: "inline-block" }}>
+            <div style={{ fontSize: "0.72rem", color: "#E8C97A", letterSpacing: "0.15em" }}>FOR EVENT ORGANIZERS</div>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem", marginBottom: "3rem" }}>
             {[
               { name: "Starter", price: "$40", period: "/mo", features: ["1 active event", "Up to 10 brands", "Planning hub", "Checklist", "Marketing plans", "Brand CRM"], highlight: false },
@@ -165,7 +181,9 @@ export default function LandingPage() {
           </div>
 
           {/* Brand organizer plans */}
-          <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.15em", marginBottom: "1rem", textAlign: "center" }}>FOR BRAND ORGANIZERS</div>
+          <div style={{ background: "#2a4d3e", borderRadius: "12px", padding: "8px 16px", margin: "3rem 0 1rem", display: "inline-block" }}>
+            <div style={{ fontSize: "0.72rem", color: "#E8C97A", letterSpacing: "0.15em" }}>FOR BRAND ORGANIZERS</div>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem" }}>
             {[
               { name: "Emerging", price: "$25", features: ["1 city", "1 team member", "Planning hub", "Budget tracker", "Mood board", "Chat with planner"] },
@@ -189,9 +207,13 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div style={{ textAlign: "center", marginTop: "2rem", padding: "1.5rem", background: "#fff", borderRadius: "12px", border: "1px solid #e4ebe6" }}>
-            <div style={{ fontSize: "1rem", color: "#1c1714", marginBottom: "4px" }}>Participating brands are always free</div>
-            <div style={{ fontSize: "0.85rem", color: "#4a5a52" }}>Brands invited to events on Nalpop never pay. The organizer covers access.</div>
+          <div style={{ marginTop: "3rem", background: "#E8C97A", borderRadius: "16px", padding: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" as const, gap: "1rem" }}>
+            <div>
+              <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.15em", marginBottom: "6px" }}>FOR PARTICIPATING BRANDS</div>
+              <div style={{ fontSize: "1.5rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "4px" }}>Always free</div>
+              <div style={{ fontSize: "0.88rem", color: "#1B3A2D99" }}>Brands invited to events on Nalpop never pay. The organizer covers access.</div>
+            </div>
+            <div style={{ fontSize: "3rem", color: "#1B3A2D" }}>🏷</div>
           </div>
         </div>
       </section>
