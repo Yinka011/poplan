@@ -5,7 +5,7 @@ export default function LandingPage() {
     <div style={{ fontFamily: "Georgia, serif", background: "#f8faf8", minHeight: "100vh" }}>
 
       {/* Nav */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.5rem 4rem", background: "#f8faf8", position: "sticky" as const, top: 0, zIndex: 10, borderBottom: "1px solid #e4ebe6" }}>
+      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.5rem", background: "#f8faf8", position: "sticky" as const, top: 0, zIndex: 10, borderBottom: "1px solid #e4ebe6" }}>
         <div style={{ fontSize: "1.2rem", letterSpacing: "0.2em", color: "#1B3A2D" }}>NALPOP</div>
         <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
           <a href="#features" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>Features</a>
@@ -16,8 +16,8 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section style={{ minHeight: "90vh", display: "flex", alignItems: "center", padding: "6rem 4rem", maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "center", width: "100%" }}>
+      <section style={{ minHeight: "90vh", display: "flex", alignItems: "center", padding: "4rem 2rem", maxWidth: "1200px", margin: "0 auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "4rem", alignItems: "center", width: "100%" }}>
           <div>
             <div style={{ fontSize: "0.75rem", letterSpacing: "0.2em", color: "#E8C97A", marginBottom: "1.5rem", background: "#1B3A2D", display: "inline-block", padding: "4px 12px", borderRadius: "20px" }}>NOW IN EARLY ACCESS</div>
             <h1 style={{ fontSize: "3.5rem", color: "#1c1714", fontWeight: "normal", lineHeight: 1.15, marginBottom: "1.5rem", margin: "0 0 1.5rem" }}>
@@ -50,7 +50,7 @@ export default function LandingPage() {
                 <div style={{ fontSize: "1.2rem", color: "#fff" }}>Sep 11–13, 2026</div>
                 <div style={{ fontSize: "0.78rem", color: "#ffffff88", marginTop: "2px" }}>28 brands confirmed</div>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "0.75rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "8px", marginBottom: "0.75rem" }}>
                 <div style={{ background: "#ffffff11", borderRadius: "8px", padding: "0.75rem" }}>
                   <div style={{ fontSize: "0.6rem", color: "#E8C97A", letterSpacing: "0.1em" }}>REVENUE</div>
                   <div style={{ fontSize: "1.1rem", color: "#fff", marginTop: "4px" }}>$24,800</div>
@@ -80,13 +80,13 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section id="how" style={{ background: "#1B3A2D", padding: "6rem 4rem" }}>
+      <section id="how" style={{ background: "#1B3A2D", padding: "4rem 2rem" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <div style={{ fontSize: "0.72rem", color: "#E8C97A", letterSpacing: "0.2em", marginBottom: "1rem" }}>HOW IT WORKS</div>
             <h2 style={{ fontSize: "2.5rem", color: "#fff", fontWeight: "normal", margin: 0 }}>Built for every role in the pop-up world</h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "2rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "2rem" }}>
             {[
               { role: "Organizer", desc: "Host pop-ups, invite brands, manage planning, track expenses, sync with Square and calculate payouts — all in one dashboard.", icon: "🎯" },
               { role: "Brand organizer", desc: "Run your own pop-ups across multiple cities. Collaborate with planners, approve suggestions, track budgets per city.", icon: "🌍" },
@@ -103,15 +103,15 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" style={{ padding: "6rem 4rem", maxWidth: "1200px", margin: "0 auto" }}>
+      <section id="features" style={{ padding: "4rem 2rem", maxWidth: "1200px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "4rem" }}>
           <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.2em", marginBottom: "1rem" }}>FEATURES</div>
           <h2 style={{ fontSize: "2.5rem", color: "#1c1714", fontWeight: "normal", margin: 0 }}>Everything you need, nothing you do not</h2>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.5rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem" }}>
           {[
             { title: "Planning hub", desc: "Decor, refreshments and staffing in one place. Suggest items to brands and get approvals instantly.", icon: "📋" },
-            { title: "Square integration", desc: "Upload brand inventory directly to your Square POS. Sync sales after the event automatically.", icon: "💳" },
+            { title: "POS integration", desc: "Upload brand inventory directly to your point of sale system. Sync sales after the event automatically.", icon: "💳" },
             { title: "Payout calculator", desc: "Automatic commission calculations per brand. Mark payouts as sent and brands see it instantly.", icon: "💰" },
             { title: "Brand portal", desc: "Every brand gets their own portal. Tasks, files, inventory, messages and sales — all in one place.", icon: "🏪" },
             { title: "Mood board", desc: "Shared inspiration boards between organizers and brands. Pin images, categories and notes.", icon: "🖼" },
@@ -130,7 +130,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" style={{ background: "#f0f4f1", padding: "6rem 4rem" }}>
+      <section id="pricing" style={{ background: "#f0f4f1", padding: "4rem 2rem" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.2em", marginBottom: "1rem" }}>PRICING</div>
@@ -140,11 +140,11 @@ export default function LandingPage() {
 
           {/* Organizer plans */}
           <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.15em", marginBottom: "1rem", textAlign: "center" }}>FOR ORGANIZERS</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.5rem", marginBottom: "3rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem", marginBottom: "3rem" }}>
             {[
-              { name: "Starter", price: "$49", period: "/mo", features: ["1 active event", "Up to 10 brands", "Planning hub", "Checklist", "Marketing plans", "Brand CRM"], highlight: false },
-              { name: "Growth", price: "$149", period: "/mo", features: ["3 active events", "Up to 30 brands", "Everything in Starter", "Square integration", "Sales dashboard", "Payout calculator", "Planner mode"], highlight: true },
-              { name: "Pro", price: "$349", period: "/mo", features: ["Unlimited events", "Unlimited brands", "Everything in Growth", "White label", "Priority support", "Custom domain", "Advanced analytics"], highlight: false },
+              { name: "Starter", price: "$40", period: "/mo", features: ["1 active event", "Up to 10 brands", "Planning hub", "Checklist", "Marketing plans", "Brand CRM"], highlight: false },
+              { name: "Growth", price: "$60", period: "/mo", features: ["3 active events", "Up to 30 brands", "Everything in Starter", "Square integration", "Sales dashboard", "Payout calculator", "Planner mode"], highlight: true },
+              { name: "Pro", price: "$90", period: "/mo", features: ["Unlimited events", "Unlimited brands", "Everything in Growth", "White label", "Priority support", "Custom domain", "Advanced analytics"], highlight: false },
             ].map((plan, i) => (
               <div key={i} style={{ background: plan.highlight ? "#1B3A2D" : "#fff", borderRadius: "16px", padding: "2rem", border: plan.highlight ? "none" : "1px solid #e4ebe6", position: "relative" as const }}>
                 {plan.highlight && <div style={{ position: "absolute" as const, top: "-12px", left: "50%", transform: "translateX(-50%)", background: "#E8C97A", color: "#1B3A2D", fontSize: "0.68rem", padding: "3px 12px", borderRadius: "20px", letterSpacing: "0.1em", whiteSpace: "nowrap" as const }}>MOST POPULAR</div>}
@@ -166,11 +166,11 @@ export default function LandingPage() {
 
           {/* Brand organizer plans */}
           <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.15em", marginBottom: "1rem", textAlign: "center" }}>FOR BRAND ORGANIZERS</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.5rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem" }}>
             {[
-              { name: "Emerging", price: "$19", features: ["1 city", "1 team member", "Planning hub", "Budget tracker", "Mood board", "Chat with planner"] },
+              { name: "Emerging", price: "$25", features: ["1 city", "1 team member", "Planning hub", "Budget tracker", "Mood board", "Chat with planner"] },
               { name: "Established", price: "$59", features: ["Up to 5 cities", "5 team members", "Everything in Emerging", "Document vault", "Currency per city", "Post-event report"] },
-              { name: "Global", price: "$129", features: ["Unlimited cities", "Unlimited team", "Everything in Established", "White label portal", "Priority support", "Custom domain"] },
+              { name: "Global", price: "$100", features: ["Unlimited cities", "Unlimited team", "Everything in Established", "White label portal", "Priority support", "Custom domain"] },
             ].map((plan, i) => (
               <div key={i} style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e4ebe6" }}>
                 <div style={{ fontSize: "0.85rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>{plan.name}</div>
@@ -197,7 +197,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section style={{ background: "#1B3A2D", padding: "6rem 4rem", textAlign: "center" }}>
+      <section style={{ background: "#1B3A2D", padding: "4rem 2rem", textAlign: "center" }}>
         <div style={{ maxWidth: "600px", margin: "0 auto" }}>
           <h2 style={{ fontSize: "2.5rem", color: "#fff", fontWeight: "normal", marginBottom: "1rem" }}>Ready to run better pop-ups?</h2>
           <p style={{ fontSize: "1rem", color: "#ffffff88", lineHeight: 1.7, marginBottom: "2.5rem" }}>Join the organizers and brands already using Nalpop to manage their events with less chaos and more clarity.</p>
@@ -206,7 +206,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ background: "#142d22", padding: "3rem 4rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <footer style={{ background: "#142d22", padding: "2rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: "1rem", letterSpacing: "0.2em", color: "#fff", marginBottom: "4px" }}>NALPOP</div>
           <div style={{ fontSize: "0.78rem", color: "#ffffff55" }}>© 2026 Nalpop. All rights reserved.</div>
