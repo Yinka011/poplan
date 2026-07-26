@@ -17,7 +17,7 @@ export default function WaitlistPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        to: "hello@nalpop.com",
+        to: "olaniyanyin@gmail.com",
         subject: `New waitlist request from ${name}`,
         html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Role:</strong> ${role}</p>`,
       }),
