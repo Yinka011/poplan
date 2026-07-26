@@ -237,7 +237,7 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
                         </div>
                       ))}
                       <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
-                        <input placeholder="Add a comment..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(pin.id, pin.label)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.75rem", fontFamily: "Georgia, serif" }} autoFocus />
+                        <input placeholder="Add a comment..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(pin.id)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.75rem", fontFamily: "Georgia, serif" }} autoFocus />
                         <button onClick={() => sendComment(pin.id)} style={{ padding: "5px 10px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer" }}>Send</button>
                       </div>
                     </div>
