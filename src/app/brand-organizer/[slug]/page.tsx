@@ -475,7 +475,7 @@ export default function BrandCityDashboard() {
                         {items.map(item => (
                           <div key={item.id} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", border: "1px solid #ede8e2", borderLeft: item.brand_status === "approved" ? "3px solid #4a7c59" : item.brand_status === "rejected" ? "3px solid #c0392b" : item.brand_status === "suggested" ? "3px solid #E8C97A" : "1px solid #ede8e2" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                              <div style={{ fontSize: "0.95rem", color: "#1B3A2D", fontWeight: 500 }}>{item.item}</div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><div style={{ fontSize: "0.95rem", color: "#1B3A2D", fontWeight: 500 }}>{item.item}</div>{invoices.filter(inv => inv.item_name === item.item && inv.status === "approved").length > 0 && <span style={{ fontSize: "0.65rem", background: "#4a7c5922", color: "#4a7c59", padding: "1px 6px", borderRadius: "10px" }}>✓ paid</span>}</div>
                               {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#E8C97A" }}>${Number(item.cost).toFixed(2)}</div>}
                             </div>
                             {item.quantity > 0 && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginBottom: "2px" }}>Qty: {item.quantity}</div>}
@@ -514,7 +514,7 @@ export default function BrandCityDashboard() {
                   <div key={item.id} style={{ padding: "1rem 1.25rem", borderBottom: i < refresh.length - 1 ? "1px solid #f5f2ee" : "none" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
-                        <div style={{ fontSize: "0.9rem", color: "#1B3A2D" }}>{item.item}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><div style={{ fontSize: "0.9rem", color: "#1B3A2D" }}>{item.item}</div>{invoices.filter(inv => inv.item_name === item.item && inv.status === "approved").length > 0 && <span style={{ fontSize: "0.65rem", background: "#4a7c5922", color: "#4a7c59", padding: "1px 6px", borderRadius: "10px" }}>✓ paid</span>}</div>
                         {item.quantity && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>{item.quantity}</div>}
                       </div>
                       {item.cost > 0 && <span style={{ fontSize: "0.85rem", color: "#4a7c59" }}>${Number(item.cost).toFixed(2)}</span>}
