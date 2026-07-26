@@ -1,245 +1,171 @@
-import Link from "next/link";
+"use client";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-export default function LandingPage() {
+export default function LoginPage() {
+  const [mode, setMode] = useState<"home" | "organizer-login" | "brand-login" | "forgot">("home");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleOrganizerLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setError("Invalid email or password"); setLoading(false); return; }
+    const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_email", email).single();
+    if (!roleData) { window.location.href = "/onboarding"; }
+    else if (roleData.role === "brand_organizer") { window.location.href = "/brand-organizer"; }
+    else { window.location.href = "/login/organizer/events"; }
+  };
+
+  const handleBrandLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setError("Invalid email or password"); setLoading(false); return; }
+    const { data: ownEvents } = await supabase.from("events").select("id").eq("organizer_email", email).limit(1);
+    const { data: soloEvents } = await supabase.from("brand_solo_events").select("id").eq("brand_email", email).limit(1);
+    if ((ownEvents && ownEvents.length > 0) || (soloEvents && soloEvents.length > 0)) {
+      window.location.href = "/brand-hub";
+    } else {
+      window.location.href = "/brand/portal";
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo: "https://nalpop.com/reset-password" });
+    setSent(true);
+    setLoading(false);
+  };
+
+  const inp = { width: "100%", padding: "12px 14px", border: "1px solid #e8e2da", borderRadius: "10px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#fff", boxSizing: "border-box" as const, color: "#1c1714", outline: "none" };
+  const btn = { width: "100%", padding: "12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: "0.03em" };
+
   return (
-    <div style={{ fontFamily: "Georgia, serif", background: "#f8faf8", minHeight: "100vh" }}>
-
-      {/* Nav */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.5rem", background: "#f8faf8", position: "sticky" as const, top: 0, zIndex: 10, borderBottom: "1px solid #e4ebe6" }}>
-        <div style={{ fontSize: "1.2rem", letterSpacing: "0.2em", color: "#1B3A2D" }}>NALPOP</div>
-        <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
-          <a href="#features" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>Features</a>
-          <a href="#how" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>How it works</a>
-          <a href="#pricing" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>Pricing</a>
-          <Link href="/login-page" style={{ fontSize: "0.85rem", padding: "8px 20px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none" }}>Sign in</Link>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", fontFamily: "Georgia, serif" }}>
+      
+      {/* Left panel */}
+      <div style={{ width: "45%", background: "#1B3A2D", display: "flex", flexDirection: "column" as const, justifyContent: "space-between", padding: "3rem", position: "relative" as const, overflow: "hidden" }}>
+        <div style={{ position: "relative" as const, zIndex: 1 }}>
+          <a href="/" style={{ textDecoration: "none" }}>
+            <div style={{ fontSize: "1.5rem", letterSpacing: "0.2em", color: "#fff" }}>NALPOP</div>
+            <div style={{ width: "2rem", height: "1px", background: "#E8C97A", marginTop: "8px" }} />
+          </a>
         </div>
-      </nav>
-
-      {/* Hero */}
-      <section style={{ minHeight: "90vh", display: "flex", alignItems: "center", padding: "4rem 2rem", maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "4rem", alignItems: "center", width: "100%" }}>
-          <div>
-            <div style={{ fontSize: "0.75rem", letterSpacing: "0.2em", color: "#E8C97A", marginBottom: "1.5rem", background: "#1B3A2D", display: "inline-block", padding: "4px 12px", borderRadius: "20px" }}>NOW IN EARLY ACCESS</div>
-            <h1 style={{ fontSize: "3.5rem", color: "#1c1714", fontWeight: "normal", lineHeight: 1.15, marginBottom: "1.5rem", margin: "0 0 1.5rem" }}>
-              The platform built for<br />
-              <span style={{ color: "#1B3A2D", fontStyle: "italic" }}>pop-up culture.</span>
-            </h1>
-            <p style={{ fontSize: "1.1rem", color: "#4a5a52", lineHeight: 1.8, marginBottom: "2.5rem", maxWidth: "480px" }}>
-              Manage brands, inventory, planning and payouts — all in one place. Built by a pop-up organizer, for pop-up organizers.
-            </p>
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" as const }}>
-              <Link href="/waitlist" style={{ padding: "14px 32px", background: "#1B3A2D", color: "#fff", borderRadius: "10px", textDecoration: "none", fontSize: "0.95rem" }}>Get started</Link>
-              <a href="#how" style={{ padding: "14px 32px", background: "transparent", color: "#1B3A2D", borderRadius: "10px", textDecoration: "none", fontSize: "0.95rem", border: "1px solid #1B3A2D" }}>See how it works</a>
-            </div>
-            <div style={{ marginTop: "2.5rem", display: "flex", gap: "2rem" }}>
-              <div><div style={{ fontSize: "1.5rem", color: "#1B3A2D", fontWeight: "normal" }}>30+</div><div style={{ fontSize: "0.78rem", color: "#4a5a52" }}>Brands managed</div></div>
-              <div><div style={{ fontSize: "1.5rem", color: "#1B3A2D", fontWeight: "normal" }}>3</div><div style={{ fontSize: "0.78rem", color: "#4a5a52" }}>Cities</div></div>
-              <div><div style={{ fontSize: "1.5rem", color: "#1B3A2D", fontWeight: "normal" }}>100%</div><div style={{ fontSize: "0.78rem", color: "#4a5a52" }}>WhatsApp free</div></div>
-            </div>
+        <div style={{ position: "relative" as const, zIndex: 1 }}>
+          <div style={{ fontSize: "2.2rem", color: "#fff", lineHeight: 1.3, fontWeight: "normal", marginBottom: "1.5rem" }}>
+            Run your pop-up.<br />
+            <span style={{ color: "#E8C97A", fontStyle: "italic" }}>Not your inbox.</span>
           </div>
-          <div style={{ position: "relative" as const }}>
-            {/* Dashboard mockup */}
-            <div style={{ background: "#1B3A2D", borderRadius: "20px", padding: "1.5rem", boxShadow: "0 40px 80px #1B3A2D33" }}>
-              <div style={{ display: "flex", gap: "6px", marginBottom: "1rem" }}>
-                <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ffffff33" }} />
-                <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ffffff33" }} />
-                <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ffffff33" }} />
-              </div>
-              <div style={{ background: "#ffffff11", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
-                <div style={{ fontSize: "0.65rem", color: "#E8C97A", letterSpacing: "0.1em", marginBottom: "4px" }}>ATLANTA POP-UP</div>
-                <div style={{ fontSize: "1.2rem", color: "#fff" }}>Sep 11–13, 2026</div>
-                <div style={{ fontSize: "0.78rem", color: "#ffffff88", marginTop: "2px" }}>28 brands confirmed</div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "8px", marginBottom: "0.75rem" }}>
-                <div style={{ background: "#ffffff11", borderRadius: "8px", padding: "0.75rem" }}>
-                  <div style={{ fontSize: "0.6rem", color: "#E8C97A", letterSpacing: "0.1em" }}>REVENUE</div>
-                  <div style={{ fontSize: "1.1rem", color: "#fff", marginTop: "4px" }}>$24,800</div>
-                </div>
-                <div style={{ background: "#ffffff11", borderRadius: "8px", padding: "0.75rem" }}>
-                  <div style={{ fontSize: "0.6rem", color: "#E8C97A", letterSpacing: "0.1em" }}>DAYS LEFT</div>
-                  <div style={{ fontSize: "1.1rem", color: "#fff", marginTop: "4px" }}>48</div>
-                </div>
-              </div>
-              <div style={{ background: "#ffffff11", borderRadius: "8px", padding: "0.75rem" }}>
-                <div style={{ fontSize: "0.6rem", color: "#ffffff88", marginBottom: "6px" }}>BRAND PROGRESS</div>
-                {["Lola Signatures", "Spice of Lagos", "Zoba Martin"].map((brand, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: i < 2 ? "1px solid #ffffff11" : "none" }}>
-                    <span style={{ fontSize: "0.78rem", color: "#fff" }}>{brand}</span>
-                    <span style={{ fontSize: "0.68rem", color: "#E8C97A" }}>{["Files uploaded", "Inventory sent", "Payment due"][i]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Floating card */}
-            <div style={{ position: "absolute" as const, bottom: "-20px", right: "-20px", background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", boxShadow: "0 20px 40px #00000022", border: "1px solid #e4ebe6" }}>
-              <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "2px" }}>Square sync complete</div>
-              <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>147 products uploaded ✓</div>
-            </div>
+          <div style={{ fontSize: "0.88rem", color: "#ffffff88", lineHeight: 1.8 }}>
+            Manage brands, inventory, planning and payouts — all in one place.
           </div>
         </div>
-      </section>
-
-      {/* How it works */}
-      <section id="how" style={{ background: "#1B3A2D", padding: "4rem 2rem" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <div style={{ fontSize: "0.72rem", color: "#E8C97A", letterSpacing: "0.2em", marginBottom: "1rem" }}>HOW IT WORKS</div>
-            <h2 style={{ fontSize: "2.5rem", color: "#fff", fontWeight: "normal", margin: 0 }}>Built for every role in the pop-up world</h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "2rem" }}>
-            {[
-              { role: "Organizer", desc: "Host pop-ups, invite brands, manage planning, track expenses, sync with Square and calculate payouts — all in one dashboard.", icon: "🎯" },
-              { role: "Brand organizer", desc: "Run your own pop-ups across multiple cities. Collaborate with planners, approve suggestions, track budgets per city.", icon: "🌍" },
-              { role: "Participating brand", desc: "Get invited, upload your inventory, track your sales and receive your payout. No spreadsheets, no WhatsApp chaos.", icon: "🏷" },
-            ].map((item, i) => (
-              <div key={i} style={{ background: "#ffffff11", borderRadius: "16px", padding: "2rem" }}>
-                <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>{item.icon}</div>
-                <div style={{ fontSize: "1.1rem", color: "#fff", marginBottom: "0.75rem" }}>{item.role}</div>
-                <div style={{ fontSize: "0.88rem", color: "#ffffff88", lineHeight: 1.7 }}>{item.desc}</div>
-              </div>
-            ))}
-          </div>
+        <div style={{ position: "relative" as const, zIndex: 1, fontSize: "0.72rem", color: "#ffffff44", letterSpacing: "0.1em" }}>
+          © 2026 NALPOP
         </div>
-      </section>
+      </div>
 
-      {/* Features */}
-      <section id="features" style={{ padding: "4rem 2rem", maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-          <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.2em", marginBottom: "1rem" }}>FEATURES</div>
-          <h2 style={{ fontSize: "2.5rem", color: "#1c1714", fontWeight: "normal", margin: 0 }}>Everything you need, nothing you do not</h2>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem" }}>
-          {[
-            { title: "Planning hub", desc: "Decor, refreshments and staffing in one place. Suggest items to brands and get approvals instantly.", icon: "📋" },
-            { title: "POS integration", desc: "Upload brand inventory directly to your point of sale system. Sync sales after the event automatically.", icon: "💳" },
-            { title: "Payout calculator", desc: "Automatic commission calculations per brand. Mark payouts as sent and brands see it instantly.", icon: "💰" },
-            { title: "Brand portal", desc: "Every brand gets their own portal. Tasks, files, inventory, messages and sales — all in one place.", icon: "🏪" },
-            { title: "Mood board", desc: "Shared inspiration boards between organizers and brands. Pin images, categories and notes.", icon: "🖼" },
-            { title: "Email notifications", desc: "Automated emails for announcements, task assignments, file reviews and messages.", icon: "📧" },
-            { title: "Multi-city support", desc: "Run pop-ups across multiple cities. Each city gets its own dashboard, budget and team.", icon: "🌍" },
-            { title: "Marketing plans", desc: "Plan your marketing across Instagram, TikTok, Meta Ads, Email and more. Track due dates.", icon: "📣" },
-            { title: "Checklist", desc: "60+ event checklist items across venue, brands, decor, staff, marketing and logistics.", icon: "✅" },
-          ].map((f, i) => (
-            <div key={i} style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
-              <div style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{f.icon}</div>
-              <div style={{ fontSize: "0.95rem", color: "#1c1714", marginBottom: "0.5rem" }}>{f.title}</div>
-              <div style={{ fontSize: "0.82rem", color: "#4a5a52", lineHeight: 1.6 }}>{f.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Right panel */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+        <div style={{ width: "100%", maxWidth: "400px" }}>
 
-      {/* Pricing */}
-      <section id="pricing" style={{ background: "#f0f4f1", padding: "4rem 2rem" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.2em", marginBottom: "1rem" }}>PRICING</div>
-            <h2 style={{ fontSize: "2.5rem", color: "#1c1714", fontWeight: "normal", margin: "0 0 1rem" }}>Simple, transparent pricing</h2>
-            <p style={{ fontSize: "0.95rem", color: "#4a5a52", margin: 0 }}>Organizers pay. Brands are always free.</p>
-          </div>
-
-          {/* Who is it for */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem", marginBottom: "3rem" }}>
-            {[
-              { who: "Event Organizer", desc: "You host pop-ups and invite brands to participate", color: "#1B3A2D" },
-              { who: "Brand Organizer", desc: "You run your own pop-ups across multiple cities", color: "#2a4d3e" },
-              { who: "Participating Brand", desc: "You are invited to attend someone else's pop-up", color: "#E8C97A", text: "#1B3A2D" },
-            ].map((item, i) => (
-              <div key={i} style={{ background: item.color, borderRadius: "12px", padding: "1.25rem 1.5rem", border: i === 2 ? "none" : "none" }}>
-                <div style={{ fontSize: "0.95rem", color: i === 2 ? "#1B3A2D" : "#fff", marginBottom: "4px" }}>{item.who}</div>
-                <div style={{ fontSize: "0.82rem", color: i === 2 ? "#1B3A2D99" : "#ffffff88", lineHeight: 1.5 }}>{item.desc}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Organizer plans */}
-          <div style={{ background: "#1B3A2D", borderRadius: "12px", padding: "8px 16px", marginBottom: "1rem", display: "inline-block" }}>
-            <div style={{ fontSize: "0.72rem", color: "#E8C97A", letterSpacing: "0.15em" }}>FOR EVENT ORGANIZERS</div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem", marginBottom: "3rem" }}>
-            {[
-              { name: "Starter", price: "$40", period: "/mo", features: ["1 active event", "Up to 10 brands", "Planning hub", "Checklist", "Marketing plans", "Brand CRM"], highlight: false },
-              { name: "Growth", price: "$60", period: "/mo", features: ["3 active events", "Up to 30 brands", "Everything in Starter", "Square integration", "Sales dashboard", "Payout calculator", "Planner mode"], highlight: true },
-              { name: "Pro", price: "$90", period: "/mo", features: ["Unlimited events", "Unlimited brands", "Everything in Growth", "White label", "Priority support", "Custom domain", "Advanced analytics"], highlight: false },
-            ].map((plan, i) => (
-              <div key={i} style={{ background: plan.highlight ? "#1B3A2D" : "#fff", borderRadius: "16px", padding: "2rem", border: plan.highlight ? "none" : "1px solid #e4ebe6", position: "relative" as const }}>
-                {plan.highlight && <div style={{ position: "absolute" as const, top: "-12px", left: "50%", transform: "translateX(-50%)", background: "#E8C97A", color: "#1B3A2D", fontSize: "0.68rem", padding: "3px 12px", borderRadius: "20px", letterSpacing: "0.1em", whiteSpace: "nowrap" as const }}>MOST POPULAR</div>}
-                <div style={{ fontSize: "0.85rem", color: plan.highlight ? "#E8C97A" : "#1B3A2D", marginBottom: "0.5rem" }}>{plan.name}</div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: "2px", marginBottom: "1.5rem" }}>
-                  <span style={{ fontSize: "2.5rem", color: plan.highlight ? "#fff" : "#1c1714", fontWeight: "normal" }}>{plan.price}</span>
-                  <span style={{ fontSize: "0.85rem", color: plan.highlight ? "#ffffff88" : "#4a5a52" }}>{plan.period}</span>
-                </div>
-                {plan.features.map((f, j) => (
-                  <div key={j} style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
-                    <span style={{ color: plan.highlight ? "#E8C97A" : "#1B3A2D", fontSize: "0.85rem" }}>✓</span>
-                    <span style={{ fontSize: "0.85rem", color: plan.highlight ? "#ffffff88" : "#4a5a52" }}>{f}</span>
-                  </div>
-                ))}
-                <Link href="/waitlist" style={{ display: "block", marginTop: "1.5rem", padding: "10px", background: plan.highlight ? "#E8C97A" : "#1B3A2D", color: plan.highlight ? "#1B3A2D" : "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.88rem", textAlign: "center" as const }}>Get started</Link>
-              </div>
-            ))}
-          </div>
-
-          {/* Brand organizer plans */}
-          <div style={{ background: "#2a4d3e", borderRadius: "12px", padding: "8px 16px", margin: "3rem 0 1rem", display: "inline-block" }}>
-            <div style={{ fontSize: "0.72rem", color: "#E8C97A", letterSpacing: "0.15em" }}>FOR BRAND ORGANIZERS</div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem" }}>
-            {[
-              { name: "Emerging", price: "$25", features: ["1 city", "1 team member", "Planning hub", "Budget tracker", "Mood board", "Chat with planner"] },
-              { name: "Established", price: "$59", features: ["Up to 5 cities", "5 team members", "Everything in Emerging", "Document vault", "Currency per city", "Post-event report"] },
-              { name: "Global", price: "$100", features: ["Unlimited cities", "Unlimited team", "Everything in Established", "White label portal", "Priority support", "Custom domain"] },
-            ].map((plan, i) => (
-              <div key={i} style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e4ebe6" }}>
-                <div style={{ fontSize: "0.85rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>{plan.name}</div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: "2px", marginBottom: "1.5rem" }}>
-                  <span style={{ fontSize: "2.5rem", color: "#1c1714", fontWeight: "normal" }}>{plan.price}</span>
-                  <span style={{ fontSize: "0.85rem", color: "#4a5a52" }}>/mo</span>
-                </div>
-                {plan.features.map((f, j) => (
-                  <div key={j} style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
-                    <span style={{ color: "#1B3A2D", fontSize: "0.85rem" }}>✓</span>
-                    <span style={{ fontSize: "0.85rem", color: "#4a5a52" }}>{f}</span>
-                  </div>
-                ))}
-                <Link href="/waitlist" style={{ display: "block", marginTop: "1.5rem", padding: "10px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", fontSize: "0.88rem", textAlign: "center" as const }}>Get started</Link>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ marginTop: "3rem", background: "#E8C97A", borderRadius: "16px", padding: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" as const, gap: "1rem" }}>
+          {mode === "home" && (
             <div>
-              <div style={{ fontSize: "0.72rem", color: "#1B3A2D", letterSpacing: "0.15em", marginBottom: "6px" }}>FOR PARTICIPATING BRANDS</div>
-              <div style={{ fontSize: "1.5rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "4px" }}>Always free</div>
-              <div style={{ fontSize: "0.88rem", color: "#1B3A2D99" }}>Brands invited to events on Nalpop never pay. The organizer covers access.</div>
+              <div style={{ marginBottom: "2.5rem" }}>
+                <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "8px" }}>Welcome back</h1>
+                <p style={{ fontSize: "0.9rem", color: "#4a5a52", margin: 0 }}>Sign in to your Nalpop account.</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+                <button onClick={() => { setMode("organizer-login"); setError(""); }} style={{ ...btn }}>Sign in as Organizer</button>
+                <button onClick={() => { setMode("brand-login"); setError(""); }} style={{ ...btn, background: "#fff", color: "#1B3A2D", border: "1px solid #1B3A2D" }}>Sign in as Brand</button>
+              </div>
+              <div style={{ marginTop: "2rem", padding: "1.25rem", background: "#fff", borderRadius: "12px", border: "1px solid #e4ebe6" }}>
+                <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "4px" }}>New to Nalpop?</div>
+                <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>Access is by invitation only. Contact your event organizer to get started.</div>
+              </div>
             </div>
-            <div style={{ fontSize: "3rem", color: "#1B3A2D" }}>🏷</div>
-          </div>
-        </div>
-      </section>
+          )}
 
-      {/* CTA */}
-      <section style={{ background: "#1B3A2D", padding: "4rem 2rem", textAlign: "center" }}>
-        <div style={{ maxWidth: "600px", margin: "0 auto" }}>
-          <h2 style={{ fontSize: "2.5rem", color: "#fff", fontWeight: "normal", marginBottom: "1rem" }}>Ready to run better pop-ups?</h2>
-          <p style={{ fontSize: "1rem", color: "#ffffff88", lineHeight: 1.7, marginBottom: "2.5rem" }}>Join the organizers and brands already using Nalpop to manage their events with less chaos and more clarity.</p>
-          <Link href="/waitlist" style={{ display: "inline-block", padding: "16px 40px", background: "#E8C97A", color: "#1B3A2D", borderRadius: "10px", textDecoration: "none", fontSize: "1rem" }}>Get started today</Link>
-        </div>
-      </section>
+          {mode === "organizer-login" && (
+            <div>
+              <button onClick={() => { setMode("home"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "6px" }}>Organizer sign in</h1>
+                <p style={{ fontSize: "0.88rem", color: "#4a5a52", margin: 0 }}>Welcome back. Enter your credentials below.</p>
+              </div>
+              <form onSubmit={handleOrganizerLogin} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+                <div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={inp} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>PASSWORD</div>
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required style={inp} />
+                </div>
+                {error && <div style={{ fontSize: "0.82rem", color: "#c0392b", padding: "8px 12px", background: "#c0392b11", borderRadius: "8px" }}>{error}</div>}
+                <button type="submit" disabled={loading} style={{ ...btn, marginTop: "4px", opacity: loading ? 0.7 : 1 }}>{loading ? "Signing in..." : "Sign in"}</button>
+                <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "0.82rem", fontFamily: "Georgia, serif", textAlign: "center" as const }}>Forgot password?</button>
+              </form>
+            </div>
+          )}
 
-      {/* Footer */}
-      <footer style={{ background: "#142d22", padding: "2rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <div style={{ fontSize: "1rem", letterSpacing: "0.2em", color: "#fff", marginBottom: "4px" }}>NALPOP</div>
-          <div style={{ fontSize: "0.78rem", color: "#ffffff55" }}>© 2026 Nalpop. All rights reserved.</div>
-        </div>
-        <div style={{ display: "flex", gap: "2rem" }}>
-          <Link href="/login-page" style={{ fontSize: "0.82rem", color: "#ffffff88", textDecoration: "none" }}>Sign in</Link>
-          <a href="mailto:hello@nalpop.com" style={{ fontSize: "0.82rem", color: "#ffffff88", textDecoration: "none" }}>Contact</a>
-          <a href="#pricing" style={{ fontSize: "0.82rem", color: "#ffffff88", textDecoration: "none" }}>Pricing</a>
-        </div>
-      </footer>
+          {mode === "brand-login" && (
+            <div>
+              <button onClick={() => { setMode("home"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "6px" }}>Brand sign in</h1>
+                <p style={{ fontSize: "0.88rem", color: "#4a5a52", margin: 0 }}>Access your brand portal below.</p>
+              </div>
+              <form onSubmit={handleBrandLogin} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+                <div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={inp} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>PASSWORD</div>
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required style={inp} />
+                </div>
+                {error && <div style={{ fontSize: "0.82rem", color: "#c0392b", padding: "8px 12px", background: "#c0392b11", borderRadius: "8px" }}>{error}</div>}
+                <button type="submit" disabled={loading} style={{ ...btn, marginTop: "4px", opacity: loading ? 0.7 : 1 }}>{loading ? "Signing in..." : "Sign in"}</button>
+                <button type="button" onClick={() => { setMode("forgot"); setError(""); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "0.82rem", fontFamily: "Georgia, serif", textAlign: "center" as const }}>Forgot password?</button>
+              </form>
+            </div>
+          )}
 
+          {mode === "forgot" && (
+            <div>
+              <button onClick={() => { setMode("home"); setError(""); setSent(false); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "0.85rem", marginBottom: "1.5rem", padding: 0, fontFamily: "Georgia, serif" }}>← Back</button>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "1.6rem", color: "#1c1714", fontWeight: "normal", marginBottom: "6px" }}>Reset password</h1>
+                <p style={{ fontSize: "0.88rem", color: "#4a5a52", margin: 0 }}>Enter your email and we will send you a reset link.</p>
+              </div>
+              {sent ? (
+                <div style={{ padding: "1.25rem", background: "#4a7c5922", borderRadius: "12px", border: "1px solid #4a7c5944" }}>
+                  <div style={{ fontSize: "0.9rem", color: "#4a7c59", marginBottom: "4px" }}>Reset link sent</div>
+                  <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>Check your email for the password reset link.</div>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+                  <div>
+                    <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={inp} />
+                  </div>
+                  <button type="submit" disabled={loading} style={{ ...btn, opacity: loading ? 0.7 : 1 }}>{loading ? "Sending..." : "Send reset link"}</button>
+                </form>
+              )}
+            </div>
+          )}
+
+        </div>
+      </div>
     </div>
   );
 }
