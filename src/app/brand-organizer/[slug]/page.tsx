@@ -637,9 +637,9 @@ export default function BrandCityDashboard() {
                   <span style={{ fontSize: "0.95rem", color: "#4a5a52" }}>${totalManual.toFixed(2)}</span>
                 </div>
                 {expenses.map((exp, i) => (
-                  <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: i < expenses.length - 1 ? "1px solid #f8f5f2" : "none", fontSize: "0.8rem" }}>
+                  <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: i < expenses.length - 1 ? "1px solid #f8f5f2" : "none", fontSize: "0.8rem" }}>
                     <span style={{ color: "#4a5a52" }}>{exp.category} — {exp.item}</span>
-                    <span style={{ color: "#4a5a52" }}>${Number(exp.cost).toFixed(2)}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span style={{ color: "#4a5a52" }}>${Number(exp.cost).toFixed(2)}</span><button onClick={() => deleteExpense(exp.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button></div>
                   </div>
                 ))}
               </div>
