@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import WanniTutorial from "@/components/shared/WanniTutorial";
 import MoodBoard from "@/components/shared/MoodBoard";
 
 type PlannerInfo = {
@@ -75,6 +76,7 @@ export default function BrandCityDashboard() {
   const [expenses, setExpenses] = useState<{id: number; category: string; item: string; cost: number; deposit: number;}[]>([]);
   const [comments, setComments] = useState<{id: number; item_name: string; sender_email: string; sender_name: string; message: string; created_at: string;}[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "invoices" | "tasks" | "shipments" | "chat" | "moodboard">("overview");
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -326,6 +328,7 @@ export default function BrandCityDashboard() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#faf7f4", fontFamily: "Georgia, serif" }}>
+      {showTutorial && <WanniTutorial onClose={() => setShowTutorial(false)} />}
 
       {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "#00000033", zIndex: 15 }} />}
       <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: "240px", background: "#1B3A2D", zIndex: 16, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.3s ease", display: "flex", flexDirection: "column" as const }}>
