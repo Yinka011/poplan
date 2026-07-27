@@ -67,7 +67,6 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
       const ext = selectedFile.name.split(".").pop() || "jpg";
       const path = `${eventSlug}/${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("mood-board").upload(path, selectedFile, { upsert: true });
-      console.log("Upload path:", path, "Error:", error);
       if (!error) {
         const { data: urlData } = supabase.storage.from("mood-board").getPublicUrl(path);
         imageUrl = urlData.publicUrl;
@@ -151,13 +150,14 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
               onClick={() => document.getElementById("mood-file-upload")?.click()}
               style={{ border: "2px dashed #e4ebe6", borderRadius: "12px", padding: "1.5rem", textAlign: "center" as const, cursor: "pointer", marginBottom: "8px", background: preview ? "#000" : "#f8faf8", position: "relative" as const, overflow: "hidden", minHeight: "120px", display: "flex", alignItems: "center", justifyContent: "center" }}
             >
-              <input id="mood-file-upload" type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
+              <input id="mood-file-upload" type="file" accept="image/jpeg,image/jpg,image/png" style={{ display: "none" }} onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
               {preview ? (
                 <img src={preview} alt="preview" style={{ maxWidth: "100%", maxHeight: "200px", objectFit: "contain" as const }} />
               ) : (
                 <div>
                   <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>🖼️</div>
                   <div style={{ fontSize: "0.78rem", color: "#4a5a52" }}>Click to upload an image</div>
+                  <div style={{ fontSize: "0.68rem", color: "#8b7355", marginTop: "2px" }}>JPG or PNG only</div>
                 </div>
               )}
             </div>
