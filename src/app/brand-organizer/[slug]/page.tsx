@@ -368,7 +368,7 @@ export default function BrandCityDashboard() {
             {/* Hero stats */}
             <div style={{ background: "#1B3A2D", borderRadius: "20px", padding: "2.5rem", marginBottom: "2rem", color: "#fff", position: "relative" as const, overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, right: 0, width: "200px", height: "200px", background: "radial-gradient(circle, #E8C97A22 0%, transparent 70%)", pointerEvents: "none" as const }} />
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "2rem", alignItems: "start" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "2rem", alignItems: "start" }}>
                 <div>
                   <div style={{ fontSize: "0.6rem", color: "#4a7a5e", letterSpacing: "0.2em", marginBottom: "8px" }}>LOCATION</div>
                   <div style={{ fontSize: "1.8rem", fontWeight: "normal", letterSpacing: "0.05em", lineHeight: 1.1 }}>{cityName}</div>
@@ -385,19 +385,6 @@ export default function BrandCityDashboard() {
                       <div style={{ height: "100%", width: `${Math.min((totalSpent / budget) * 100, 100)}%`, background: isOverBudget ? "#ff6b6b" : "#c8a882", borderRadius: "2px" }} />
                     </div>
                   )}
-                </div>
-                <div>
-                  <div style={{ fontSize: "0.6rem", color: "#4a7a5e", letterSpacing: "0.2em", marginBottom: "8px" }}>TASKS</div>
-                  <button onClick={() => setActiveTab("tasks")} style={{ background: "transparent", border: "none", cursor: "pointer", textAlign: "left" as const, padding: 0 }}>
-                    <div style={{ fontSize: "1.4rem", color: "#fff" }}>{assignedCompleted + myCompleted}/{assignedTasks.length + myTasks.length}</div>
-                    <div style={{ fontSize: "0.72rem", color: overdueAssigned > 0 ? "#ff6b6b" : "#4a7a5e", marginTop: "4px" }}>{overdueAssigned > 0 ? `${overdueAssigned} overdue` : "completed"}</div>
-                  </button>
-                  {assignedTasks.filter(t => !t.completed).slice(0, 3).map(t => (
-                    <div key={t.id} style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}>
-                      <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#c8a882", flexShrink: 0 }} />
-                      <div style={{ fontSize: "0.7rem", color: "#d4c87a", lineHeight: 1.3 }}>{t.task}</div>
-                    </div>
-                  ))}
                 </div>
                 <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", textAlign: "center" as const }}>
                   <div style={{ fontSize: "3rem", color: "#1B3A2D", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent ?? "—"}</div>
