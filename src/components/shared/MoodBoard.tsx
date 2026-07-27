@@ -67,6 +67,7 @@ export default function MoodBoard({ eventSlug, userEmail, userName }: Props) {
       const ext = selectedFile.name.split(".").pop() || "jpg";
       const path = `${eventSlug}/${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("mood-board").upload(path, selectedFile, { upsert: true });
+      console.log("Upload path:", path, "Error:", error);
       if (!error) {
         const { data: urlData } = supabase.storage.from("mood-board").getPublicUrl(path);
         imageUrl = urlData.publicUrl;
