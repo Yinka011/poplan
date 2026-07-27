@@ -300,14 +300,14 @@ export default function BrandCityDashboard() {
           <div style={{ background: "#E8C97A11", borderRadius: "8px", padding: "8px 10px", marginBottom: "6px", border: "1px solid #E8C97A33" }}>
             <div style={{ fontSize: "0.72rem", color: "#E8C97A", marginBottom: "6px", letterSpacing: "0.05em" }}>SUGGESTED BY YOUR PLANNER</div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={() => updateBrandStatus(table, itemId, "approved")} title="Approve" style={{ padding: "4px 14px", background: "transparent", color: "#4a7c59", border: "1px solid #4a7c59", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontFamily: "Georgia, serif" }}>Approve</button>
+              <button onClick={() => updateBrandStatus(table, itemId, "approved")} title="Approve" style={{ padding: "4px 14px", background: "transparent", color: "#E8C97A", border: "1px solid #4a7c59", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontFamily: "Georgia, serif" }}>Approve</button>
               <button onClick={() => updateBrandStatus(table, itemId, "rejected")} title="Decline" style={{ padding: "4px 14px", background: "transparent", color: "#c0392b", border: "1px solid #c0392b", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontFamily: "Georgia, serif" }}>Decline</button>
             </div>
           </div>
         )}
         {brandStatus === "approved" && (
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-            <span style={{ fontSize: "0.72rem", color: "#4a7c59", border: "1px solid #4a7c5966", padding: "2px 10px", borderRadius: "20px" }}>✓ Approved</span>
+            <span style={{ fontSize: "0.72rem", color: "#E8C97A", border: "1px solid #4a7c5966", padding: "2px 10px", borderRadius: "20px" }}>✓ Approved</span>
             <button onClick={() => updateBrandStatus(table, itemId, "suggested")} style={{ fontSize: "0.68rem", color: "#4a5a52", background: "transparent", border: "none", cursor: "pointer" }}>Undo</button>
           </div>
         )}
@@ -330,7 +330,7 @@ export default function BrandCityDashboard() {
       {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "#00000033", zIndex: 15 }} />}
       <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: "240px", background: "#1B3A2D", zIndex: 16, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.3s ease", display: "flex", flexDirection: "column" as const }}>
         <div style={{ padding: "2rem 1.5rem 1.5rem", borderBottom: "1px solid #2a4d3e" }}>
-          <div style={{ fontSize: "0.65rem", color: "#4a7a5e", letterSpacing: "0.15em", marginBottom: "8px" }}>YOUR EVENT</div>
+          <div style={{ fontSize: "0.65rem", color: "#ffffff88", letterSpacing: "0.15em", marginBottom: "8px" }}>YOUR EVENT</div>
           <div style={{ fontSize: "1.1rem", color: "#fff", letterSpacing: "0.05em" }}>{cityName}</div>
           {datesLabel && <div style={{ fontSize: "0.75rem", color: "#c8a882", marginTop: "4px" }}>{datesLabel}</div>}
           {pendingInvoices > 0 && (
@@ -341,24 +341,24 @@ export default function BrandCityDashboard() {
         </div>
         <nav style={{ flex: 1, padding: "1rem 0" }}>
           {tabs.map(tab => (
-            <a key={tab.key} onClick={() => { setActiveTab(tab.key as any); setSidebarOpen(false); }} style={{ display: "flex", alignItems: "center", padding: "12px 1.5rem", fontSize: "0.82rem", color: activeTab === tab.key ? "#fff" : "#4a7a5e", background: activeTab === tab.key ? "#2a4d3e" : "transparent", textDecoration: "none", borderLeft: activeTab === tab.key ? "2px solid #c8a882" : "2px solid transparent", cursor: "pointer", letterSpacing: "0.05em", transition: "all 0.15s" }}>
+            <a key={tab.key} onClick={() => { setActiveTab(tab.key as any); setSidebarOpen(false); }} style={{ display: "flex", alignItems: "center", padding: "12px 1.5rem", fontSize: "0.82rem", color: activeTab === tab.key ? "#fff" : "#ffffff88", background: activeTab === tab.key ? "#1B3A2D" : "transparent", textDecoration: "none", borderLeft: activeTab === tab.key ? "2px solid #c8a882" : "2px solid transparent", cursor: "pointer", letterSpacing: "0.05em", transition: "all 0.15s" }}>
               {tab.label}
             </a>
           ))}
         </nav>
         <div style={{ padding: "1.5rem", borderTop: "1px solid #2a4d3e" }}>
-          <Link href="/brand-organizer" style={{ fontSize: "0.75rem", color: "#4a7a5e", textDecoration: "none", letterSpacing: "0.08em" }}>← ALL CITIES</Link>
+          <Link href="/brand-organizer" style={{ fontSize: "0.75rem", color: "#ffffff88", textDecoration: "none", letterSpacing: "0.08em" }}>← ALL CITIES</Link>
         </div>
       </div>
 
       <div style={{ background: "#1B3A2D", padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem", position: "sticky" as const, top: 0, zIndex: 14 }}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px", display: "flex", flexDirection: "column" as const, gap: "5px" }}>
-          <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "#c8a882" : "#4a7a5e", transition: "all 0.2s", transform: sidebarOpen ? "rotate(45deg) translate(4px, 4px)" : "none" }} />
-          <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "transparent" : "#4a7a5e", transition: "all 0.2s" }} />
-          <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "#c8a882" : "#4a7a5e", transition: "all 0.2s", transform: sidebarOpen ? "rotate(-45deg) translate(4px, -4px)" : "none" }} />
+          <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "#c8a882" : "#ffffff88", transition: "all 0.2s", transform: sidebarOpen ? "rotate(45deg) translate(4px, 4px)" : "none" }} />
+          <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "transparent" : "#ffffff88", transition: "all 0.2s" }} />
+          <span style={{ display: "block", width: "22px", height: "1px", background: sidebarOpen ? "#c8a882" : "#ffffff88", transition: "all 0.2s", transform: sidebarOpen ? "rotate(-45deg) translate(4px, -4px)" : "none" }} />
         </button>
         <div style={{ fontSize: "0.85rem", color: "#fff", letterSpacing: "0.1em" }}>{cityName.toUpperCase()}</div>
-        <div style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#4a7a5e", letterSpacing: "0.1em" }}>{tabs.find(t => t.key === activeTab)?.label.toUpperCase()}</div>
+        <div style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#ffffff88", letterSpacing: "0.1em" }}>{tabs.find(t => t.key === activeTab)?.label.toUpperCase()}</div>
       </div>
 
       <div style={{ padding: "2rem 2.5rem", maxWidth: "1000px", margin: "0 auto" }}>
@@ -370,27 +370,27 @@ export default function BrandCityDashboard() {
               <div style={{ position: "absolute", top: 0, right: 0, width: "200px", height: "200px", background: "radial-gradient(circle, #E8C97A22 0%, transparent 70%)", pointerEvents: "none" as const }} />
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "2rem", alignItems: "start" }}>
                 <div>
-                  <div style={{ fontSize: "0.6rem", color: "#4a7a5e", letterSpacing: "0.2em", marginBottom: "8px" }}>LOCATION</div>
+                  <div style={{ fontSize: "0.6rem", color: "#ffffff88", letterSpacing: "0.2em", marginBottom: "8px" }}>LOCATION</div>
                   <div style={{ fontSize: "1.8rem", fontWeight: "normal", letterSpacing: "0.05em", lineHeight: 1.1 }}>{cityName}</div>
                   {datesLabel && <div style={{ fontSize: "0.85rem", color: "#c8a882", marginTop: "8px" }}>{datesLabel}</div>}
-                  {venueName && <div style={{ fontSize: "0.75rem", color: "#4a7a5e", marginTop: "6px" }}>📍 {venueName}</div>}
+                  {venueName && <div style={{ fontSize: "0.75rem", color: "#ffffff88", marginTop: "6px" }}>📍 {venueName}</div>}
                   {venueAddress && <div style={{ fontSize: "0.7rem", color: "#5a4a3a", marginTop: "2px" }}>{venueAddress}</div>}
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.6rem", color: "#4a7a5e", letterSpacing: "0.2em", marginBottom: "8px" }}>BUDGET</div>
+                  <div style={{ fontSize: "0.6rem", color: "#ffffff88", letterSpacing: "0.2em", marginBottom: "8px" }}>BUDGET</div>
                   <div style={{ fontSize: "1.4rem", color: isOverBudget ? "#ff6b6b" : "#c8a882" }}>${totalSpent.toFixed(0)}</div>
-                  {budget > 0 && <div style={{ fontSize: "0.72rem", color: isOverBudget ? "#ff6b6b" : "#4a7a5e", marginTop: "4px" }}>of ${budget.toFixed(0)}</div>}
+                  {budget > 0 && <div style={{ fontSize: "0.72rem", color: isOverBudget ? "#ff6b6b" : "#ffffff88", marginTop: "4px" }}>of ${budget.toFixed(0)}</div>}
                   {budget > 0 && (
-                    <div style={{ height: "2px", background: "#2a4d3e", borderRadius: "2px", marginTop: "8px" }}>
+                    <div style={{ height: "2px", background: "#1B3A2D", borderRadius: "2px", marginTop: "8px" }}>
                       <div style={{ height: "100%", width: `${Math.min((totalSpent / budget) * 100, 100)}%`, background: isOverBudget ? "#ff6b6b" : "#c8a882", borderRadius: "2px" }} />
                     </div>
                   )}
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.6rem", color: "#4a7a5e", letterSpacing: "0.2em", marginBottom: "8px" }}>TASKS</div>
+                  <div style={{ fontSize: "0.6rem", color: "#ffffff88", letterSpacing: "0.2em", marginBottom: "8px" }}>TASKS</div>
                   <button onClick={() => setActiveTab("tasks")} style={{ background: "transparent", border: "none", cursor: "pointer", textAlign: "left" as const, padding: 0 }}>
                     <div style={{ fontSize: "1.4rem", color: "#fff" }}>{assignedCompleted + myCompleted}/{assignedTasks.length + myTasks.length}</div>
-                    <div style={{ fontSize: "0.72rem", color: overdueAssigned > 0 ? "#ff6b6b" : "#4a7a5e", marginTop: "4px" }}>{overdueAssigned > 0 ? `${overdueAssigned} overdue` : "completed"}</div>
+                    <div style={{ fontSize: "0.72rem", color: overdueAssigned > 0 ? "#ff6b6b" : "#ffffff88", marginTop: "4px" }}>{overdueAssigned > 0 ? `${overdueAssigned} overdue` : "completed"}</div>
                   </button>
                 </div>
                 <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", textAlign: "center" as const }}>
@@ -422,7 +422,7 @@ export default function BrandCityDashboard() {
                 <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "12px" }}>INVOICES</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
                   <div><div style={{ fontSize: "1.4rem", color: "#E8C97A" }}>{pendingInvoices}</div><div style={{ fontSize: "0.65rem", color: "#4a5a52" }}>Pending</div></div>
-                  <div><div style={{ fontSize: "1.4rem", color: "#4a7c59" }}>{invoices.filter(i => i.status === "approved").length}</div><div style={{ fontSize: "0.65rem", color: "#4a5a52" }}>Approved</div></div>
+                  <div><div style={{ fontSize: "1.4rem", color: "#E8C97A" }}>{invoices.filter(i => i.status === "approved").length}</div><div style={{ fontSize: "0.65rem", color: "#4a5a52" }}>Approved</div></div>
                   <div><div style={{ fontSize: "1.4rem", color: "#c0392b" }}>{invoices.filter(i => i.status === "rejected").length}</div><div style={{ fontSize: "0.65rem", color: "#4a5a52" }}>Rejected</div></div>
                 </div>
               </div>
@@ -495,7 +495,7 @@ export default function BrandCityDashboard() {
                         {items.map(item => (
                           <div key={item.id} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", border: "1px solid #ede8e2", borderLeft: item.brand_status === "approved" ? "3px solid #4a7c59" : item.brand_status === "rejected" ? "3px solid #c0392b" : item.brand_status === "suggested" ? "3px solid #E8C97A" : "1px solid #ede8e2" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><div style={{ fontSize: "0.95rem", color: "#1B3A2D", fontWeight: 500 }}>{item.item}</div>{invoices.filter(inv => inv.item_name === item.item && inv.status === "approved").length > 0 && <span style={{ fontSize: "0.65rem", background: "#4a7c5922", color: "#4a7c59", padding: "1px 6px", borderRadius: "10px" }}>✓ paid</span>}</div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><div style={{ fontSize: "0.95rem", color: "#1B3A2D", fontWeight: 500 }}>{item.item}</div>{invoices.filter(inv => inv.item_name === item.item && inv.status === "approved").length > 0 && <span style={{ fontSize: "0.65rem", background: "#4a7c5922", color: "#E8C97A", padding: "1px 6px", borderRadius: "10px" }}>✓ paid</span>}</div>
                               {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#E8C97A" }}>${Number(item.cost).toFixed(2)}</div>}
                             </div>
                             {item.quantity > 0 && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginBottom: "2px" }}>Qty: {item.quantity}</div>}
@@ -534,10 +534,10 @@ export default function BrandCityDashboard() {
                   <div key={item.id} style={{ padding: "1rem 1.25rem", borderBottom: i < refresh.length - 1 ? "1px solid #f5f2ee" : "none" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><div style={{ fontSize: "0.9rem", color: "#1B3A2D" }}>{item.item}</div>{invoices.filter(inv => inv.item_name === item.item && inv.status === "approved").length > 0 && <span style={{ fontSize: "0.65rem", background: "#4a7c5922", color: "#4a7c59", padding: "1px 6px", borderRadius: "10px" }}>✓ paid</span>}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><div style={{ fontSize: "0.9rem", color: "#1B3A2D" }}>{item.item}</div>{invoices.filter(inv => inv.item_name === item.item && inv.status === "approved").length > 0 && <span style={{ fontSize: "0.65rem", background: "#4a7c5922", color: "#E8C97A", padding: "1px 6px", borderRadius: "10px" }}>✓ paid</span>}</div>
                         {item.quantity && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>{item.quantity}</div>}
                       </div>
-                      {item.cost > 0 && <span style={{ fontSize: "0.85rem", color: "#4a7c59" }}>${Number(item.cost).toFixed(2)}</span>}
+                      {item.cost > 0 && <span style={{ fontSize: "0.85rem", color: "#E8C97A" }}>${Number(item.cost).toFixed(2)}</span>}
                     </div>
                     <BrandApproval itemName={item.item} table="planning_refreshments" itemId={item.id} brandStatus={item.brand_status} />
                   </div>
@@ -622,7 +622,7 @@ export default function BrandCityDashboard() {
 
             {[
               { label: "Decor", items: decor.map(d => ({ name: d.item, cost: d.cost, detail: d.category })), total: totalDecor, color: "#E8C97A" },
-              { label: "Refreshments", items: refresh.map(r => ({ name: r.item, cost: r.cost, detail: r.quantity })), total: totalRefresh, color: "#4a7c59" },
+              { label: "Refreshments", items: refresh.map(r => ({ name: r.item, cost: r.cost, detail: r.quantity })), total: totalRefresh, color: "#E8C97A" },
               { label: "Staffing", items: staff.map(s => ({ name: s.name, cost: (s.shifts || []).reduce((h, sh) => h + Number(sh.hours), 0) * Number(s.pay_rate), detail: s.notes })), total: totalStaff, color: "#5b7fa6" },
             ].map(section => section.total > 0 ? (
               <div key={section.label} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #ede8e2" }}>
@@ -660,7 +660,7 @@ export default function BrandCityDashboard() {
               </div>
             )}
             <div style={{ background: "#1B3A2D", borderRadius: "14px", padding: "1rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "0.72rem", color: "#4a7a5e", letterSpacing: "0.15em" }}>TOTAL SPEND</span>
+              <span style={{ fontSize: "0.72rem", color: "#ffffff88", letterSpacing: "0.15em" }}>TOTAL SPEND</span>
               <span style={{ fontSize: "1.2rem", color: "#fff" }}>${totalSpent.toFixed(2)}</span>
             </div>
           </div>
