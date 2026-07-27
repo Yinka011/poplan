@@ -386,7 +386,6 @@ export default function BrandCityDashboard() {
                     </div>
                   )}
                 </div>
-                <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", textAlign: "center" as const }}>
                 <div>
                   <div style={{ fontSize: "0.6rem", color: "#4a7a5e", letterSpacing: "0.2em", marginBottom: "8px" }}>TASKS</div>
                   <button onClick={() => setActiveTab("tasks")} style={{ background: "transparent", border: "none", cursor: "pointer", textAlign: "left" as const, padding: 0 }}>
@@ -394,6 +393,7 @@ export default function BrandCityDashboard() {
                     <div style={{ fontSize: "0.72rem", color: overdueAssigned > 0 ? "#ff6b6b" : "#4a7a5e", marginTop: "4px" }}>{overdueAssigned > 0 ? `${overdueAssigned} overdue` : "completed"}</div>
                   </button>
                 </div>
+                <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", textAlign: "center" as const }}>
                   <div style={{ fontSize: "3rem", color: "#1B3A2D", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent ?? "—"}</div>
                   <div style={{ fontSize: "0.6rem", color: "#4a5a52", marginTop: "6px", letterSpacing: "0.1em" }}>DAYS TO EVENT</div>
                 </div>
