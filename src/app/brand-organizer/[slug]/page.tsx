@@ -440,6 +440,27 @@ export default function BrandCityDashboard() {
               </div>
             </div>
 
+            {/* Planner tasks card */}
+            {assignedTasks.length > 0 && (
+              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2", marginBottom: "1rem", cursor: "pointer" }} onClick={() => setActiveTab("tasks")}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.15em" }}>TASKS FROM YOUR PLANNER</div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>{assignedCompleted}/{assignedTasks.length} complete</div>
+                </div>
+                <div style={{ height: "3px", background: "#f0f4f1", borderRadius: "2px", marginBottom: "12px", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${assignedTasks.length > 0 ? (assignedCompleted / assignedTasks.length) * 100 : 0}%`, background: "#1B3A2D", borderRadius: "2px", transition: "width 0.3s" }} />
+                </div>
+                {assignedTasks.filter(t => !t.completed).slice(0, 4).map(t => (
+                  <div key={t.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0", borderBottom: "1px solid #f8f5f2" }}>
+                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: t.due_date && new Date(t.due_date) < new Date() ? "#c0392b" : "#E8C97A", flexShrink: 0 }} />
+                    <div style={{ fontSize: "0.82rem", color: "#1B3A2D", flex: 1 }}>{t.task}</div>
+                    {t.due_date && <div style={{ fontSize: "0.68rem", color: "#4a5a52" }}>{new Date(t.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>}
+                  </div>
+                ))}
+                <div style={{ fontSize: "0.75rem", color: "#E8C97A", marginTop: "10px" }}>View all tasks →</div>
+              </div>
+            )}
+
             {isOverBudget && (
               <div style={{ background: "#ff6b6b11", border: "1px solid #ff6b6b33", borderRadius: "14px", padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ fontSize: "1.2rem" }}>⚠️</span>
