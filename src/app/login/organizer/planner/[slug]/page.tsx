@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -63,7 +64,8 @@ export default function PlannerDashboard() {
   const [staff, setStaff] = useState<StaffItem[]>([]);
   const [manualExpenses, setManualExpenses] = useState<ManualExpense[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "mytasks" | "brandtasks" | "chat" | "receipts" | "moodboard">("overview");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "mytasks" | "brandtasks" | "chat" | "receipts" | "moodboard">((searchParams.get("tab") as any) || "overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [userEmail, setUserEmail] = useState("");

@@ -237,6 +237,11 @@ export default function BrandCityDashboard() {
   const totalSpent = totalDecor + totalRefresh + totalStaff + totalManual;
   const isOverBudget = budget > 0 && totalSpent > budget;
 
+  const deleteExpense = async (id: number) => {
+    await supabase.from("event_expenses").delete().eq("id", id);
+    setExpenses(prev => prev.filter(e => e.id !== id));
+  };
+
   const pendingInvoices = invoices.filter(i => i.status === "pending").length;
   const assignedCompleted = assignedTasks.filter(t => t.completed).length;
   const myCompleted = myTasks.filter(t => t.completed).length;
@@ -252,7 +257,7 @@ export default function BrandCityDashboard() {
   const tabs = [
     { key: "overview", label: "Overview" },
     { key: "planning", label: "Planning Hub" },
-    { key: "budget", label: "Budget" },
+    { key: "budget", label: "Expenses" },
     { key: "invoices", label: `Invoices${pendingInvoices > 0 ? ` (${pendingInvoices})` : ""}` },
     { key: "tasks", label: `Tasks${overdueAssigned > 0 ? " ⚠" : ""}` },
     { key: "shipments", label: "Shipments" },
