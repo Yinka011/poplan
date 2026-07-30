@@ -24,7 +24,7 @@ const typeIcon: Record<string, string> = {
   default: "🔔",
 };
 
-export default function OrganizerBell({ event }: { event: string }) {
+export default function OrganizerBell({ event, slug }: { event: string; slug: string }) {
   const [notifications, setNotifications] = useState<OrgNotification[]>([]);
   const [open, setOpen] = useState(false);
   const unread = notifications.filter(n => !n.read).length;
@@ -67,7 +67,7 @@ export default function OrganizerBell({ event }: { event: string }) {
 
   return (
     <div style={{ position: "relative" as const }}>
-      <button onClick={() => { setOpen(!open); if (!open && unread > 0) markAllRead(); }} style={{ background: "transparent", border: "none", cursor: "pointer", position: "relative" as const, padding: "4px" }}>
+      <a href={`/login/organizer/events/${slug}/notifications`} style={{ background: "transparent", border: "none", cursor: "pointer", position: "relative" as const, padding: "4px", textDecoration: "none", display: "inline-block" }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -77,9 +77,9 @@ export default function OrganizerBell({ event }: { event: string }) {
             {unread > 9 ? "9+" : unread}
           </div>
         )}
-      </button>
+      </a>
 
-      {open && (
+      {false && (
         <div style={{ position: "absolute" as const, right: 0, top: "36px", width: "340px", background: "#fff", borderRadius: "14px", boxShadow: "0 8px 40px #00000022", border: "1px solid #e4ebe6", zIndex: 100, maxHeight: "480px", overflow: "hidden", display: "flex", flexDirection: "column" as const }}>
           <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid #f0f4f1", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>Brand activity</div>
