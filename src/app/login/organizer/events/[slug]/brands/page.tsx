@@ -15,6 +15,8 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 
 export default function BrandsPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [resendingAll, setResendingAll] = useState(false);
+  const [resendCount, setResendCount] = useState(0);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [selected, setSelected] = useState<Brand | null>(null);
@@ -53,6 +55,24 @@ export default function BrandsPage() {
   const getCompletedTasks = (email: string) =>
     tasks.filter(t => t.brand_email === email && t.completed).map(t => t.task);
 
+  const resendAllInvites = async () => {
+    if (!confirm(`Resend invites to all ${brands.length} brands? They will receive a new access link.`)) return;
+    setResendingAll(true);
+    setResendCount(0);
+    for (const brand of brands) {
+      if (brand.email) {
+        await fetch("/api/invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: brand.email }),
+        });
+        setResendCount(prev => prev + 1);
+      }
+    }
+    setResendingAll(false);
+    alert("All invites resent successfully!");
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
@@ -69,7 +89,25 @@ export default function BrandsPage() {
               const { completed, total, percent } = getProgress(brand.email);
               const progress = getStatusLabel(percent);
               const payStatus = statusColors[brand.status] || statusColors.Unpaid;
-              return (
+              const resendAllInvites = async () => {
+    if (!confirm(`Resend invites to all ${brands.length} brands? They will receive a new access link.`)) return;
+    setResendingAll(true);
+    setResendCount(0);
+    for (const brand of brands) {
+      if (brand.email) {
+        await fetch("/api/invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: brand.email }),
+        });
+        setResendCount(prev => prev + 1);
+      }
+    }
+    setResendingAll(false);
+    alert("All invites resent successfully!");
+  };
+
+  return (
                 <div key={brand.id} onClick={() => setSelected(selected?.id === brand.id ? null : brand)} style={{ background: selected?.id === brand.id ? "#fdf8f3" : "#fff", borderRadius: "12px", padding: "1.25rem", marginBottom: "10px", border: selected?.id === brand.id ? "1px solid #E8C97A" : "1px solid #e4ebe6", cursor: "pointer", transition: "all 0.15s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
                     <div>
@@ -107,7 +145,25 @@ export default function BrandsPage() {
               {deadlines.map(deadline => {
                 const completedTasks = getCompletedTasks(selected.email);
                 const done = completedTasks.includes(deadline.task);
-                return (
+                const resendAllInvites = async () => {
+    if (!confirm(`Resend invites to all ${brands.length} brands? They will receive a new access link.`)) return;
+    setResendingAll(true);
+    setResendCount(0);
+    for (const brand of brands) {
+      if (brand.email) {
+        await fetch("/api/invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: brand.email }),
+        });
+        setResendCount(prev => prev + 1);
+      }
+    }
+    setResendingAll(false);
+    alert("All invites resent successfully!");
+  };
+
+  return (
                   <div key={deadline.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 0", borderBottom: "1px solid #f0f4f1" }}>
                     <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: done ? "#E8C97A" : "#f0f4f1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       {done && <span style={{ color: "#fff", fontSize: "9px" }}>✓</span>}
