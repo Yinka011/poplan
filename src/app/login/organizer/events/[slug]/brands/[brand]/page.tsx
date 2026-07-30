@@ -326,7 +326,12 @@ export default function OrganizerBrandPage() {
                   {inviting ? "..." : "✉"}
                 </button>
               ) : (
-                <span style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "20px", background: "#4a7c5922", color: "#4a7c59" }}>✓ Invited</span>
+                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "20px", background: "#4a7c5922", color: "#4a7c59" }}>✓ Invited</span>
+                  <button onClick={inviteBrand} disabled={inviting} title="Resend invite" style={{ background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "6px 10px", cursor: "pointer", color: "#4a5a52", fontSize: "0.75rem", fontFamily: "Georgia, serif" }}>
+                    {inviting ? "..." : "Resend invite"}
+                  </button>
+                </div>
               )}
             </div>
           </div>
