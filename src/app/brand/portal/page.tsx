@@ -1,4 +1,5 @@
 "use client";
+import { notifyOrganizer } from "@/lib/organizerNotify";
 import { sendEmail, emailTemplate } from "@/lib/email";
 import NotificationBell from "@/components/shared/NotificationBell";
 import { useEffect, useState } from "react";
@@ -129,6 +130,19 @@ export default function BrandPortal() {
 
       setLoading(false);
 
+      // Notify organizer of brand login
+      const loginKey = `brand_login_notified_${user.email}`;
+      if (!localStorage.getItem(loginKey)) {
+        await notifyOrganizer({
+          event: resolvedEvent,
+          brandEmail: resolvedBrandEmail,
+          brandName: brand?.name || resolvedBrandEmail,
+          type: "login",
+          message: `logged in to their portal for the first time`,
+        });
+        localStorage.setItem(loginKey, "true");
+      }
+
       // Show tutorial on first visit
       const tutorialKey = `brand_tutorial_seen_${user.email}`;
       if (!localStorage.getItem(tutorialKey)) {
@@ -149,6 +163,15 @@ export default function BrandPortal() {
     const now = new Date().toISOString();
     await supabase.from("brands").update({ shipped: newShipped, shipped_at: newShipped ? now : null }).eq("id", brand.id);
     setBrand(prev => prev ? { ...prev, shipped: newShipped, shipped_at: newShipped ? now : "" } : prev);
+    if (newShipped && brand) {
+      await notifyOrganizer({
+        event: brand.event || "Atlanta",
+        brandEmail,
+        brandName: brand.name,
+        type: "shipment",
+        message: `marked their products as shipped`,
+      });
+    }
     setMarkingShipped(false);
   };
 
@@ -180,6 +203,13 @@ export default function BrandPortal() {
     }).select().single();
     if (data) {
       setMessages(prev => [...prev, data]);
+      await notifyOrganizer({
+        event: brand?.event || "Atlanta",
+        brandEmail,
+        brandName: brand?.name || brandEmail,
+        type: "message",
+        message: `sent a message: "${newMessage.slice(0, 60)}${newMessage.length > 60 ? "..." : ""}"`,
+      });
       // Email the organizer
       await sendEmail({
         to: "aocurates@gmail.com",

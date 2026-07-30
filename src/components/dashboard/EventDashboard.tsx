@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import OrganizerBell from "@/components/dashboard/OrganizerBell";
 import { useEffect, useState } from "react";
 import Checklist from "@/components/dashboard/Checklist";
 import MarketingDeadlines from "@/components/dashboard/MarketingDeadlines";
@@ -87,7 +88,10 @@ export function EventDashboard({ event }: EventDashboardProps) {
       {/* Header */}
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link href="/login/organizer/events" className="text-sm font-medium text-brown-600/70 transition-colors hover:text-brown-800">
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", background: "#1B3A2D", padding: "8px 16px", borderRadius: "10px" }}>
+          <OrganizerBell event={event.city} />
+        </div>
+        <Link href="/login/organizer/events" className="text-sm font-medium text-brown-600/70 transition-colors hover:text-brown-800">
             ← All events
           </Link>
           <Link href={`/login/organizer/events/${event.slug}/sales`} style={{ fontSize: "0.82rem", padding: "5px 14px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif" }}>Sales & Payouts →</Link>

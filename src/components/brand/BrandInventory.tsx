@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import { notifyOrganizer } from "@/lib/organizerNotify";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -163,6 +164,13 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
       await supabase.from("brand_products").update({ square_catalog_id: "uploaded" }).eq("id", product.id);
       setProducts(prev => prev.map(p => p.id === product.id ? { ...p, square_catalog_id: "uploaded" } : p));
       alert(`${product.name} uploaded to Square!`);
+      await notifyOrganizer({
+        event,
+        brandEmail,
+        brandName,
+        type: "square_upload",
+        message: `uploaded ${product.name} to Square POS`,
+      });
     } else {
       alert("Error: " + (data.error || "Upload failed"));
     }
