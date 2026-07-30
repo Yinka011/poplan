@@ -88,13 +88,13 @@ export function EventDashboard({ event }: EventDashboardProps) {
       {/* Header */}
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", background: "#1B3A2D", padding: "8px 16px", borderRadius: "10px" }}>
-          <OrganizerBell event={event.city} />
-        </div>
-        <Link href="/login/organizer/events" className="text-sm font-medium text-brown-600/70 transition-colors hover:text-brown-800">
+          <Link href="/login/organizer/events" className="text-sm font-medium text-brown-600/70 transition-colors hover:text-brown-800">
             ← All events
           </Link>
           <Link href={`/login/organizer/events/${event.slug}/sales`} style={{ fontSize: "0.82rem", padding: "5px 14px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif" }}>Sales & Payouts →</Link>
+          <div style={{ background: "#1B3A2D", padding: "6px 12px", borderRadius: "8px" }}>
+            <OrganizerBell event={event.city} />
+          </div>
         </div>
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-medium text-brown-800 sm:text-4xl">
           {event.name}
