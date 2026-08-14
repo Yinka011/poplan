@@ -599,15 +599,28 @@ export default function PlannerDashboard() {
 
             <div style={{ background: "#f8faf8", borderRadius: "10px", padding: "1rem", border: "1px solid #f0f4f1", marginBottom: "1.5rem" }}>
               <div style={{ fontSize: "0.82rem", color: "#1B3A2D", marginBottom: "10px", fontWeight: 500 }}>Upload new receipt or invoice</div>
-              <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "4px" }}>LINK TO BUDGET ITEM</div>
-              <select value={newReceipt.description} onChange={e => setNewReceipt({...newReceipt, description: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const, background: "#fff" }}>
-                <option value="">Select a budget item...</option>
-                {decor.map(d => <option key={`decor-${d.id}`} value={d.item}>{d.item} (Decor · ${Number(d.cost).toFixed(2)})</option>)}
-                {refresh.map(r => <option key={`refresh-${r.id}`} value={r.item}>{r.item} (Refreshments · ${Number(r.cost).toFixed(2)})</option>)}
-                {staff.map(s => <option key={`staff-${s.id}`} value={s.name}>{s.name} (Staff)</option>)}
-                {manualExpenses.map(e => <option key={`exp-${e.id}`} value={e.item}>{e.item} ({e.category} · ${Number(e.cost).toFixed(2)})</option>)}
-                <option value="Other">Other (not in budget)</option>
-              </select>
+              <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "4px" }}>RECEIPT NAME / VENDOR</div>
+              <input placeholder="e.g. Instacart, LuxeBalloons, Videographer" value={newReceipt.description} onChange={e => setNewReceipt({...newReceipt, description: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
+              <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "6px" }}>SELECT ITEMS COVERED BY THIS RECEIPT</div>
+              <div style={{ background: "#f8faf8", borderRadius: "8px", padding: "8px", border: "1px solid #e4ebe6", marginBottom: "8px", maxHeight: "200px", overflowY: "auto" as const }}>
+                {[
+                  ...decor.filter(d => d.cost > 0).map(d => ({ key: `d-${d.id}`, name: d.item, cost: d.cost, cat: "Decor" })),
+                  ...refresh.filter(r => r.cost > 0).map(r => ({ key: `r-${r.id}`, name: r.item, cost: r.cost, cat: "Refreshments" })),
+                  ...manualExpenses.filter(e => e.cost > 0).map(e => ({ key: `e-${e.id}`, name: e.item, cost: e.cost, cat: e.category })),
+                ].map(item => (
+                  <div key={item.key} onClick={() => setSelectedItems(prev => prev.includes(item.name) ? prev.filter(i => i !== item.name) : [...prev, item.name])} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px", borderRadius: "6px", cursor: "pointer", background: selectedItems.includes(item.name) ? "#f0f4f1" : "transparent", marginBottom: "2px" }}>
+                    <div style={{ width: "14px", height: "14px", borderRadius: "3px", border: "1.5px solid " + (selectedItems.includes(item.name) ? "#1B3A2D" : "#e4ebe6"), background: selectedItems.includes(item.name) ? "#1B3A2D" : "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {selectedItems.includes(item.name) && <span style={{ color: "#fff", fontSize: "10px" }}>✓</span>}
+                    </div>
+                    <span style={{ fontSize: "0.82rem", color: "#1c1714", flex: 1 }}>{item.name}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#4a5a52" }}>{item.cat}</span>
+                    <span style={{ fontSize: "0.82rem", color: "#E8C97A" }}>${Number(item.cost).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+              {selectedItems.length > 0 && (
+                <div style={{ fontSize: "0.75rem", color: "#1B3A2D", marginBottom: "8px" }}>{selectedItems.length} item{selectedItems.length !== 1 ? "s" : ""} selected</div>
+              )}
               <input placeholder="Amount $" value={newReceipt.amount} onChange={e => setNewReceipt({...newReceipt, amount: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
               <div onClick={() => document.getElementById("receipt-upload")?.click()} style={{ border: "2px dashed #e4ebe6", borderRadius: "8px", padding: "12px", textAlign: "center" as const, cursor: "pointer", marginBottom: "8px", background: selectedReceiptFile ? "#f0faf0" : "#fff" }}>
                 <input id="receipt-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => setSelectedReceiptFile(e.target.files?.[0] || null)} />
