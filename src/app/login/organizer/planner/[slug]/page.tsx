@@ -633,7 +633,12 @@ export default function PlannerDashboard() {
 
             {/* Budget items without receipts */}
             {(() => {
-              const receiptedItems = receipts.map(r => r.description);
+              const receiptedItems = receipts.flatMap(r => {
+                try {
+                  const parsed = JSON.parse(r.description || "[]");
+                  return Array.isArray(parsed) ? parsed : [r.description];
+                } catch { return [r.description]; }
+              });
               const allItems = [
                 ...decor.filter(d => d.cost > 0).map(d => ({ name: d.item, cost: d.cost, category: "Decor" })),
                 ...refresh.filter(r => r.cost > 0).map(r => ({ name: r.item, cost: r.cost, category: "Refreshments" })),
