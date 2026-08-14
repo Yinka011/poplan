@@ -127,7 +127,7 @@ export default function NotificationsPage() {
                     <div style={{ fontSize: "0.82rem", color: "#4a5a52", lineHeight: 1.5 }}>{n.message}</div>
                     <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginTop: "4px", padding: "2px 8px", background: "#f0f4f1", borderRadius: "10px", display: "inline-block" }}>{typeLabel[n.type] || "Activity"}</div>
                   </div>
-                </div>
+                </a>
               ))}
             </div>
           ))
