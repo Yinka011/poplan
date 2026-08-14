@@ -126,12 +126,13 @@ export default function OrganizerBrandPage() {
     if (!brandData) { setLoading(false); return; }
     setBrand(brandData);
 
-    const [deadlineRes, taskRes, memberRes, noteRes, approvalRes] = await Promise.all([
+    const [deadlineRes, taskRes, memberRes, noteRes, approvalRes, messagesRes] = await Promise.all([
       supabase.from("event_deadlines").select("*").eq("event", "Atlanta").order("id"),
       supabase.from("brand_tasks").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta"),
       supabase.from("brand_members").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta"),
       supabase.from("brand_notes").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta").order("created_at", { ascending: false }),
       supabase.from("file_approvals").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta"),
+      supabase.from("brand_messages").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta").order("created_at"),
     ]);
 
     if (deadlineRes.data) setDeadlines(deadlineRes.data);
@@ -139,6 +140,7 @@ export default function OrganizerBrandPage() {
     if (memberRes.data) setMembers(memberRes.data);
     if (noteRes.data) setNotes(noteRes.data);
     if (approvalRes.data) setApprovals(approvalRes.data);
+    if (messagesRes.data) setMessages(messagesRes.data);
 
     await fetchFiles(brandData.email);
     setLoading(false);
