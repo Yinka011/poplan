@@ -598,7 +598,15 @@ export default function PlannerDashboard() {
 
             <div style={{ background: "#f8faf8", borderRadius: "10px", padding: "1rem", border: "1px solid #f0f4f1", marginBottom: "1.5rem" }}>
               <div style={{ fontSize: "0.82rem", color: "#1B3A2D", marginBottom: "10px", fontWeight: 500 }}>Upload new receipt or invoice</div>
-              <input placeholder="Description e.g. Venue deposit" value={newReceipt.description} onChange={e => setNewReceipt({...newReceipt, description: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
+              <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "4px" }}>LINK TO BUDGET ITEM</div>
+              <select value={newReceipt.description} onChange={e => setNewReceipt({...newReceipt, description: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const, background: "#fff" }}>
+                <option value="">Select a budget item...</option>
+                {decor.map(d => <option key={`decor-${d.id}`} value={d.item}>{d.item} (Decor · ${Number(d.cost).toFixed(2)})</option>)}
+                {refresh.map(r => <option key={`refresh-${r.id}`} value={r.item}>{r.item} (Refreshments · ${Number(r.cost).toFixed(2)})</option>)}
+                {staff.map(s => <option key={`staff-${s.id}`} value={s.name}>{s.name} (Staff)</option>)}
+                {expenses.map(e => <option key={`exp-${e.id}`} value={e.item}>{e.item} ({e.category} · ${Number(e.cost).toFixed(2)})</option>)}
+                <option value="Other">Other (not in budget)</option>
+              </select>
               <input placeholder="Amount $" value={newReceipt.amount} onChange={e => setNewReceipt({...newReceipt, amount: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
               <div onClick={() => document.getElementById("receipt-upload")?.click()} style={{ border: "2px dashed #e4ebe6", borderRadius: "8px", padding: "12px", textAlign: "center" as const, cursor: "pointer", marginBottom: "8px", background: selectedReceiptFile ? "#f0faf0" : "#fff" }}>
                 <input id="receipt-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => setSelectedReceiptFile(e.target.files?.[0] || null)} />
@@ -608,6 +616,29 @@ export default function PlannerDashboard() {
                 {uploading ? "Uploading..." : "Upload"}
               </button>
             </div>
+
+            {/* Budget items without receipts */}
+            {(() => {
+              const receiptedItems = receipts.map(r => r.description);
+              const allItems = [
+                ...decor.filter(d => d.cost > 0).map(d => ({ name: d.item, cost: d.cost, category: "Decor" })),
+                ...refresh.filter(r => r.cost > 0).map(r => ({ name: r.item, cost: r.cost, category: "Refreshments" })),
+                ...expenses.filter(e => e.cost > 0).map(e => ({ name: e.item, cost: e.cost, category: e.category })),
+              ];
+              const pending = allItems.filter(i => !receiptedItems.includes(i.name));
+              if (pending.length === 0) return null;
+              return (
+                <div style={{ background: "#fff8f0", borderRadius: "10px", padding: "1rem", border: "1px solid #f0e8d8", marginBottom: "1rem" }}>
+                  <div style={{ fontSize: "0.72rem", color: "#b87333", letterSpacing: "0.1em", marginBottom: "8px" }}>PENDING RECEIPTS ({pending.length})</div>
+                  {pending.map((item, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: i < pending.length - 1 ? "1px solid #f5ede0" : "none", fontSize: "0.82rem" }}>
+                      <span style={{ color: "#4a5a52" }}>{item.name} — {item.category}</span>
+                      <span style={{ color: "#b87333" }}>${Number(item.cost).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {receipts.length === 0 ? (
               <p style={{ fontSize: "0.85rem", color: "#4a5a52" }}>No receipts uploaded yet.</p>
