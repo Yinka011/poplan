@@ -177,7 +177,7 @@ export default function PlannerDashboard() {
       const { data } = await supabase.from("planner_receipts").insert({
         event_slug: slug, planner_email: userEmail, file_name: selectedReceiptFile.name,
         file_url: urlData.publicUrl, amount: parseFloat(newReceipt.amount) || 0,
-        description: newReceipt.description, status: "pending"
+        description: selectedItems.length > 0 ? JSON.stringify(selectedItems) : newReceipt.description, status: "pending"
       }).select().single();
       if (data) setReceipts(prev => [data, ...prev]);
     }
@@ -660,7 +660,14 @@ export default function PlannerDashboard() {
               receipts.map(receipt => (
                 <div key={receipt.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", background: "#f8faf8", marginBottom: "8px", border: "1px solid #f0f4f1" }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>{receipt.description}</div>
+                    <div style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>
+                      {(() => {
+                        try {
+                          const parsed = JSON.parse(receipt.description);
+                          return Array.isArray(parsed) ? parsed.join(", ") : receipt.description;
+                        } catch { return receipt.description; }
+                      })()}
+                    </div>
                     <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginTop: "2px" }}>{receipt.file_name} · {new Date(receipt.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
                   </div>
                   <div style={{ fontSize: "0.95rem", color: "#E8C97A", fontWeight: 500 }}>${Number(receipt.amount).toFixed(2)}</div>
