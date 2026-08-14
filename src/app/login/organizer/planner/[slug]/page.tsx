@@ -232,7 +232,7 @@ export default function PlannerDashboard() {
   const tabs = [
     { key: "overview", label: "Overview" },
     { key: "planning", label: "Planning Hub" },
-    { key: "budget", label: "Budget" },
+    { key: "budget", label: "Expenses" },
     { key: "mytasks", label: "My Tasks" },
     { key: "brandtasks", label: `${plannerEvent?.brand_name || "Brand"} Tasks` },
     { key: "chat", label: "Chat" },
@@ -604,7 +604,7 @@ export default function PlannerDashboard() {
                 {decor.map(d => <option key={`decor-${d.id}`} value={d.item}>{d.item} (Decor · ${Number(d.cost).toFixed(2)})</option>)}
                 {refresh.map(r => <option key={`refresh-${r.id}`} value={r.item}>{r.item} (Refreshments · ${Number(r.cost).toFixed(2)})</option>)}
                 {staff.map(s => <option key={`staff-${s.id}`} value={s.name}>{s.name} (Staff)</option>)}
-                {expenses.map(e => <option key={`exp-${e.id}`} value={e.item}>{e.item} ({e.category} · ${Number(e.cost).toFixed(2)})</option>)}
+                {manualExpenses.map(e => <option key={`exp-${e.id}`} value={e.item}>{e.item} ({e.category} · ${Number(e.cost).toFixed(2)})</option>)}
                 <option value="Other">Other (not in budget)</option>
               </select>
               <input placeholder="Amount $" value={newReceipt.amount} onChange={e => setNewReceipt({...newReceipt, amount: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", marginBottom: "8px", boxSizing: "border-box" as const }} />
@@ -623,7 +623,7 @@ export default function PlannerDashboard() {
               const allItems = [
                 ...decor.filter(d => d.cost > 0).map(d => ({ name: d.item, cost: d.cost, category: "Decor" })),
                 ...refresh.filter(r => r.cost > 0).map(r => ({ name: r.item, cost: r.cost, category: "Refreshments" })),
-                ...expenses.filter(e => e.cost > 0).map(e => ({ name: e.item, cost: e.cost, category: e.category })),
+                ...manualExpenses.filter(e => e.cost > 0).map(e => ({ name: e.item, cost: e.cost, category: e.category })),
               ];
               const pending = allItems.filter(i => !receiptedItems.includes(i.name));
               if (pending.length === 0) return null;
