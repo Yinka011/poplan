@@ -95,6 +95,9 @@ export default function OrganizerBrandPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [approvals, setApprovals] = useState<FileApproval[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [messages, setMessages] = useState<{id: number; sender_name: string; sender_email: string; message: string; created_at: string;}[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [newNote, setNewNote] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -308,6 +311,22 @@ export default function OrganizerBrandPage() {
     </div>
   );
 
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !brand) return;
+    setSendingMessage(true);
+    const { data } = await supabase.from("brand_messages").insert({
+      event: city,
+      brand_email: brand.email,
+      organizer_email: "aocurates@gmail.com",
+      sender_email: "aocurates@gmail.com",
+      sender_name: "AO Curates",
+      message: newMessage.trim(),
+    }).select().single();
+    if (data) setMessages(prev => [...prev, data]);
+    setNewMessage("");
+    setSendingMessage(false);
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
@@ -501,6 +520,31 @@ export default function OrganizerBrandPage() {
 
         {/* Notes */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+          {/* Messages */}
+          <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6", marginBottom: "1.5rem" }}>
+            <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "1rem" }}>Messages with {brand.name}</div>
+            <div style={{ maxHeight: "300px", overflowY: "auto" as const, marginBottom: "1rem", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
+              {messages.length === 0 ? (
+                <div style={{ fontSize: "0.82rem", color: "#4a5a52", textAlign: "center", padding: "1rem" }}>No messages yet</div>
+              ) : (
+                messages.map(msg => (
+                  <div key={msg.id} style={{ display: "flex", flexDirection: "column" as const, alignItems: msg.sender_email === "aocurates@gmail.com" ? "flex-end" : "flex-start" }}>
+                    <div style={{ maxWidth: "80%", padding: "8px 12px", borderRadius: "10px", background: msg.sender_email === "aocurates@gmail.com" ? "#1B3A2D" : "#f0f4f1", color: msg.sender_email === "aocurates@gmail.com" ? "#fff" : "#1c1714", fontSize: "0.85rem", lineHeight: 1.5 }}>
+                      {msg.message}
+                    </div>
+                    <div style={{ fontSize: "0.68rem", color: "#8b7355", marginTop: "2px" }}>{msg.sender_name} · {new Date(msg.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder={`Message ${brand.name}...`} style={{ flex: 1, padding: "8px 12px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", outline: "none" }} />
+              <button onClick={sendMessage} disabled={sendingMessage || !newMessage.trim()} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+                {sendingMessage ? "..." : "Send"}
+              </button>
+            </div>
+          </div>
+
           <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontFamily: "Georgia, serif", marginBottom: "1rem" }}>Private notes</div>
           <div style={{ display: "flex", gap: "8px", marginBottom: "1rem" }}>
             <input type="text" placeholder="Add a note about this brand..." value={newNote} onChange={e => setNewNote(e.target.value)} onKeyDown={e => e.key === "Enter" && addNote()} style={{ flex: 1, padding: "8px 12px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
