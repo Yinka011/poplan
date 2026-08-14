@@ -75,6 +75,7 @@ export default function PlannerDashboard() {
   const [newMessage, setNewMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [newReceipt, setNewReceipt] = useState({ description: "", amount: "" });
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [selectedReceiptFile, setSelectedReceiptFile] = useState<File | null>(null);
   const [addingExpense, setAddingExpense] = useState<string | null>(null);
   const [newExpense, setNewExpense] = useState({ item: "", cost: "", deposit: "" });
