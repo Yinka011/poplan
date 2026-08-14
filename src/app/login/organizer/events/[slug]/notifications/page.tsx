@@ -115,7 +115,7 @@ export default function NotificationsPage() {
             <div key={date} style={{ marginBottom: "2rem" }}>
               <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "0.75rem", paddingBottom: "6px", borderBottom: "1px solid #e4ebe6" }}>{date.toUpperCase()}</div>
               {items.map(n => (
-                <div key={n.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "8px", border: "1px solid #e4ebe6", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                <a key={n.id} href={`/login/organizer/events/${slug}/brands/${encodeURIComponent(n.brand_name)}`} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "8px", border: "1px solid #e4ebe6", display: "flex", gap: "12px", alignItems: "flex-start", textDecoration: "none" }}>
                   <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#f0f4f1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", flexShrink: 0 }}>
                     {typeIcon[n.type] || typeIcon.default}
                   </div>
