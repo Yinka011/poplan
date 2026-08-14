@@ -315,7 +315,7 @@ export default function OrganizerBrandPage() {
     if (!newMessage.trim() || !brand) return;
     setSendingMessage(true);
     const { data } = await supabase.from("brand_messages").insert({
-      event: city,
+      event: slug.charAt(0).toUpperCase() + slug.slice(1),
       brand_email: brand.email,
       organizer_email: "aocurates@gmail.com",
       sender_email: "aocurates@gmail.com",
