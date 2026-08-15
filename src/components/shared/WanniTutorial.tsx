@@ -45,8 +45,8 @@ const steps = [
   {
     icon: "📦",
     title: "Shipments",
-    desc: "Track everything being shipped to the venue here. Your planner will add shipment items and you can see the status of each one. Mark items as shipped once they are on their way so your planner knows what to expect.",
-    tip: "Make sure all items are shipped and confirmed before the event date.",
+    desc: "Track everything being shipped to the venue. Each item shows its name and shipping status. Click the pencil icon on any item to add the courier (DHL, UPS, FedEx etc) and tracking number. Your planner can see these details and mark items as received when they arrive at the venue.",
+    tip: "Add your courier and tracking number as soon as you ship so your planner can track the delivery.",
   },
   {
     icon: "💬",
