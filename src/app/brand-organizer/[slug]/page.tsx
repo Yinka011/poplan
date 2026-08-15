@@ -158,6 +158,11 @@ export default function BrandCityDashboard() {
 
   };
 
+  const deleteMyTask = async (id: number) => {
+    await supabase.from("planner_tasks").delete().eq("id", id);
+    setMyTasks(prev => prev.filter(t => t.id !== id));
+  };
+
   const toggleTask = async (task: Task, isMine: boolean) => {
     await supabase.from("planner_tasks").update({ completed: !task.completed }).eq("id", task.id);
     if (isMine) setMyTasks(prev => prev.map(t => t.id === task.id ? { ...t, completed: !t.completed } : t));
@@ -751,6 +756,7 @@ export default function BrandCityDashboard() {
                     <div style={{ fontSize: "0.9rem", color: task.completed ? "#b0a090" : "#1B3A2D", textDecoration: task.completed ? "line-through" : "none" }}>{task.task}</div>
                     {task.due_date && <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginTop: "2px" }}>Due {task.due_date}</div>}
                   </div>
+                  <button onClick={() => deleteMyTask(task.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                 </div>
               ))}
             </div>
