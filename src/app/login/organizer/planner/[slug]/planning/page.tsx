@@ -56,6 +56,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>({});
   const [addingShift, setAddingShift] = useState<number | null>(null);
+  const [staffMenu, setStaffMenu] = useState<number | null>(null);
   const [newShift, setNewShift] = useState({ shift_date: "", start_time: "", end_time: "" });
   const [newDecor, setNewDecor] = useState({ category: "Theme", item: "", decision: "", vendor: "", cost: "", quantity: "", status: "Pending", notes: "" });
   const [newRefresh, setNewRefresh] = useState({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
@@ -155,6 +156,21 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
     }
     setNewShift({ shift_date: "", start_time: "", end_time: "" });
     setAddingShift(null);
+  };
+
+  const duplicateStaff = async (member: any) => {
+    const { data } = await supabase.from("planning_staff").insert({
+      event: eventSlug,
+      name: member.name + " (copy)",
+      role: member.role,
+      pay_rate: member.pay_rate,
+      phone: member.phone,
+      email: member.email,
+      notes: member.notes,
+      brand_status: "pending",
+    }).select().single();
+    if (data) setStaff(prev => [...prev, { ...data, shifts: [] }]);
+    setStaffMenu(null);
   };
 
   const deleteShift = async (staffId: number, shiftId: number) => {
