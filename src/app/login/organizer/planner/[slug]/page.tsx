@@ -63,12 +63,13 @@ export default function PlannerDashboard() {
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
   const [staff, setStaff] = useState<StaffItem[]>([]);
   const [manualExpenses, setManualExpenses] = useState<ManualExpense[]>([]);
+  const [shipments, setShipments] = useState<{id: number; notes: string; shipped: boolean; courier?: string; tracking_number?: string; received?: boolean;}[]>([]);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const [teamEmail, setTeamEmail] = useState("");
   const [invitingTeam, setInvitingTeam] = useState(false);
   const [teamInvited, setTeamInvited] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "mytasks" | "brandtasks" | "chat" | "receipts" | "moodboard" | "team">((searchParams.get("tab") as any) || "overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "mytasks" | "brandtasks" | "chat" | "receipts" | "moodboard" | "team" | "shipments">((searchParams.get("tab") as any) || "overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [userEmail, setUserEmail] = useState("");
@@ -95,7 +96,7 @@ export default function PlannerDashboard() {
     const { data: profile } = await supabase.from("profiles").select("name").eq("email", user.email).single();
     if (profile?.name) setUserName(profile.name);
 
-    const [peRes, myTasksRes, brandTasksRes, messagesRes, receiptsRes, decorRes, refreshRes, staffRes, shiftsRes, expRes] = await Promise.all([
+    const [peRes, myTasksRes, brandTasksRes, messagesRes, receiptsRes, decorRes, refreshRes, staffRes, shiftsRes, expRes, shipmentsRes] = await Promise.all([
       supabase.from("event_planners").select("*").eq("event_slug", slug).eq("planner_email", user.email).maybeSingle(),
       supabase.from("planner_tasks").select("*").eq("event_slug", slug).eq("owner", "planner").order("created_at"),
       supabase.from("planner_tasks").select("*").eq("event_slug", slug).eq("owner", "brand").order("created_at"),
@@ -106,6 +107,7 @@ export default function PlannerDashboard() {
       supabase.from("planning_staff").select("*").eq("event", slug),
       supabase.from("planning_staff_shifts").select("*").eq("event", slug),
       supabase.from("expenses").select("*").eq("event", slug).order("category"),
+      supabase.from("shipments").select("*").eq("event_slug", slug).order("created_at"),
     ]);
 
     if (peRes.data) setPlannerEvent(peRes.data);
@@ -123,6 +125,7 @@ export default function PlannerDashboard() {
       setStaff(staffWithShifts);
     }
     if (expRes.data) setManualExpenses(expRes.data);
+    if (shipmentsRes.data) setShipments(shipmentsRes.data);
     setLoading(false);
   };
 
@@ -243,6 +246,7 @@ export default function PlannerDashboard() {
     { key: "receipts", label: "Receipts" },
     { key: "moodboard", label: "Mood Board" },
     { key: "team", label: "Team Access" },
+    { key: "shipments", label: `Shipments${shipments.filter(s => s.shipped && !s.received).length > 0 ? ` (${shipments.filter(s => s.shipped && !s.received).length})` : ""}` },
   ];
 
   const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", ...style });
@@ -266,6 +270,11 @@ export default function PlannerDashboard() {
       alert("Error: " + (data.error || "Could not send invite"));
     }
     setInvitingTeam(false);
+  };
+
+  const markReceived = async (id: number, received: boolean) => {
+    await supabase.from("shipments").update({ received }).eq("id", id);
+    setShipments(prev => prev.map(s => s.id === id ? { ...s, received } : s));
   };
 
   return (
@@ -627,6 +636,56 @@ export default function PlannerDashboard() {
                   <div key={email} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "#f0f4f1", borderRadius: "8px", marginBottom: "6px" }}>
                     <span style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>✓</span>
                     <span style={{ fontSize: "0.85rem", color: "#1c1714" }}>{email}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "shipments" && (
+          <div>
+            <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1.5rem" }}>Track items being shipped to the venue. Mark items as received when they arrive.</p>
+            {shipments.length === 0 ? (
+              <div style={{ background: "#fff", borderRadius: "14px", padding: "3rem", textAlign: "center", border: "1px solid #e4ebe6" }}>
+                <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>No shipments yet</div>
+                <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>Shipments will appear here when the brand marks items as shipped.</div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "1.5rem" }}>
+                  <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem", border: "1px solid #e4ebe6", textAlign: "center" as const }}>
+                    <div style={{ fontSize: "1.5rem", color: "#1B3A2D" }}>{shipments.length}</div>
+                    <div style={{ fontSize: "0.7rem", color: "#4a5a52", letterSpacing: "0.08em" }}>TOTAL ITEMS</div>
+                  </div>
+                  <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem", border: "1px solid #e4ebe6", textAlign: "center" as const }}>
+                    <div style={{ fontSize: "1.5rem", color: "#E8C97A" }}>{shipments.filter(s => s.shipped).length}</div>
+                    <div style={{ fontSize: "0.7rem", color: "#4a5a52", letterSpacing: "0.08em" }}>SHIPPED</div>
+                  </div>
+                  <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem", border: "1px solid #e4ebe6", textAlign: "center" as const }}>
+                    <div style={{ fontSize: "1.5rem", color: "#4a7c59" }}>{shipments.filter(s => s.received).length}</div>
+                    <div style={{ fontSize: "0.7rem", color: "#4a5a52", letterSpacing: "0.08em" }}>RECEIVED</div>
+                  </div>
+                </div>
+                {shipments.map(shipment => (
+                  <div key={shipment.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "8px", border: "1px solid #e4ebe6", borderLeft: `3px solid ${shipment.received ? "#4a7c59" : shipment.shipped ? "#E8C97A" : "#e4ebe6"}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "4px" }}>{shipment.notes}</div>
+                        {shipment.courier && <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>{shipment.courier} {shipment.tracking_number && `· ${shipment.tracking_number}`}</div>}
+                      </div>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: "20px", background: shipment.received ? "#4a7c5922" : shipment.shipped ? "#E8C97A22" : "#f0f4f1", color: shipment.received ? "#4a7c59" : shipment.shipped ? "#b87333" : "#4a5a52" }}>
+                          {shipment.received ? "✓ Received" : shipment.shipped ? "Shipped" : "Pending"}
+                        </span>
+                        {shipment.shipped && !shipment.received && (
+                          <button onClick={() => markReceived(shipment.id, true)} style={{ fontSize: "0.72rem", padding: "4px 10px", background: "#4a7c59", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontFamily: "Georgia, serif" }}>Mark received</button>
+                        )}
+                        {shipment.received && (
+                          <button onClick={() => markReceived(shipment.id, false)} style={{ fontSize: "0.72rem", padding: "4px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52", fontFamily: "Georgia, serif" }}>Undo</button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
