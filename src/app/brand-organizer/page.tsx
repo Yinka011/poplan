@@ -215,7 +215,7 @@ export default function BrandOrganizerDashboard() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
                     <div>
                       <div style={{ fontSize: "1.1rem", color: "#1B3A2D" }}>{event.city || event.name}</div>
-                      {isManaged && event.planner_email && <div style={{ fontSize: "0.72rem", color: "#E8C97A", marginTop: "2px" }}>Planner: {event.planner_email.split("@")[0]}</div>}
+                      {isManaged && event.planner_email && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>Planner: {event.planner_email.split("@")[0]}</div>}
                     </div>
                     <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                       <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: statusStyle.bg, color: statusStyle.color }}>{displayStatus}</span>
@@ -223,7 +223,7 @@ export default function BrandOrganizerDashboard() {
                     </div>
                   </div>
 
-                  {event.dates_label && event.dates_label !== "TBD" && <div style={{ fontSize: "0.82rem", color: "#E8C97A", marginBottom: "6px" }}>{event.dates_label}</div>}
+                  {event.dates_label && event.dates_label !== "TBD" && <div style={{ fontSize: "0.82rem", color: "#6b5f54", marginBottom: "6px" }}>{event.dates_label}</div>}
                   {event.venue_name && <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "2px" }}>📍 {event.venue_name}</div>}
                   {event.venue_address && <div style={{ fontSize: "0.75rem", color: "#aaa", marginBottom: "8px" }}>{event.venue_address}</div>}
 
