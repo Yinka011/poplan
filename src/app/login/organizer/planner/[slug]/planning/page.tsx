@@ -14,7 +14,11 @@ type ItemComment = { id: number; item_name: string; sender_email: string; sender
 const DECOR_CATEGORIES = ["Theme", "Furniture", "Florals", "Lighting", "Signage", "Props"];
 const STAFF_ROLES = ["Cashier", "Stylist", "Runner", "Check-in", "Security", "Inventory", "Brand liaison", "Photographer"];
 const STATUSES = ["Pending", "In Progress", "Confirmed", "Cancelled"];
-const EVENT_DAYS = ["Fri Sep 11", "Sat Sep 12", "Sun Sep 13"];
+// Dynamic event days based on slug
+const getEventDays = (slug: string) => {
+  if (slug.includes("wanni")) return ["Thu Aug 7", "Fri Aug 8", "Sat Aug 9"];
+  return ["Fri Sep 11", "Sat Sep 12", "Sun Sep 13"];
+};
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   Confirmed: { bg: "#4a7c5922", color: "#4a7c59" },
@@ -56,7 +60,8 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>({});
   const [addingShift, setAddingShift] = useState<number | null>(null);
-  const [newShift, setNewShift] = useState({ shift_date: "Fri Sep 11", start_time: "", end_time: "" });
+  const EVENT_DAYS = getEventDays(eventSlug);
+  const [newShift, setNewShift] = useState({ shift_date: EVENT_DAYS[0], start_time: "", end_time: "" });
   const [newDecor, setNewDecor] = useState({ category: "Theme", item: "", decision: "", vendor: "", cost: "", quantity: "", status: "Pending", notes: "" });
   const [newRefresh, setNewRefresh] = useState({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
   const [newStaff, setNewStaff] = useState({ name: "", role: "Cashier", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
@@ -153,7 +158,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
     if (data) {
       setStaff(prev => prev.map(m => m.id === staffId ? { ...m, shifts: [...(m.shifts || []), data] } : m));
     }
-    setNewShift({ shift_date: "Fri Sep 11", start_time: "", end_time: "" });
+    setNewShift({ shift_date: EVENT_DAYS[0], start_time: "", end_time: "" });
     setAddingShift(null);
   };
 
@@ -634,7 +639,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                               </div>
                             </div>
                           ) : (
-                            <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: "Fri Sep 11", start_time: "", end_time: "" }); }} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>+ Add shift</button>
+                            <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: EVENT_DAYS[0], start_time: "", end_time: "" }); }} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>+ Add shift</button>
                           )}
                         </div>
                         <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
