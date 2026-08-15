@@ -65,7 +65,10 @@ export default function PlannerDashboard() {
   const [manualExpenses, setManualExpenses] = useState<ManualExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "mytasks" | "brandtasks" | "chat" | "receipts" | "moodboard">((searchParams.get("tab") as any) || "overview");
+  const [teamEmail, setTeamEmail] = useState("");
+  const [invitingTeam, setInvitingTeam] = useState(false);
+  const [teamInvited, setTeamInvited] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "mytasks" | "brandtasks" | "chat" | "receipts" | "moodboard" | "team">((searchParams.get("tab") as any) || "overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [userEmail, setUserEmail] = useState("");
@@ -239,11 +242,31 @@ export default function PlannerDashboard() {
     { key: "chat", label: "Chat" },
     { key: "receipts", label: "Receipts" },
     { key: "moodboard", label: "Mood Board" },
+    { key: "team", label: "Team Access" },
   ];
 
   const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", ...style });
 
   if (loading) return <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>;
+
+  const inviteTeamMember = async () => {
+    if (!teamEmail.trim()) return;
+    setInvitingTeam(true);
+    const res = await fetch("/api/invite-organizer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: teamEmail, role: "brand_organizer" }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setTeamInvited(prev => [...prev, teamEmail]);
+      setTeamEmail("");
+      alert(`Invite sent to ${teamEmail}`);
+    } else {
+      alert("Error: " + (data.error || "Could not send invite"));
+    }
+    setInvitingTeam(false);
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif" }}>
@@ -587,6 +610,30 @@ export default function PlannerDashboard() {
         )}
 
         {/* Mood Board */}
+        {activeTab === "team" && (
+          <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+            <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>Team access</div>
+            <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1.5rem" }}>Invite team members to access {plannerEvent?.brand_name || "this brand"} portal. They will receive an email with a link to set up their account.</p>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "1.5rem" }}>
+              <input type="email" value={teamEmail} onChange={e => setTeamEmail(e.target.value)} placeholder="Team member email" style={{ flex: 1, padding: "10px 12px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.88rem", fontFamily: "Georgia, serif", outline: "none" }} onKeyDown={e => e.key === "Enter" && inviteTeamMember()} />
+              <button onClick={inviteTeamMember} disabled={invitingTeam || !teamEmail.trim()} style={{ padding: "10px 20px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.88rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+                {invitingTeam ? "Sending..." : "Send invite"}
+              </button>
+            </div>
+            {teamInvited.length > 0 && (
+              <div>
+                <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.1em", marginBottom: "8px" }}>INVITED THIS SESSION</div>
+                {teamInvited.map(email => (
+                  <div key={email} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "#f0f4f1", borderRadius: "8px", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>✓</span>
+                    <span style={{ fontSize: "0.85rem", color: "#1c1714" }}>{email}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "moodboard" && (
           <MoodBoard eventSlug={slug} userEmail={userEmail} userName={userName} />
         )}
