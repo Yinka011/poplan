@@ -610,7 +610,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                           <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.05em", marginBottom: "6px" }}>SHIFTS</div>
                           {(member.shifts || []).map(shift => (
                             <div key={shift.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", borderBottom: "1px solid #f8f5f0", fontSize: "0.8rem" }}>
-                              <div style={{ color: "#1B3A2D" }}>{shift.shift_date}</div>
+                              <div style={{ color: "#1B3A2D" }}>{shift.shift_date && shift.shift_date.includes("-") ? new Date(shift.shift_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : shift.shift_date}</div>
                               <div style={{ color: "#4a5a52" }}>{shift.start_time} – {shift.end_time}</div>
                               <div style={{ color: "#E8C97A" }}>{shift.hours}hrs</div>
                               <button onClick={() => deleteShift(member.id, shift.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#c8bfb5", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#c8bfb5")}>✕</button>
