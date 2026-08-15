@@ -434,13 +434,10 @@ export default function BrandCityDashboard() {
                 )}
               </div>
 
-              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2", cursor: "pointer" }} onClick={() => setActiveTab("budget")}>
-                <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "12px" }}>INVOICES</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                  <div><div style={{ fontSize: "1.4rem", color: "#E8C97A" }}>{pendingInvoices}</div><div style={{ fontSize: "0.65rem", color: "#4a5a52" }}>Pending</div></div>
-                  <div><div style={{ fontSize: "1.4rem", color: "#E8C97A" }}>{invoices.filter(i => i.status === "approved").length}</div><div style={{ fontSize: "0.65rem", color: "#4a5a52" }}>Approved</div></div>
-                  <div><div style={{ fontSize: "1.4rem", color: "#c0392b" }}>{invoices.filter(i => i.status === "rejected").length}</div><div style={{ fontSize: "0.65rem", color: "#4a5a52" }}>Rejected</div></div>
-                </div>
+              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2", cursor: "pointer" }} onClick={() => setActiveTab("invoices")}>
+                <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "12px" }}>RECEIPTS</div>
+                <div style={{ fontSize: "1.4rem", color: "#1B3A2D", marginBottom: "4px" }}>{plannerReceipts.length}</div>
+                <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>uploaded by planner</div>
               </div>
 
               <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #ede8e2" }}>
