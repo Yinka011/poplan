@@ -156,6 +156,13 @@ export default function BrandCityDashboard() {
     if (commentsRes.data) setComments(commentsRes.data);
     setLoading(false);
 
+
+    // Show tutorial on first visit
+    const tutorialKey = `wanni_tutorial_seen_${slug}`;
+    if (!localStorage.getItem(tutorialKey)) {
+      setShowTutorial(true);
+      localStorage.setItem(tutorialKey, "true");
+    }
   };
 
   const deleteMyTask = async (id: number) => {
