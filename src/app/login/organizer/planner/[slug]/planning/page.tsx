@@ -14,11 +14,7 @@ type ItemComment = { id: number; item_name: string; sender_email: string; sender
 const DECOR_CATEGORIES = ["Theme", "Furniture", "Florals", "Lighting", "Signage", "Props"];
 const STAFF_ROLES = ["Cashier", "Stylist", "Runner", "Check-in", "Security", "Inventory", "Brand liaison", "Photographer"];
 const STATUSES = ["Pending", "In Progress", "Confirmed", "Cancelled"];
-// Dynamic event days based on slug
-const getEventDays = (slug: string) => {
-  if (slug.includes("wanni")) return ["Thu Aug 7", "Fri Aug 8", "Sat Aug 9"];
-  return ["Fri Sep 11", "Sat Sep 12", "Sun Sep 13"];
-};
+
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   Confirmed: { bg: "#4a7c5922", color: "#4a7c59" },
@@ -60,8 +56,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>({});
   const [addingShift, setAddingShift] = useState<number | null>(null);
-  const EVENT_DAYS = getEventDays(eventSlug);
-  const [newShift, setNewShift] = useState({ shift_date: EVENT_DAYS[0], start_time: "", end_time: "" });
+  const [newShift, setNewShift] = useState({ shift_date: "", start_time: "", end_time: "" });
   const [newDecor, setNewDecor] = useState({ category: "Theme", item: "", decision: "", vendor: "", cost: "", quantity: "", status: "Pending", notes: "" });
   const [newRefresh, setNewRefresh] = useState({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
   const [newStaff, setNewStaff] = useState({ name: "", role: "Cashier", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
@@ -158,7 +153,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
     if (data) {
       setStaff(prev => prev.map(m => m.id === staffId ? { ...m, shifts: [...(m.shifts || []), data] } : m));
     }
-    setNewShift({ shift_date: EVENT_DAYS[0], start_time: "", end_time: "" });
+    setNewShift({ shift_date: "", start_time: "", end_time: "" });
     setAddingShift(null);
   };
 
@@ -623,9 +618,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                           ))}
                           {addingShift === member.id ? (
                             <div style={{ marginTop: "8px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
-                              <select value={newShift.shift_date} onChange={e => setNewShift({...newShift, shift_date: e.target.value})} style={editInp({ width: "100%" })}>
-                                {EVENT_DAYS.map(d => <option key={d}>{d}</option>)}
-                              </select>
+                              <input type="date" value={newShift.shift_date} onChange={e => setNewShift({...newShift, shift_date: e.target.value})} style={editInp({ width: "100%" })} />
                               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                                 <input placeholder="Start e.g. 10am" value={newShift.start_time} onChange={e => setNewShift({...newShift, start_time: e.target.value})} style={editInp()} />
                                 <input placeholder="End e.g. 6pm" value={newShift.end_time} onChange={e => setNewShift({...newShift, end_time: e.target.value})} style={editInp()} />
@@ -639,7 +632,7 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                               </div>
                             </div>
                           ) : (
-                            <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: EVENT_DAYS[0], start_time: "", end_time: "" }); }} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>+ Add shift</button>
+                            <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: "", start_time: "", end_time: "" }); }} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>+ Add shift</button>
                           )}
                         </div>
                         <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
