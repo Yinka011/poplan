@@ -54,6 +54,9 @@ type Shipment = {
   id: number;
   notes: string;
   shipped: boolean;
+  tracking_number?: string;
+  courier?: string;
+  received?: boolean;
 };
 
 type DecorItem = { id: number; category: string; item: string; cost: number; quantity: number; notes: string; brand_status?: string; decision?: string; vendor?: string; };
@@ -71,6 +74,8 @@ export default function BrandCityDashboard() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [plannerReceipts, setPlannerReceipts] = useState<{id: number; description: string; amount: number; file_url: string; file_name: string; created_at: string; event_slug: string;}[]>([]);
   const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [editingShipment, setEditingShipment] = useState<number | null>(null);
+  const [shipmentTracking, setShipmentTracking] = useState({ courier: "", tracking_number: "" });
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
   const [staff, setStaff] = useState<StaffItem[]>([]);
@@ -163,6 +168,21 @@ export default function BrandCityDashboard() {
       setShowTutorial(true);
       localStorage.setItem(tutorialKey, "true");
     }
+  };
+
+  const saveTracking = async (shipmentId: number) => {
+    await supabase.from("shipments").update({
+      courier: shipmentTracking.courier,
+      tracking_number: shipmentTracking.tracking_number,
+    }).eq("id", shipmentId);
+    setShipments(prev => prev.map(s => s.id === shipmentId ? { ...s, ...shipmentTracking } : s));
+    setEditingShipment(null);
+  };
+
+  const toggleReceived = async (shipment: Shipment) => {
+    const newReceived = !shipment.received;
+    await supabase.from("shipments").update({ received: newReceived }).eq("id", shipment.id);
+    setShipments(prev => prev.map(s => s.id === shipment.id ? { ...s, received: newReceived } : s));
   };
 
   const deleteMyTask = async (id: number) => {
@@ -786,12 +806,31 @@ export default function BrandCityDashboard() {
             )}
             {shipments.length === 0 && <p style={{ fontSize: "0.85rem", color: "#4a5a52" }}>No shipments yet.</p>}
             {shipments.map(shipment => (
-              <div key={shipment.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #f5f2ee" }}>
-                <div onClick={() => toggleShipment(shipment)} style={{ width: "22px", height: "22px", borderRadius: "50%", border: shipment.shipped ? "none" : "1.5px solid #d4c5b0", background: shipment.shipped ? "#4a7c59" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
-                  {shipment.shipped && <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>}
+              <div key={shipment.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem", marginBottom: "8px", border: "1px solid #e4ebe6" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+                  <div onClick={() => toggleShipment(shipment)} style={{ width: "22px", height: "22px", borderRadius: "50%", border: shipment.shipped ? "none" : "1.5px solid #d4c5b0", background: shipment.shipped ? "#4a7c59" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+                    {shipment.shipped && <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "0.9rem", color: shipment.shipped ? "#b0a090" : "#1B3A2D", textDecoration: shipment.shipped ? "line-through" : "none" }}>{shipment.notes}</div>
+                    {shipment.courier && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>{shipment.courier} {shipment.tracking_number && `· ${shipment.tracking_number}`}</div>}
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                    {shipment.received && <span style={{ fontSize: "0.68rem", color: "#4a7c59", background: "#4a7c5922", padding: "2px 8px", borderRadius: "10px" }}>✓ Received</span>}
+                    <span style={{ fontSize: "0.68rem", color: shipment.shipped ? "#4a7c59" : "#4a5a52", letterSpacing: "0.05em" }}>{shipment.shipped ? "SHIPPED" : "PENDING"}</span>
+                    <button onClick={() => { setEditingShipment(shipment.id); setShipmentTracking({ courier: shipment.courier || "", tracking_number: shipment.tracking_number || "" }); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "12px" }}>✎</button>
+                  </div>
                 </div>
-                <div style={{ flex: 1, fontSize: "0.9rem", color: shipment.shipped ? "#b0a090" : "#1B3A2D", textDecoration: shipment.shipped ? "line-through" : "none" }}>{shipment.notes}</div>
-                <span style={{ fontSize: "0.68rem", color: shipment.shipped ? "#4a7c59" : "#4a5a52", letterSpacing: "0.05em" }}>{shipment.shipped ? "SHIPPED" : "PENDING"}</span>
+                {editingShipment === shipment.id && (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "6px", paddingTop: "8px", borderTop: "1px solid #f0f4f1" }}>
+                    <select value={shipmentTracking.courier} onChange={e => setShipmentTracking({...shipmentTracking, courier: e.target.value})} style={{ padding: "6px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.8rem", fontFamily: "Georgia, serif" }}>
+                      <option value="">Courier...</option>
+                      {["DHL", "UPS", "FedEx", "USPS", "ShipBob", "Other"].map(c => <option key={c}>{c}</option>)}
+                    </select>
+                    <input placeholder="Tracking number" value={shipmentTracking.tracking_number} onChange={e => setShipmentTracking({...shipmentTracking, tracking_number: e.target.value})} style={{ padding: "6px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.8rem", fontFamily: "Georgia, serif" }} />
+                    <button onClick={() => saveTracking(shipment.id)} style={{ padding: "6px 12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
