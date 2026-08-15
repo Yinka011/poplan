@@ -111,7 +111,6 @@ export default function BrandCityDashboard() {
       supabase.from("planner_tasks").select("*").eq("event_slug", slug).order("created_at"),
       supabase.from("planner_messages").select("*").eq("event_slug", slug).order("created_at"),
       supabase.from("item_invoices").select("*").eq("event_slug", slug).order("created_at", { ascending: false }),
-      supabase.from("planner_receipts").select("*").eq("event_slug", slug).order("created_at", { ascending: false }),
       supabase.from("shipments").select("*").eq("event_slug", slug),
       supabase.from("planning_decor").select("*").eq("event", slug).order("category"),
       supabase.from("planning_refreshments").select("*").eq("event", slug),
@@ -119,6 +118,7 @@ export default function BrandCityDashboard() {
       supabase.from("planning_staff_shifts").select("*").eq("event", slug),
       supabase.from("expenses").select("*").eq("event", slug),
       supabase.from("item_comments").select("*").eq("event_slug", slug).order("created_at"),
+      supabase.from("planner_receipts").select("*").eq("event_slug", slug).order("created_at", { ascending: false }),
     ]);
 
     if (plannerRes.data) {
