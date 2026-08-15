@@ -400,8 +400,8 @@ export default function BrandCityDashboard() {
                   </button>
                 </div>
                 <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", textAlign: "center" as const }}>
-                  <div style={{ fontSize: "3rem", color: "#1B3A2D", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent ?? "—"}</div>
-                  <div style={{ fontSize: "0.6rem", color: "#4a5a52", marginTop: "6px", letterSpacing: "0.1em" }}>DAYS TO EVENT</div>
+                  <div style={{ fontSize: "3rem", color: "#1B3A2D", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent !== null && daysToEvent !== undefined ? (daysToEvent < 0 ? "✓" : daysToEvent) : "—"}</div>
+                  <div style={{ fontSize: "0.6rem", color: "#4a5a52", marginTop: "6px", letterSpacing: "0.1em" }}>{daysToEvent !== null && daysToEvent < 0 ? "COMPLETE" : "DAYS TO EVENT"}</div>
                 </div>
               </div>
             </div>
