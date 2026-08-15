@@ -651,10 +651,6 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                             <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: "", start_time: "", end_time: "" }); }} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>+ Add shift</button>
                           )}
                         </div>
-                        <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
-                          <button onClick={() => { setEditing(member.id); setEditData({...member}); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>Edit</button>
-                          <button onClick={() => deleteItem("planning_staff", member.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0f4f1", borderRadius: "6px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
-                        </div>
                         <CommentThread itemName={member.name} table="planning_staff" itemId={member.id} currentStatus={member.brand_status} />
                         <InvoiceSection itemName={member.name} category="Staff" />
                       </div>
