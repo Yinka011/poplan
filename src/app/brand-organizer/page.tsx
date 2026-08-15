@@ -11,6 +11,8 @@ type BrandEvent = {
   status: string;
   venue_name?: string;
   venue_address?: string;
+  end_date?: string;
+  start_date?: string;
   organizer_email?: string;
 };
 
@@ -30,6 +32,7 @@ type PlannerAssignment = {
   city?: string;
   dates_label?: string;
   start_date?: string;
+  end_date?: string;
   venue_name?: string;
   venue_address?: string;
 };
@@ -37,7 +40,7 @@ type PlannerAssignment = {
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   Active: { bg: "#4a7c5922", color: "#4a7c59" },
   Planning: { bg: "#E8C97A22", color: "#E8C97A" },
-  Completed: { bg: "#4a5a5222", color: "#4a5a52" },
+  Completed: { bg: "#4a7c5922", color: "#4a7c59" },
 };
 
 export default function BrandOrganizerDashboard() {
@@ -138,7 +141,7 @@ export default function BrandOrganizerDashboard() {
 
   const allEvents = [
     ...events.map(e => ({ ...e, type: "own" as const })),
-    ...plannerEvents.map(pe => ({ id: pe.id, slug: pe.event_slug, name: pe.brand_name + " — " + pe.city, city: pe.city || "", dates_label: pe.dates_label || "TBD", status: "Planning", venue_name: pe.venue_name, venue_address: pe.venue_address, type: "managed" as const, planner_email: pe.planner_email })),
+    ...plannerEvents.map(pe => ({ id: pe.id, slug: pe.event_slug, name: pe.brand_name + " — " + pe.city, city: pe.city || "", dates_label: pe.dates_label || "TBD", status: "Planning", end_date: pe.end_date || "", start_date: pe.start_date || "", venue_name: pe.venue_name, venue_address: pe.venue_address, type: "managed" as const, planner_email: pe.planner_email })),
   ];
 
   return (
@@ -203,17 +206,19 @@ export default function BrandOrganizerDashboard() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
             {allEvents.map(event => {
               const eventShipments = shipments.filter(s => s.event_slug === event.slug);
-              const statusStyle = STATUS_COLORS[event.status] || STATUS_COLORS.Planning;
               const isManaged = event.type === "managed";
+              const isComplete = event.end_date ? new Date(event.end_date) < new Date() : false;
+              const displayStatus = isComplete ? "Completed" : event.status;
+              const statusStyle = STATUS_COLORS[displayStatus] || STATUS_COLORS.Planning;
               return (
-                <div key={event.id} style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6", borderTop: isManaged ? "3px solid #E8C97A" : "1px solid #e4ebe6" }}>
+                <div key={event.id} style={{ background: isComplete ? "#faf9f7" : "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6", borderTop: isComplete ? "3px solid #4a7c59" : isManaged ? "3px solid #E8C97A" : "3px solid #1B3A2D" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
                     <div>
                       <div style={{ fontSize: "1.1rem", color: "#1B3A2D" }}>{event.city || event.name}</div>
-                      {isManaged && <div style={{ fontSize: "0.72rem", color: "#E8C97A", marginTop: "2px" }}>Managed by planner</div>}
+                      {isManaged && event.planner_email && <div style={{ fontSize: "0.72rem", color: "#E8C97A", marginTop: "2px" }}>Planner: {event.planner_email.split("@")[0]}</div>}
                     </div>
                     <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: statusStyle.bg, color: statusStyle.color }}>{event.status}</span>
+                      <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: statusStyle.bg, color: statusStyle.color }}>{displayStatus}</span>
                       {!isManaged && <button onClick={() => deleteEvent(event.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "12px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>}
                     </div>
                   </div>
