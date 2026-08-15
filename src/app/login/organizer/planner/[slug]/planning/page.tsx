@@ -597,10 +597,24 @@ export default function PlannerPlanningHub({ params }: { params: Promise<{ slug:
                         {editing === member.id ? <input value={editData.name || ""} onChange={e => setEditData({...editData, name: e.target.value})} style={editInp({ width: "140px", marginBottom: "4px" })} /> : <div style={{ fontSize: "1rem", color: "#1B3A2D", fontWeight: 500 }}>{member.name}</div>}
                         <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: (roleColors[member.role] || "#E8C97A") + "22", color: roleColors[member.role] || "#E8C97A" }}>{member.role}</span>
                       </div>
-                      <div style={{ textAlign: "right" as const }}>
-                        <div style={{ fontSize: "0.85rem", color: "#4a5a52" }}>${Number(member.pay_rate).toFixed(0)}/hr</div>
-                        {totalHours > 0 && <div style={{ fontSize: "1rem", color: "#E8C97A", fontWeight: 500 }}>${totalPay.toFixed(2)}</div>}
-                        {totalHours > 0 && <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>{totalHours}hrs total</div>}
+                      <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                        <div style={{ textAlign: "right" as const }}>
+                          <div style={{ fontSize: "0.85rem", color: "#4a5a52" }}>${Number(member.pay_rate).toFixed(0)}/hr</div>
+                          {totalHours > 0 && <div style={{ fontSize: "1rem", color: "#E8C97A", fontWeight: 500 }}>${totalPay.toFixed(2)}</div>}
+                          {totalHours > 0 && <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>{totalHours}hrs total</div>}
+                        </div>
+                        <div style={{ position: "relative" as const }}>
+                          <button onClick={() => setStaffMenu(staffMenu === member.id ? null : member.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "18px", padding: "0 4px", lineHeight: 1 }}>⋯</button>
+                          {staffMenu === member.id && (
+                            <div style={{ position: "absolute" as const, right: 0, top: "28px", background: "#fff", borderRadius: "10px", boxShadow: "0 4px 20px #00000015", border: "1px solid #e4ebe6", zIndex: 10, minWidth: "160px" }}>
+                              <button onClick={() => { setEditing(member.id); setEditData({...member}); setStaffMenu(null); }} style={{ display: "block", width: "100%", padding: "8px 14px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" as const, fontSize: "0.82rem", color: "#1c1714", fontFamily: "Georgia, serif" }}>✎ Edit</button>
+                              <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: "", start_time: "", end_time: "" }); setStaffMenu(null); }} style={{ display: "block", width: "100%", padding: "8px 14px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" as const, fontSize: "0.82rem", color: "#1c1714", fontFamily: "Georgia, serif" }}>+ Add shift</button>
+                              <button onClick={() => duplicateStaff(member)} style={{ display: "block", width: "100%", padding: "8px 14px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" as const, fontSize: "0.82rem", color: "#1c1714", fontFamily: "Georgia, serif" }}>⧉ Duplicate</button>
+                              <button onClick={() => { updateBrandStatus("planning_staff", member.id, member.brand_status === "suggested" ? "pending" : "suggested"); setStaffMenu(null); }} style={{ display: "block", width: "100%", padding: "8px 14px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" as const, fontSize: "0.82rem", color: "#1c1714", fontFamily: "Georgia, serif" }}>{member.brand_status === "suggested" ? "↩ Unshare" : "↑ Share with brand"}</button>
+                              <button onClick={() => { deleteItem("planning_staff", member.id); setStaffMenu(null); }} style={{ display: "block", width: "100%", padding: "8px 14px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" as const, fontSize: "0.82rem", color: "#c0392b", fontFamily: "Georgia, serif", borderTop: "1px solid #f0f4f1" }}>✕ Remove</button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                     {editing === member.id ? (
