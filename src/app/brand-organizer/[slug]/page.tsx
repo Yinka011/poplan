@@ -69,6 +69,7 @@ export default function BrandCityDashboard() {
   const [assignedTasks, setAssignedTasks] = useState<Task[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [plannerReceipts, setPlannerReceipts] = useState<{id: number; description: string; amount: number; file_url: string; file_name: string; created_at: string;}[]>([]);
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
@@ -105,11 +106,12 @@ export default function BrandCityDashboard() {
     const { data: profile } = await supabase.from("profiles").select("name").eq("email", user.email).single();
     if (profile?.name) setUserName(profile.name);
 
-    const [plannerRes, allTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes, commentsRes] = await Promise.all([
+    const [plannerRes, allTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes, commentsRes, plannerReceiptsRes] = await Promise.all([
       supabase.from("event_planners").select("*").eq("event_slug", slug).maybeSingle(),
       supabase.from("planner_tasks").select("*").eq("event_slug", slug).order("created_at"),
       supabase.from("planner_messages").select("*").eq("event_slug", slug).order("created_at"),
       supabase.from("item_invoices").select("*").eq("event_slug", slug).order("created_at", { ascending: false }),
+      supabase.from("planner_receipts").select("*").eq("event_slug", slug).order("created_at", { ascending: false }),
       supabase.from("shipments").select("*").eq("event_slug", slug),
       supabase.from("planning_decor").select("*").eq("event", slug).order("category"),
       supabase.from("planning_refreshments").select("*").eq("event", slug),
@@ -131,6 +133,7 @@ export default function BrandCityDashboard() {
     }
     if (messagesRes.data) setMessages(messagesRes.data);
     if (invoicesRes.data) setInvoices(invoicesRes.data);
+    if (plannerReceiptsRes.data) setPlannerReceipts(plannerReceiptsRes.data);
     if (shipmentsRes.data) setShipments(shipmentsRes.data);
     if (decorRes.data) setDecor(decorRes.data);
     if (refreshRes.data) setRefresh(refreshRes.data);
@@ -260,7 +263,7 @@ export default function BrandCityDashboard() {
     { key: "overview", label: "Overview" },
     { key: "planning", label: "Planning Hub" },
     { key: "budget", label: "Expenses" },
-    { key: "invoices", label: `Invoices${pendingInvoices > 0 ? ` (${pendingInvoices})` : ""}` },
+    { key: "invoices", label: "Receipts" },
     { key: "tasks", label: `Tasks${overdueAssigned > 0 ? " ⚠" : ""}` },
     { key: "shipments", label: "Shipments" },
     { key: "chat", label: "Chat" },
