@@ -675,46 +675,32 @@ export default function BrandCityDashboard() {
         {/* Invoices */}
         {activeTab === "invoices" && (
           <div>
-            <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1.5rem" }}>Review and approve or reject invoices from your planner. Approved invoices will be paid.</p>
-            {invoices.length === 0 ? (
+            <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1.5rem" }}>Payment receipts from your event. Download any receipt for your records.</p>
+            {plannerReceipts.length === 0 ? (
               <div style={{ background: "#fff", borderRadius: "14px", padding: "3rem", textAlign: "center", border: "1px solid #ede8e2" }}>
-                <p style={{ fontSize: "0.85rem", color: "#4a5a52" }}>No invoices yet.</p>
+                <p style={{ fontSize: "0.85rem", color: "#4a5a52" }}>No receipts uploaded yet.</p>
               </div>
             ) : (
-              invoices.map(inv => (
-                <div key={inv.id} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #ede8e2", borderLeft: `3px solid ${inv.status === "approved" ? "#4a7c59" : inv.status === "rejected" ? "#c0392b" : "#E8C97A"}` }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-                    <div>
-                      <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontWeight: 500 }}>{inv.description}</div>
-                      <button onClick={() => { setActiveTab("planning"); setPlanningTab(inv.item_category?.toLowerCase() === "refreshments" ? "refreshments" : inv.item_category?.toLowerCase() === "staff" ? "staff" : "decor"); }} style={{ fontSize: "0.72rem", color: "#E8C97A", background: "transparent", border: "none", cursor: "pointer", padding: "0", textDecoration: "underline", fontFamily: "Georgia, serif" }}>{inv.item_name} →</button>
-                      <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginTop: "2px" }}>{new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+              plannerReceipts.map(receipt => {
+                let items: string[] = [];
+                try {
+                  const parsed = JSON.parse(receipt.description);
+                  items = Array.isArray(parsed) ? parsed : [receipt.description];
+                } catch { items = [receipt.description]; }
+                return (
+                  <div key={receipt.id} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #ede8e2" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                      <div>
+                        <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontWeight: 500 }}>{receipt.file_name.replace(/_/g, " ").replace(/\.\w+$/, "")}</div>
+                        <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginTop: "4px", lineHeight: 1.5 }}>{items.join(" · ")}</div>
+                        <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginTop: "4px" }}>{new Date(receipt.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                      </div>
+                      <div style={{ fontSize: "1.1rem", color: "#E8C97A", fontWeight: 500 }}>${Number(receipt.amount).toFixed(2)}</div>
                     </div>
-                    <div style={{ textAlign: "right" as const }}>
-                      <div style={{ fontSize: "1.1rem", color: "#E8C97A", fontWeight: 500 }}>${Number(inv.amount).toFixed(2)}</div>
-                      <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: "20px", background: inv.status === "approved" ? "#4a7c5922" : inv.status === "rejected" ? "#c0392b22" : "#f0f4f1", color: inv.status === "approved" ? "#4a7c59" : inv.status === "rejected" ? "#c0392b" : "#4a5a52" }}>
-                        {inv.status === "approved" ? "Approved" : inv.status === "rejected" ? "Rejected" : "Pending approval"}
-                      </span>
-                    </div>
+                    <a href={receipt.file_url} download target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.78rem", padding: "6px 14px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", display: "inline-block" }}>↓ Download receipt</a>
                   </div>
-                  {inv.rejection_note && <div style={{ fontSize: "0.75rem", color: "#c0392b", marginBottom: "8px" }}>Note: {inv.rejection_note}</div>}
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    <a href={inv.file_url} download target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.75rem", padding: "5px 12px", background: "#f5f2ee", color: "#1B3A2D", borderRadius: "6px", textDecoration: "none" }}>↓ Download</a>
-                    {inv.status === "pending" && (
-                      <>
-                        <button onClick={() => approveInvoice(inv.id)} style={{ fontSize: "0.75rem", padding: "5px 12px", background: "#4a7c59", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>✓ Approve</button>
-                        <button onClick={() => { setRejecting(inv.id); setRejectionNote(""); }} style={{ fontSize: "0.75rem", padding: "5px 12px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>✕ Reject</button>
-                      </>
-                    )}
-                  </div>
-                  {rejecting === inv.id && (
-                    <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
-                      <input placeholder="Reason for rejection..." value={rejectionNote} onChange={e => setRejectionNote(e.target.value)} style={{ flex: 1, padding: "6px 10px", border: "1px solid #c0392b", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} autoFocus />
-                      <button onClick={() => rejectInvoice(inv.id)} style={{ padding: "6px 12px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer" }}>Confirm</button>
-                      <button onClick={() => setRejecting(null)} style={{ padding: "6px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
-                    </div>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
