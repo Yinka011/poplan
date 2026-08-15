@@ -91,8 +91,6 @@ export function EventDashboard({ event }: EventDashboardProps) {
           <Link href="/login/organizer/events" className="text-sm font-medium text-brown-600/70 transition-colors hover:text-brown-800">
             ← All events
           </Link>
-          <Link href={`/login/organizer/events/${event.slug}/sales`} style={{ fontSize: "0.82rem", padding: "5px 14px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif" }}>Sales & Payouts →</Link>
-          <Link href={`/login/organizer/events/${event.slug}/shipments`} style={{ fontSize: "0.82rem", padding: "5px 14px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif" }}>Shipments →</Link>
           <div style={{ background: "#1B3A2D", padding: "6px 12px", borderRadius: "8px" }}>
             <OrganizerBell event={event.city} slug={event.slug} />
           </div>

@@ -22,6 +22,8 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
     { label: "Brand Tasks", href: `/login/organizer/events/${slug}/tasks` },
     { label: "Expenses", href: `/login/organizer/events/${slug}/expenses` },
     { label: "Planning Hub", href: `/login/organizer/events/${slug}/planning` },
+    { label: "Shipments", href: `/login/organizer/events/${slug}/shipments` },
+    { label: "Sales & Payouts", href: `/login/organizer/events/${slug}/sales` },
   ];
 
   return (
