@@ -106,8 +106,9 @@ export default function BrandCityDashboard() {
     const { data: profile } = await supabase.from("profiles").select("name").eq("email", user.email).single();
     if (profile?.name) setUserName(profile.name);
 
-    const [plannerRes, allTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes, commentsRes, plannerReceiptsRes] = await Promise.all([
+    const [plannerRes, eventRes, allTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes, commentsRes, plannerReceiptsRes] = await Promise.all([
       supabase.from("event_planners").select("*").eq("event_slug", slug).maybeSingle(),
+      supabase.from("events").select("*").eq("slug", slug).maybeSingle(),
       supabase.from("planner_tasks").select("*").eq("event_slug", slug).order("created_at"),
       supabase.from("planner_messages").select("*").eq("event_slug", slug).order("created_at"),
       supabase.from("item_invoices").select("*").eq("event_slug", slug).order("created_at", { ascending: false }),
@@ -121,8 +122,15 @@ export default function BrandCityDashboard() {
       supabase.from("planner_receipts").select("*").eq("event_slug", slug).order("created_at", { ascending: false }),
     ]);
 
+    const eventData = eventRes?.data;
     if (plannerRes.data) {
-      setPlanner(plannerRes.data);
+      setPlanner({
+        ...plannerRes.data,
+        city: plannerRes.data.city || eventData?.city || slug,
+        dates_label: plannerRes.data.dates_label || eventData?.dates_label || "",
+        venue_name: plannerRes.data.venue_name || eventData?.venue_name || "",
+        venue_address: plannerRes.data.venue_address || eventData?.venue_address || "",
+      });
       setNewPlannerName(plannerRes.data.planner_name || "");
       setBudget(Number(plannerRes.data.budget) || 0);
       setNewBudget(String(plannerRes.data.budget || ""));

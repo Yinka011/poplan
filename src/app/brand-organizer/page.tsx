@@ -48,7 +48,7 @@ export default function BrandOrganizerDashboard() {
   const [adding, setAdding] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
-  const [newEvent, setNewEvent] = useState({ name: "", city: "", dates_label: "", status: "Planning", venue_name: "", venue_address: "" });
+  const [newEvent, setNewEvent] = useState({ city: "", start_date: "", end_date: "", status: "Planning", venue_name: "", venue_address: "" });
   const [addingShipment, setAddingShipment] = useState<string | null>(null);
   const [newShipment, setNewShipment] = useState({ notes: "" });
 
@@ -75,13 +75,15 @@ export default function BrandOrganizerDashboard() {
   };
 
   const addEvent = async () => {
-    if (!newEvent.name.trim() || !newEvent.city.trim()) return;
+    if (!newEvent.city.trim()) return;
     const slug = newEvent.city.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
     const { data } = await supabase.from("events").insert({
       slug,
-      name: newEvent.name,
+      name: newEvent.city,
       city: newEvent.city,
-      dates_label: newEvent.dates_label || "TBD",
+      start_date: newEvent.start_date || null,
+      end_date: newEvent.end_date || null,
+      dates_label: newEvent.start_date && newEvent.end_date ? `${new Date(newEvent.start_date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${new Date(newEvent.end_date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : "TBD",
       status: newEvent.status,
       organizer_email: userEmail,
       mode: "own_brand",
@@ -89,7 +91,7 @@ export default function BrandOrganizerDashboard() {
       venue_address: newEvent.venue_address,
     }).select().single();
     if (data) setEvents(prev => [...prev, data]);
-    setNewEvent({ name: "", city: "", dates_label: "", status: "Planning", venue_name: "", venue_address: "" });
+    setNewEvent({ city: "", start_date: "", end_date: "", status: "Planning", venue_name: "", venue_address: "" });
     setAdding(false);
   };
 
@@ -165,9 +167,17 @@ export default function BrandOrganizerDashboard() {
           <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
             <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "1rem" }}>New city pop-up</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
-              <input placeholder="Event name e.g. Wanni Fuga Houston" value={newEvent.name} onChange={e => setNewEvent({...newEvent, name: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
               <input placeholder="City e.g. Houston" value={newEvent.city} onChange={e => setNewEvent({...newEvent, city: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-              <input placeholder="Dates e.g. Aug 7-9, 2026" value={newEvent.dates_label} onChange={e => setNewEvent({...newEvent, dates_label: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+              <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "3px" }}>START DATE</div>
+                  <input type="date" value={newEvent.start_date} onChange={e => setNewEvent({...newEvent, start_date: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "3px" }}>END DATE</div>
+                  <input type="date" value={newEvent.end_date} onChange={e => setNewEvent({...newEvent, end_date: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
+                </div>
+              </div>
               <select value={newEvent.status} onChange={e => setNewEvent({...newEvent, status: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
                 <option>Planning</option>
                 <option>Active</option>
