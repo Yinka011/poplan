@@ -123,17 +123,19 @@ export default function BrandCityDashboard() {
     ]);
 
     const eventData = eventRes?.data;
-    if (plannerRes.data) {
+    if (plannerRes.data || eventData) {
       setPlanner({
-        ...plannerRes.data,
-        city: plannerRes.data.city || eventData?.city || slug,
-        dates_label: plannerRes.data.dates_label || eventData?.dates_label || "",
-        venue_name: plannerRes.data.venue_name || eventData?.venue_name || "",
-        venue_address: plannerRes.data.venue_address || eventData?.venue_address || "",
-      });
-      setNewPlannerName(plannerRes.data.planner_name || "");
-      setBudget(Number(plannerRes.data.budget) || 0);
-      setNewBudget(String(plannerRes.data.budget || ""));
+        ...(plannerRes.data || {}),
+        city: plannerRes.data?.city || eventData?.city || slug,
+        dates_label: plannerRes.data?.dates_label || eventData?.dates_label || "",
+        venue_name: plannerRes.data?.venue_name || eventData?.venue_name || "",
+        venue_address: plannerRes.data?.venue_address || eventData?.venue_address || "",
+        start_date: plannerRes.data?.start_date || eventData?.start_date || "",
+        end_date: plannerRes.data?.end_date || eventData?.end_date || "",
+      } as any);
+      setNewPlannerName(plannerRes.data?.planner_name || "");
+      setBudget(Number(plannerRes.data?.budget) || 0);
+      setNewBudget(String(plannerRes.data?.budget || ""));
     }
     if (allTasksRes.data) {
       setAssignedTasks(allTasksRes.data.filter((t: Task) => t.owner === "brand"));
