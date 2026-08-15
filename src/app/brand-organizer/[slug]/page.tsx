@@ -69,7 +69,7 @@ export default function BrandCityDashboard() {
   const [assignedTasks, setAssignedTasks] = useState<Task[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [plannerReceipts, setPlannerReceipts] = useState<{id: number; description: string; amount: number; file_url: string; file_name: string; created_at: string;}[]>([]);
+  const [plannerReceipts, setPlannerReceipts] = useState<{id: number; description: string; amount: number; file_url: string; file_name: string; created_at: string; event_slug: string;}[]>([]);
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
@@ -691,11 +691,11 @@ export default function BrandCityDashboard() {
                   <div key={receipt.id} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", marginBottom: "1rem", border: "1px solid #ede8e2" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
                       <div>
-                        <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontWeight: 500 }}>{(receipt.file_name || receipt.description || "Receipt").replace(/_/g, " ").replace(/\.[^.]+$/, "")}</div>
+                        <div style={{ fontSize: "0.9rem", color: "#1B3A2D", fontWeight: 500 }}>{receipt.description || receipt.file_name || "Receipt"}</div>
                         <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginTop: "4px", lineHeight: 1.5 }}>{items.join(" · ")}</div>
                         <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginTop: "4px" }}>{new Date(receipt.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
                       </div>
-                      <div style={{ fontSize: "1.1rem", color: "#E8C97A", fontWeight: 500 }}>${Number(receipt.amount).toFixed(2)}</div>
+                      <div style={{ fontSize: "1.1rem", color: "#E8C97A", fontWeight: 500 }}>{receipt.amount ? `$${Number(receipt.amount).toFixed(2)}` : ""}</div>
                     </div>
                     <a href={receipt.file_url} download target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.78rem", padding: "6px 14px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", display: "inline-block" }}>↓ Download receipt</a>
                   </div>
