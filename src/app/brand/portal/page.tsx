@@ -144,11 +144,6 @@ export default function BrandPortal() {
       }
 
       // Show tutorial on first visit
-      const tutorialKey = `brand_tutorial_seen_${user.email}`;
-      if (!localStorage.getItem(tutorialKey)) {
-        setShowTutorial(true);
-        localStorage.setItem(tutorialKey, "true");
-      }
     };
     fetchAll();
   }, []);
@@ -276,7 +271,7 @@ export default function BrandPortal() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif" }}>
-      {showTutorial && brand && <BrandTutorial brandName={brand.name} eventName={eventName} onClose={() => setShowTutorial(false)} />}
+      {showTutorial && <BrandTutorial brandName={brand?.name || ""} eventName={eventName} onClose={() => setShowTutorial(false)} />}
 
       {/* Top bar */}
       <div style={{ background: "#fff", borderBottom: "1px solid #e4ebe6", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky" as const, top: 0, zIndex: 10 }}>
