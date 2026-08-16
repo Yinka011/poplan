@@ -119,7 +119,7 @@ export default function ExpensesPage({ params }: { params: any }) {
               {editingBudget && card.clickable ? (
                 <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                   <input value={newBudget} onChange={e => setNewBudget(e.target.value)} style={{ width: "80px", padding: "4px", border: "1px solid #E8C97A", borderRadius: "4px", fontSize: "13px" }} autoFocus />
-                  <button onClick={() => { setBudget(parseFloat(newBudget)); setEditingBudget(false); }} style={{ padding: "3px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", fontSize: "11px", cursor: "pointer" }}>Save</button>
+                  <button onClick={async () => { const val = parseFloat(newBudget) || 0; await supabase.from("event_settings").upsert({ event: "Atlanta", budget: val }, { onConflict: "event" }); setBudget(val); setEditingBudget(false); }} style={{ padding: "3px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", fontSize: "11px", cursor: "pointer" }}>Save</button>
                 </div>
               ) : (
                 <div style={{ fontSize: "1.3rem", color: card.color }}>{card.value}</div>
@@ -227,8 +227,8 @@ export default function ExpensesPage({ params }: { params: any }) {
                           </div>
                         ) : (
                           <div style={{ display: "flex", gap: "4px" }}>
-                            <button onClick={() => { setEditing(exp.id); setEditData(exp); }} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "4px", cursor: "pointer", color: "#4a5a52" }}>Edit</button>
-                            <button onClick={() => deleteExpense(exp.id)} style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #f0f4f1", borderRadius: "4px", cursor: "pointer", color: "#c0392b" }}>Remove</button>
+                            <button onClick={() => { setEditing(exp.id); setEditData(exp); }} title="Edit" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "14px", padding: "2px 4px" }} onMouseEnter={e => (e.currentTarget.style.color = "#1B3A2D")} onMouseLeave={e => (e.currentTarget.style.color = "#4a5a52")}>✎</button>
+                            <button onClick={() => deleteExpense(exp.id)} title="Remove" style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "12px", padding: "2px 4px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                           </div>
                         )}
                       </td>
