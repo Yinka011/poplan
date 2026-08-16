@@ -61,7 +61,6 @@ export default function ExpensesPage({ params }: { params: any }) {
       item: newExpense.item,
       cost,
       deposit,
-      balance: cost - deposit,
       notes: newExpense.notes,
       event: "Atlanta"
     }).select().single();
