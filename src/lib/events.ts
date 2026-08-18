@@ -49,7 +49,19 @@ export const EVENTS: EventSummary[] = [
 ];
 
 export function getEventBySlug(slug: string): EventSummary | undefined {
-  return EVENTS.find((event) => event.slug === slug);
+  const found = EVENTS.find((event) => event.slug === slug);
+  if (found) return found;
+  // Return a dynamic placeholder for any other slug
+  return {
+    slug,
+    name: slug.split("-").slice(0, -1).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") + " Pop-up",
+    city: slug.split("-").slice(0, -1).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+    datesLabel: "TBD",
+    status: "Planning",
+    brandsCount: 0,
+    feesCollected: 0,
+    outstandingBalance: 0,
+  };
 }
 
 export function formatCurrency(amount: number): string {
