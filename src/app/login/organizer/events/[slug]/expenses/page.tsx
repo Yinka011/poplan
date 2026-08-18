@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 type Expense = {
   id: number;
@@ -25,6 +26,8 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function ExpensesPage({ params }: { params: any }) {
+  const slug = params?.slug || "";
+  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1) || "Atlanta";
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [decorTotal, setDecorTotal] = useState(0);
   const [refreshTotal, setRefreshTotal] = useState(0);
@@ -41,10 +44,10 @@ export default function ExpensesPage({ params }: { params: any }) {
 
   const fetchAll = async () => {
     const [expRes, decorRes, refreshRes, staffRes] = await Promise.all([
-      supabase.from("expenses").select("*").eq("event", "Atlanta").order("category"),
-      supabase.from("planning_decor").select("cost").eq("event", "Atlanta"),
-      supabase.from("planning_refreshments").select("cost").eq("event", "Atlanta"),
-      supabase.from("planning_staff").select("pay_rate").eq("event", "Atlanta"),
+      supabase.from("expenses").select("*").eq("event", eventName).order("category"),
+      supabase.from("planning_decor").select("cost").eq("event", eventName),
+      supabase.from("planning_refreshments").select("cost").eq("event", eventName),
+      supabase.from("planning_staff").select("pay_rate").eq("event", eventName),
     ]);
     if (expRes.data) setExpenses(expRes.data);
     if (decorRes.data) setDecorTotal(decorRes.data.reduce((s, x) => s + Number(x.cost), 0));
@@ -62,7 +65,7 @@ export default function ExpensesPage({ params }: { params: any }) {
       cost,
       deposit,
       notes: newExpense.notes,
-      event: "Atlanta"
+      event: eventName
     }).select().single();
     if (data) setExpenses(prev => [...prev, data]);
     setNewExpense({ category: "Venue", item: "", cost: "", deposit: "", notes: "" });
@@ -119,7 +122,7 @@ export default function ExpensesPage({ params }: { params: any }) {
               {editingBudget && card.clickable ? (
                 <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                   <input value={newBudget} onChange={e => setNewBudget(e.target.value)} style={{ width: "80px", padding: "4px", border: "1px solid #E8C97A", borderRadius: "4px", fontSize: "13px" }} autoFocus />
-                  <button onClick={async () => { const val = parseFloat(newBudget) || 0; await supabase.from("event_settings").upsert({ event: "Atlanta", budget: val }, { onConflict: "event" }); setBudget(val); setEditingBudget(false); }} style={{ padding: "3px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", fontSize: "11px", cursor: "pointer" }}>Save</button>
+                  <button onClick={async () => { const val = parseFloat(newBudget) || 0; await supabase.from("event_settings").upsert({ event: eventName, budget: val }, { onConflict: "event" }); setBudget(val); setEditingBudget(false); }} style={{ padding: "3px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", fontSize: "11px", cursor: "pointer" }}>Save</button>
                 </div>
               ) : (
                 <div style={{ fontSize: "1.3rem", color: card.color }}>{card.value}</div>

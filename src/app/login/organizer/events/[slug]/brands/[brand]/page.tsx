@@ -87,6 +87,7 @@ export default function OrganizerBrandPage() {
   const params = useParams();
   const brandSlug = decodeURIComponent(params.brand as string);
   const slug = params.slug as string;
+  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
 
   const [brand, setBrand] = useState<Brand | null>(null);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
@@ -119,7 +120,7 @@ export default function OrganizerBrandPage() {
     const { data: brandData } = await supabase
       .from("brands")
       .select("*")
-      .eq("event", "Atlanta")
+      .eq("event", eventName)
       .ilike("name", brandSlug)
       .single();
 
@@ -127,12 +128,12 @@ export default function OrganizerBrandPage() {
     setBrand(brandData);
 
     const [deadlineRes, taskRes, memberRes, noteRes, approvalRes, messagesRes] = await Promise.all([
-      supabase.from("event_deadlines").select("*").eq("event", "Atlanta").order("id"),
-      supabase.from("brand_tasks").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta"),
-      supabase.from("brand_members").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta"),
-      supabase.from("brand_notes").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta").order("created_at", { ascending: false }),
-      supabase.from("file_approvals").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta"),
-      supabase.from("brand_messages").select("*").eq("brand_email", brandData.email).eq("event", "Atlanta").order("created_at"),
+      supabase.from("event_deadlines").select("*").eq("event", eventName).order("id"),
+      supabase.from("brand_tasks").select("*").eq("brand_email", brandData.email).eq("event", eventName),
+      supabase.from("brand_members").select("*").eq("brand_email", brandData.email).eq("event", eventName),
+      supabase.from("brand_notes").select("*").eq("brand_email", brandData.email).eq("event", eventName).order("created_at", { ascending: false }),
+      supabase.from("file_approvals").select("*").eq("brand_email", brandData.email).eq("event", eventName),
+      supabase.from("brand_messages").select("*").eq("brand_email", brandData.email).eq("event", eventName).order("created_at"),
     ]);
 
     if (deadlineRes.data) setDeadlines(deadlineRes.data);
@@ -180,7 +181,7 @@ export default function OrganizerBrandPage() {
     if (existing) {
       await supabase.from("file_approvals").update({ status }).eq("brand_email", brand.email).eq("file_name", fileName);
     } else {
-      await supabase.from("file_approvals").insert({ brand_email: brand.email, event: "Atlanta", file_name: fileName, status });
+      await supabase.from("file_approvals").insert({ brand_email: brand.email, event: eventName, file_name: fileName, status });
     }
     setApprovals(prev => [...prev.filter(a => a.file_name !== fileName), { file_name: fileName, status }]);
 
@@ -233,7 +234,7 @@ export default function OrganizerBrandPage() {
       const { data: memberData } = await supabase.from("brand_members").insert({
         brand_email: brand.email,
         member_email: newMemberEmail,
-        event: "Atlanta",
+        event: eventName,
       }).select().single();
       if (memberData) setMembers(prev => [...prev, memberData]);
       alert(`Invitation sent to ${newMemberEmail}`);
@@ -262,7 +263,7 @@ export default function OrganizerBrandPage() {
     setSavingNote(true);
     const { data } = await supabase.from("brand_notes").insert({
       brand_email: brand.email,
-      event: "Atlanta",
+      event: eventName,
       content: newNote,
     }).select().single();
     if (data) setNotes(prev => [data, ...prev]);

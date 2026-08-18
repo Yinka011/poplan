@@ -61,10 +61,10 @@ export default function PlanningHub() {
 
   const fetchAll = async () => {
     const [d, r, s, sh] = await Promise.all([
-      supabase.from("planning_decor").select("*").eq("event", "Atlanta").order("category"),
-      supabase.from("planning_refreshments").select("*").eq("event", "Atlanta"),
-      supabase.from("planning_staff").select("*").eq("event", "Atlanta"),
-      supabase.from("planning_staff_shifts").select("*").eq("event", "Atlanta"),
+      supabase.from("planning_decor").select("*").eq("event", eventName).order("category"),
+      supabase.from("planning_refreshments").select("*").eq("event", eventName),
+      supabase.from("planning_staff").select("*").eq("event", eventName),
+      supabase.from("planning_staff_shifts").select("*").eq("event", eventName),
     ]);
     if (d.data) setDecor(d.data);
     if (r.data) setRefresh(r.data);
@@ -83,7 +83,7 @@ export default function PlanningHub() {
     const unitCost = parseFloat(newDecor.cost) || 0;
     const totalCost = qty > 0 ? qty * unitCost : unitCost;
     const { data } = await supabase.from("planning_decor").insert({
-      ...newDecor, cost: totalCost, quantity: qty, event: "Atlanta"
+      ...newDecor, cost: totalCost, quantity: qty, event: eventName
     }).select().single();
     if (data) setDecor(prev => [...prev, data]);
     setNewDecor({ category: "Theme", item: "", decision: "", vendor: "", cost: "", quantity: "", status: "Pending", notes: "" });
@@ -102,7 +102,7 @@ export default function PlanningHub() {
       quantity_num: qty,
       cost: totalCost,
       notes: newRefresh.notes,
-      event: "Atlanta"
+      event: eventName
     }).select().single();
     if (data) setRefresh(prev => [...prev, data]);
     setNewRefresh({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
@@ -119,7 +119,7 @@ export default function PlanningHub() {
       email: newStaff.email,
       instagram: newStaff.instagram,
       notes: newStaff.notes,
-      event: "Atlanta"
+      event: eventName
     }).select().single();
     if (data) setStaff(prev => [...prev, { ...data, shifts: [] }]);
     setNewStaff({ name: "", role: "Cashier", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
@@ -131,7 +131,7 @@ export default function PlanningHub() {
     const hours = calcHours(newShift.start_time, newShift.end_time);
     const { data } = await supabase.from("planning_staff_shifts").insert({
       staff_id: staffId,
-      event: "Atlanta",
+      event: eventName,
       shift_date: newShift.shift_date,
       start_time: newShift.start_time,
       end_time: newShift.end_time,

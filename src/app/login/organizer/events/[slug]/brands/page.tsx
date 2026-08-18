@@ -14,6 +14,9 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 };
 
 export default function BrandsPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [resendingAll, setResendingAll] = useState(false);
   const [resendCount, setResendCount] = useState(0);
@@ -24,9 +27,9 @@ export default function BrandsPage() {
   useEffect(() => {
     const fetchAll = async () => {
       const [brandRes, taskRes, deadlineRes] = await Promise.all([
-        supabase.from("brands").select("*").eq("event", "Atlanta"),
-        supabase.from("brand_tasks").select("*").eq("event", "Atlanta"),
-        supabase.from("event_deadlines").select("*").eq("event", "Atlanta").order("id"),
+        supabase.from("brands").select("*").eq("event", eventName),
+        supabase.from("brand_tasks").select("*").eq("event", eventName),
+        supabase.from("event_deadlines").select("*").eq("event", eventName).order("id"),
       ]);
       if (brandRes.data) setBrands(brandRes.data);
       if (taskRes.data) setTasks(taskRes.data);
