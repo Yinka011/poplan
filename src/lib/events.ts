@@ -52,10 +52,14 @@ export function getEventBySlug(slug: string): EventSummary | undefined {
   const found = EVENTS.find((event) => event.slug === slug);
   if (found) return found;
   // Return a dynamic placeholder for any other slug
+  // Remove timestamp (last segment if it's a number)
+  const parts = slug.split("-");
+  const cityParts = parts[parts.length - 1].match(/^\d+$/) ? parts.slice(0, -1) : parts;
+  const cityName = cityParts.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
   return {
     slug,
-    name: slug.split("-").slice(0, -1).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") + " Pop-up",
-    city: slug.split("-").slice(0, -1).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+    name: cityName + " Pop-up",
+    city: cityName,
     datesLabel: "TBD",
     status: "Planning",
     brandsCount: 0,
