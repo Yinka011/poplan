@@ -330,6 +330,16 @@ export default function OrganizerBrandPage() {
     setSendingMessage(false);
   };
 
+  const downloadFile = async (url: string, filename: string) => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif", padding: "2rem 1.5rem" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
@@ -502,7 +512,7 @@ export default function OrganizerBrandPage() {
                     </div>
                     <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: badge.background, color: badge.color, whiteSpace: "nowrap" as const }}>{badge.label}</span>
                     <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", color: "#4a5a52", textDecoration: "none" }}>View</a>
-                    <a href={file.url} download target="_blank" rel="noopener noreferrer" style={{ fontSize: "11px", padding: "3px 8px", background: "#1B3A2D", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>↓</a>
+                    <button onClick={() => downloadFile(file.url, file.name)} style={{ fontSize: "11px", padding: "3px 8px", background: "#1B3A2D", color: "#fff", borderRadius: "6px", border: "none", cursor: "pointer" }}>↓</button>
                   </div>
                   <div style={{ display: "flex", gap: "6px", marginTop: "8px", paddingLeft: "27px", alignItems: "center" }}>
                     <button onClick={() => setApprovalStatus(file.name, "approved", file.category)} title="Approve" style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: approval === "approved" ? "#4a7c59" : "transparent", color: approval === "approved" ? "#fff" : "#4a7c59", border: "1px solid #4a7c5944", borderRadius: "6px", cursor: "pointer" }}>
