@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
@@ -44,6 +45,9 @@ function calcHours(start: string, end: string): number {
 }
 
 export default function PlanningHub() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
   const [tab, setTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
