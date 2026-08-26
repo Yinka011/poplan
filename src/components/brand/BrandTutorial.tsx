@@ -77,7 +77,14 @@ const steps = [
 ];
 
 export default function BrandTutorial({ brandName, eventName, onClose }: Props) {
+  const handleClose = () => {
+    if (dontShow) {
+      localStorage.setItem(`brand_tutorial_seen_dismissed`, "true");
+    }
+    onClose();
+  };
   const [step, setStep] = useState(0);
+  const [dontShow, setDontShow] = useState(false);
   const isLast = step === steps.length - 1;
   const current = steps[step];
 
@@ -87,7 +94,7 @@ export default function BrandTutorial({ brandName, eventName, onClose }: Props) 
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
           <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em" }}>GETTING STARTED {step + 1} OF {steps.length}</div>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "1.2rem", padding: "2px 6px" }}>x</button>
+          <button onClick={handleClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "1.2rem", padding: "2px 6px" }}>x</button>
         </div>
 
         <div style={{ height: "3px", background: "#e4ebe6", borderRadius: "2px", marginBottom: "2rem", overflow: "hidden" }}>
@@ -111,14 +118,19 @@ export default function BrandTutorial({ brandName, eventName, onClose }: Props) 
           {step > 0 && (
             <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: "10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#4a5a52", fontFamily: "Georgia, serif" }}>Back</button>
           )}
-          <button onClick={isLast ? onClose : () => setStep(step + 1)} style={{ flex: 2, padding: "10px", background: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#fff", fontFamily: "Georgia, serif" }}>
+          <button onClick={isLast ? handleClose : () => setStep(step + 1)} style={{ flex: 2, padding: "10px", background: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#fff", fontFamily: "Georgia, serif" }}>
             {isLast ? "Start using Nalpop" : "Next"}
           </button>
         </div>
 
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "1rem", justifyContent: "center" }}>
+          <input type="checkbox" id="dontShow" checked={dontShow} onChange={e => setDontShow(e.target.checked)} style={{ cursor: "pointer" }} />
+          <label htmlFor="dontShow" style={{ fontSize: "0.78rem", color: "#4a5a52", cursor: "pointer" }}>Don&apos;t show this again</label>
+        </div>
+
         {!isLast && (
-          <div style={{ textAlign: "center", marginTop: "1rem" }}>
-            <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "0.78rem", color: "#b0a090", fontFamily: "Georgia, serif" }}>Skip tutorial</button>
+          <div style={{ textAlign: "center", marginTop: "0.5rem" }}>
+            <button onClick={handleClose} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "0.78rem", color: "#b0a090", fontFamily: "Georgia, serif" }}>Skip tutorial</button>
           </div>
         )}
       </div>
