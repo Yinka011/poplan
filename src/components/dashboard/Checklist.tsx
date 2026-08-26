@@ -30,7 +30,7 @@ const Avatar = ({ name }: { name: string }) => {
   );
 };
 
-export default function Checklist() {
+export default function Checklist({ event }: { event: string }) {
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [newTask, setNewTask] = useState("");
   const [newOwner, setNewOwner] = useState("");
@@ -52,7 +52,7 @@ export default function Checklist() {
   }, []);
 
   const fetchItems = async () => {
-    const { data } = await supabase.from("checklist").select("*").eq("event", "Atlanta").order("id");
+    const { data } = await supabase.from("checklist").select("*").eq("event", event).order("id");
     if (data) setItems(data);
   };
 
@@ -65,7 +65,7 @@ export default function Checklist() {
     if (!newTask.trim()) return;
     const { data } = await supabase.from("checklist").insert({
       task: newTask, owner: newOwner, due_date: newDate,
-      completed: false, event: "Atlanta", category: newCategory
+      completed: false, event: event, category: newCategory
     }).select().single();
     if (data) setItems(prev => [...prev, data]);
     setNewTask(""); setNewOwner(""); setNewDate(""); setNewCategory("General");

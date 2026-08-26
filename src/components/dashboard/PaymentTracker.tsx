@@ -29,7 +29,7 @@ const TrashIcon = () => (
   </svg>
 );
 
-export default function PaymentTracker() {
+export default function PaymentTracker({ event }: { event: string }) {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [newAmount, setNewAmount] = useState("");
@@ -50,7 +50,7 @@ export default function PaymentTracker() {
   }, []);
 
   const fetchBrands = async () => {
-    const { data } = await supabase.from("brands").select("*").eq("event", "Atlanta");
+    const { data } = await supabase.from("brands").select("*").eq("event", event);
     if (data) setBrands(data);
   };
 
@@ -79,7 +79,7 @@ export default function PaymentTracker() {
       amount_paid: paid,
       balance,
       status,
-      event: "Atlanta",
+      event: event,
       invited: false,
     }).select().single();
     if (data) setBrands(prev => [...prev, data]);

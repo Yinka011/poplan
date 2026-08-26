@@ -172,10 +172,10 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
 
 
-      <PaymentTracker />
+      <PaymentTracker event={event.city} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Checklist />
+        <Checklist event={event.city} />
         <MarketingDeadlines event={event.city} />
       </div>
 

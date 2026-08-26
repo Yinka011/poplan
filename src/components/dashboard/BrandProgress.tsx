@@ -6,7 +6,7 @@ type Brand = { id: number; name: string; email: string; };
 type Task = { brand_email: string; completed: boolean; };
 type Deadline = { id: number; task: string; };
 
-export default function BrandProgress() {
+export default function BrandProgress({ event }: { event: string }) {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
@@ -14,9 +14,9 @@ export default function BrandProgress() {
   useEffect(() => {
     const fetchAll = async () => {
       const [brandRes, taskRes, deadlineRes] = await Promise.all([
-        supabase.from("brands").select("id, name, email").eq("event", "Atlanta"),
-        supabase.from("brand_tasks").select("brand_email, completed").eq("event", "Atlanta"),
-        supabase.from("event_deadlines").select("id, task").eq("event", "Atlanta"),
+        supabase.from("brands").select("id, name, email").eq("event", event),
+        supabase.from("brand_tasks").select("brand_email, completed").eq("event", event),
+        supabase.from("event_deadlines").select("id, task").eq("event", event),
       ]);
       if (brandRes.data) setBrands(brandRes.data);
       if (taskRes.data) setTasks(taskRes.data);

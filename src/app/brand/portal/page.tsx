@@ -144,8 +144,9 @@ export default function BrandPortal() {
       }
 
       // Show tutorial on first visit
-      const tutorialKey = `brand_tutorial_seen_${resolvedBrandEmail}`;
-      if (resolvedBrandEmail && !localStorage.getItem(tutorialKey)) {
+      const resolvedEmail = resolvedBrandEmail || user?.email || "";
+      const tutorialKey = `brand_tutorial_seen_${resolvedEmail}`;
+      if (resolvedEmail && !localStorage.getItem(tutorialKey)) {
         setShowTutorial(true);
         localStorage.setItem(tutorialKey, "true");
       }
