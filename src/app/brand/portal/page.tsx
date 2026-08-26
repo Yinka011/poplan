@@ -146,9 +146,10 @@ export default function BrandPortal() {
       // Show tutorial on first visit
       const resolvedEmail = resolvedBrandEmail || user?.email || "";
       const tutorialKey = `brand_tutorial_seen_${resolvedEmail}`;
-      if (resolvedEmail && !localStorage.getItem(tutorialKey)) {
+      if (resolvedEmail) { // DEV: always show tutorial
+      // if (resolvedEmail && !localStorage.getItem(tutorialKey)) {
         setShowTutorial(true);
-        localStorage.setItem(tutorialKey, "true");
+        // localStorage.setItem(tutorialKey, "true"); // DEV: disabled
       }
     };
     fetchAll();
