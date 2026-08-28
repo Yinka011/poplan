@@ -89,7 +89,7 @@ export default function BrandTutorial({ brandName, eventName, onClose }: Props) 
   const current = steps[step];
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#00000066", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+    <div style={{ position: "fixed", inset: 0, background: "#00000066", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
       <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "520px", width: "100%", fontFamily: "Georgia, serif", position: "relative" as const, maxHeight: "90vh", overflowY: "auto" as const }}>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
