@@ -21,6 +21,9 @@ type Brand = {
   event: string;
   shipped: boolean;
   shipped_at: string;
+  courier?: string;
+  tracking_number?: string;
+  shipping_invoice?: string;
   instagram?: string;
   website?: string;
   bio?: string;
@@ -70,6 +73,8 @@ export default function BrandPortal() {
   const [brandEmail, setBrandEmail] = useState("");
   const [venueAddress, setVenueAddress] = useState("");
   const [markingShipped, setMarkingShipped] = useState(false);
+  const [editingShipping, setEditingShipping] = useState(false);
+  const [shippingDetails, setShippingDetails] = useState({ courier: "", tracking_number: "", shipping_invoice: "" });
   const [showTutorial, setShowTutorial] = useState(false);
   const [activeTab, setActiveTab] = useState<"home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "profile" | "faq">("home");
   const [editingProfile, setEditingProfile] = useState(false);
@@ -153,6 +158,17 @@ export default function BrandPortal() {
 
   const eventDate = new Date("2026-09-12");
   const daysToEvent = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  const saveShippingDetails = async () => {
+    if (!brand) return;
+    await supabase.from("brands").update({
+      courier: shippingDetails.courier,
+      tracking_number: shippingDetails.tracking_number,
+      shipping_invoice: shippingDetails.shipping_invoice,
+    }).eq("id", brand.id);
+    setBrand(prev => prev ? { ...prev, ...shippingDetails } : prev);
+    setEditingShipping(false);
+  };
 
   const toggleShipped = async () => {
     if (!brand) return;
@@ -364,6 +380,45 @@ export default function BrandPortal() {
                     <div style={{ fontSize: "0.9rem", color: "#1B3A2D" }}>Not yet shipped</div>
                   )}
                 </div>
+
+                {/* Shipping details */}
+                {editingShipping ? (
+                  <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginBottom: "12px" }}>
+                    <div>
+                      <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "3px" }}>COURIER</div>
+                      <select value={shippingDetails.courier} onChange={e => setShippingDetails({...shippingDetails, courier: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
+                        <option value="">Select courier...</option>
+                        {["DHL", "UPS", "FedEx", "USPS", "Amgray Logistics", "Other"].map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "3px" }}>TRACKING NUMBER</div>
+                      <input value={shippingDetails.tracking_number} onChange={e => setShippingDetails({...shippingDetails, tracking_number: e.target.value})} placeholder="e.g. 1Z999AA10123456784" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "3px" }}>SHIPPING INVOICE NUMBER</div>
+                      <input value={shippingDetails.shipping_invoice} onChange={e => setShippingDetails({...shippingDetails, shipping_invoice: e.target.value})} placeholder="e.g. INV-2026-001" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
+                    </div>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button onClick={saveShippingDetails} style={{ flex: 1, padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save details</button>
+                      <button onClick={() => setEditingShipping(false)} style={{ padding: "8px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: "12px" }}>
+                    {(brand.courier || brand.tracking_number || brand.shipping_invoice) ? (
+                      <div style={{ background: "#f0f4f1", borderRadius: "8px", padding: "8px 10px", marginBottom: "8px" }}>
+                        {brand.courier && <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginBottom: "2px" }}>🚚 {brand.courier}</div>}
+                        {brand.tracking_number && <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginBottom: "2px" }}>Tracking: {brand.tracking_number}</div>}
+                        {brand.shipping_invoice && <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Invoice: {brand.shipping_invoice}</div>}
+                      </div>
+                    ) : null}
+                    <button onClick={() => { setEditingShipping(true); setShippingDetails({ courier: brand.courier || "", tracking_number: brand.tracking_number || "", shipping_invoice: brand.shipping_invoice || "" }); }} style={{ fontSize: "0.78rem", color: "#1B3A2D", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "6px 12px", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%", marginBottom: "8px" }}>
+                      {(brand.courier || brand.tracking_number || brand.shipping_invoice) ? "✎ Edit shipping details" : "+ Add shipping details"}
+                    </button>
+                  </div>
+                )}
+
                 <button onClick={toggleShipped} disabled={markingShipped} style={{ padding: "8px 16px", background: brand.shipped ? "transparent" : "#1B3A2D", color: brand.shipped ? "#4a5a52" : "#fff", border: brand.shipped ? "1px solid #e4ebe6" : "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%" }}>
                   {markingShipped ? "Saving..." : brand.shipped ? "Mark as not shipped" : "Mark as shipped"}
                 </button>
