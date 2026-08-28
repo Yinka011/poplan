@@ -70,7 +70,7 @@ export default function BrandPortal() {
   const [brandEmail, setBrandEmail] = useState("");
   const [venueAddress, setVenueAddress] = useState("");
   const [markingShipped, setMarkingShipped] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(true); // DEV: force show
+  const [showTutorial, setShowTutorial] = useState(false);
   const [activeTab, setActiveTab] = useState<"home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "profile" | "faq">("home");
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({ instagram: "", website: "", bio: "" });
