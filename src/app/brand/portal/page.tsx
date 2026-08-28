@@ -368,7 +368,7 @@ export default function BrandPortal() {
                 <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "8px" }}>SHIPMENT STATUS</div>
                 <div style={{ background: "#f0f4f1", borderRadius: "8px", padding: "8px 10px", marginBottom: "12px", borderLeft: "3px solid #1B3A2D" }}>
                   <div style={{ fontSize: "0.65rem", color: "#1B3A2D", letterSpacing: "0.08em", marginBottom: "3px" }}>SHIP YOUR PRODUCTS TO</div>
-                  <div style={{ fontSize: "0.78rem", color: "#1c1714", lineHeight: 1.6 }}>Lizeo<br />5135 Peachtree Pkwy NW Ste 915<br />Peachtree Corners, GA 30092<br />United States</div>
+                  <div style={{ fontSize: "0.78rem", color: "#1c1714", lineHeight: 1.6 }}>{venueAddress || "Contact your organizer for shipping address"}</div>
                 </div>
                 <div style={{ marginBottom: "12px" }}>
                   {brand.shipped ? (
