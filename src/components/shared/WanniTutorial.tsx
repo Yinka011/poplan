@@ -69,18 +69,23 @@ const steps = [
 ];
 
 export default function WanniTutorial({ onClose }: Props) {
+  const handleClose = () => {
+    if (dontShow) localStorage.setItem("wanni_tutorial_dismissed", "true");
+    onClose();
+  };
   const [step, setStep] = useState(0);
+  const [dontShow, setDontShow] = useState(false);
   const isLast = step === steps.length - 1;
   const current = steps[step];
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#00000077", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+    <div style={{ position: "fixed", inset: 0, background: "#00000077", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
       <div style={{ background: "#1B3A2D", borderRadius: "20px", padding: "2.5rem", maxWidth: "520px", width: "100%", fontFamily: "Georgia, serif", maxHeight: "90vh", overflowY: "auto" as const }}>
 
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
           <div style={{ fontSize: "0.65rem", color: "#ffffff55", letterSpacing: "0.15em" }}>GETTING STARTED {step + 1} OF {steps.length}</div>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#ffffff55", fontSize: "1.2rem", padding: "2px 6px" }}>✕</button>
+          <button onClick={handleClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#ffffff55", fontSize: "1.2rem", padding: "2px 6px" }}>✕</button>
         </div>
 
         {/* Progress bar */}
@@ -108,14 +113,19 @@ export default function WanniTutorial({ onClose }: Props) {
           {step > 0 && (
             <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: "10px", background: "transparent", border: "1px solid #ffffff22", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#ffffff88", fontFamily: "Georgia, serif" }}>Back</button>
           )}
-          <button onClick={isLast ? onClose : () => setStep(step + 1)} style={{ flex: 2, padding: "10px", background: "#E8C97A", border: "none", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#1B3A2D", fontFamily: "Georgia, serif" }}>
+          <button onClick={isLast ? handleClose : () => setStep(step + 1)} style={{ flex: 2, padding: "10px", background: "#E8C97A", border: "none", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#1B3A2D", fontFamily: "Georgia, serif" }}>
             {isLast ? "Start exploring" : "Next"}
           </button>
         </div>
 
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "1rem", justifyContent: "center" }}>
+          <input type="checkbox" id="wdontShow" checked={dontShow} onChange={e => setDontShow(e.target.checked)} style={{ cursor: "pointer" }} />
+          <label htmlFor="wdontShow" style={{ fontSize: "0.78rem", color: "#ffffff66", cursor: "pointer" }}>Don&apos;t show this again</label>
+        </div>
+
         {!isLast && (
           <div style={{ textAlign: "center", marginTop: "1rem" }}>
-            <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "0.78rem", color: "#ffffff33", fontFamily: "Georgia, serif" }}>Skip tutorial</button>
+            <button onClick={handleClose} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "0.78rem", color: "#ffffff33", fontFamily: "Georgia, serif" }}>Skip tutorial</button>
           </div>
         )}
       </div>

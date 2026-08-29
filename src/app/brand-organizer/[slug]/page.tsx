@@ -162,11 +162,9 @@ export default function BrandCityDashboard() {
     setLoading(false);
 
 
-    // Show tutorial on first visit
-    const tutorialKey = `wanni_tutorial_seen_${slug}`;
-    if (!localStorage.getItem(tutorialKey)) {
+    // Show tutorial until dismissed
+    if (!localStorage.getItem("wanni_tutorial_dismissed")) {
       setShowTutorial(true);
-      localStorage.setItem(tutorialKey, "true");
     }
   };
 
