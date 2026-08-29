@@ -305,15 +305,19 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
                   <div>
                     <div style={{ fontSize: "1rem", color: "#1B3A2D", marginBottom: "2px" }}>{product.name}</div>
                     <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>{product.category} · Base price ${Number(product.base_price).toFixed(2)}</div>
-                    <div style={{ display: "flex", gap: "12px", marginTop: "6px" }}>
+                    <div style={{ display: "flex", gap: "12px", marginTop: "6px", flexWrap: "wrap" as const }}>
                       <span style={{ fontSize: "0.72rem", color: "#4a5a52" }}>{productUnits} units</span>
                       <span style={{ fontSize: "0.72rem", color: "#4a5a52" }}>Value: ${productValue.toFixed(2)}</span>
-                      {product.square_catalog_id ? (
-                        <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>✓ In Square</span>
-                      ) : (
-                        <span style={{ fontSize: "0.72rem", color: "#E8C97A" }}>Not in Square</span>
-                      )}
+                      {product.review_status === "approved" && <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>✓ Approved</span>}
+                      {product.review_status === "pending" && <span style={{ fontSize: "0.72rem", color: "#b87333" }}>⏳ Pending review</span>}
+                      {product.review_status === "rejected" && <span style={{ fontSize: "0.72rem", color: "#c0392b" }}>✕ Rejected</span>}
+                      {product.square_catalog_id && <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>✓ In Square</span>}
                     </div>
+                    {product.review_status === "rejected" && product.review_note && (
+                      <div style={{ marginTop: "4px", fontSize: "0.72rem", color: "#c0392b", background: "#fdf0f0", padding: "4px 8px", borderRadius: "6px", borderLeft: "2px solid #c0392b" }}>
+                        Note: {product.review_note}
+                      </div>
+                    )}
                   </div>
                   <div style={{ display: "flex", gap: "6px" }}>
                     {!product.square_catalog_id && (product.variations || []).length > 0 && (
