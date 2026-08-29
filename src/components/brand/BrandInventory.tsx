@@ -47,6 +47,8 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
   const [uploadingToSquare, setUploadingToSquare] = useState<number | null>(null);
   const [uploadingAllToSquare, setUploadingAllToSquare] = useState(false);
   const [addingVariation, setAddingVariation] = useState<number | null>(null);
+  const [editingProduct, setEditingProduct] = useState<number | null>(null);
+  const [editProductData, setEditProductData] = useState({ name: "", category: "", base_price: "" });
   const [newProduct, setNewProduct] = useState({ name: "", category: "Clothing", base_price: "", photo_url: "" });
   const [newVariation, setNewVariation] = useState({ size: "One Size", colour: "Black", quantity: "", price: "" });
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -177,6 +179,16 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
       alert("Error: " + (data.error || "Upload failed"));
     }
     setUploadingToSquare(null);
+  };
+
+  const saveProductEdit = async (productId: number) => {
+    await supabase.from("brand_products").update({
+      name: editProductData.name,
+      category: editProductData.category,
+      base_price: parseFloat(editProductData.base_price) || 0,
+    }).eq("id", productId);
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, name: editProductData.name, category: editProductData.category, base_price: parseFloat(editProductData.base_price) || 0 } : p));
+    setEditingProduct(null);
   };
 
   const submitForReview = async (productId: number) => {
@@ -318,12 +330,25 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
                         Note: {product.review_note}
                       </div>
                     )}
+                    {editingProduct === product.id && (
+                      <div style={{ marginTop: "8px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
+                        <input value={editProductData.name} onChange={e => setEditProductData({...editProductData, name: e.target.value})} placeholder="Product name" style={inp()} />
+                        <input value={editProductData.base_price} onChange={e => setEditProductData({...editProductData, base_price: e.target.value})} placeholder="Price" type="number" style={inp()} />
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <button onClick={() => saveProductEdit(product.id)} style={{ flex: 1, padding: "6px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
+                          <button onClick={() => setEditingProduct(null)} style={{ padding: "6px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Cancel</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div style={{ display: "flex", gap: "6px" }}>
                     {!product.square_catalog_id && (product.variations || []).length > 0 && (
                       <button onClick={() => submitForReview(product.id)} disabled={product.review_status === "pending" || product.review_status === "approved"} style={{ fontSize: "0.75rem", padding: "5px 10px", background: product.review_status === "approved" ? "#4a7c59" : product.review_status === "pending" ? "#E8C97A" : "#1B3A2D", color: product.review_status === "pending" ? "#1B3A2D" : "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>
                         {product.review_status === "approved" ? "✓ Approved" : product.review_status === "pending" ? "Pending review" : product.review_status === "rejected" ? "Resubmit" : "Submit for review"}
                       </button>
+                    )}
+                    {product.review_status === "rejected" && (
+                      <button onClick={() => { setEditingProduct(product.id); setEditProductData({ name: product.name, category: product.category, base_price: String(product.base_price) }); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "14px" }}>✎</button>
                     )}
                     <button onClick={() => deleteProduct(product.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "14px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                   </div>
