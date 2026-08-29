@@ -23,6 +23,8 @@ type Product = {
   base_price: number;
   photo_url?: string;
   square_catalog_id?: string;
+  review_status?: string;
+  review_note?: string;
   variations: Variation[];
 };
 
@@ -33,6 +35,9 @@ export default function InventoryPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewTab, setReviewTab] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [reviewNote, setReviewNote] = useState("");
+  const [reviewingProduct, setReviewingProduct] = useState<number | null>(null);
   const [brandFilter, setBrandFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
@@ -82,6 +87,29 @@ export default function InventoryPage() {
     return { brand, products: brandProducts.length, units, value, uploaded, total: brandProducts.length };
   });
 
+  const approveProduct = async (productId: number) => {
+    await supabase.from("brand_products").update({ review_status: "approved", review_note: "" }).eq("id", productId);
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, review_status: "approved", review_note: "" } : p));
+    // Upload to Square
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      try {
+        await fetch("/api/square-upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId, eventSlug: slug }),
+        });
+      } catch (e) { console.log("Square upload failed", e); }
+    }
+  };
+
+  const rejectProduct = async (productId: number) => {
+    await supabase.from("brand_products").update({ review_status: "rejected", review_note: reviewNote }).eq("id", productId);
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, review_status: "rejected", review_note: reviewNote } : p));
+    setReviewingProduct(null);
+    setReviewNote("");
+  };
+
   if (loading) return <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading inventory...</div>;
 
   return (
@@ -107,6 +135,35 @@ export default function InventoryPage() {
             </div>
           ))}
         </div>
+
+        {/* Review tabs */}
+        {products.filter(p => p.review_status === "pending").length > 0 && (
+          <div style={{ background: "#E8C97A22", borderRadius: "10px", padding: "1rem 1.25rem", marginBottom: "1.5rem", border: "1px solid #E8C97A44" }}>
+            <div style={{ fontSize: "0.72rem", color: "#b87333", letterSpacing: "0.1em", marginBottom: "8px" }}>⏳ PENDING REVIEW ({products.filter(p => p.review_status === "pending").length})</div>
+            {products.filter(p => p.review_status === "pending").map(product => (
+              <div key={product.id} style={{ background: "#fff", borderRadius: "10px", padding: "0.75rem 1rem", marginBottom: "8px", border: "1px solid #e4ebe6" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>{product.name}</div>
+                    <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>{product.brand_name} · {product.category} · ${Number(product.base_price).toFixed(2)}</div>
+                    <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>{product.variations.length} variation{product.variations.length !== 1 ? "s" : ""} · {product.variations.reduce((s, v) => s + v.quantity, 0)} units</div>
+                  </div>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    {product.photo_url && <img src={product.photo_url} alt={product.name} style={{ width: "40px", height: "40px", borderRadius: "6px", objectFit: "cover" }} />}
+                    <button onClick={() => approveProduct(product.id)} style={{ padding: "5px 12px", background: "#4a7c59", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>✓ Approve</button>
+                    <button onClick={() => setReviewingProduct(reviewingProduct === product.id ? null : product.id)} style={{ padding: "5px 12px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>✕ Reject</button>
+                  </div>
+                </div>
+                {reviewingProduct === product.id && (
+                  <div style={{ marginTop: "8px", display: "flex", gap: "8px" }}>
+                    <input placeholder="Reason for rejection..." value={reviewNote} onChange={e => setReviewNote(e.target.value)} style={{ flex: 1, padding: "6px 10px", border: "1px solid #c0392b", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} autoFocus />
+                    <button onClick={() => rejectProduct(product.id)} style={{ padding: "6px 12px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer" }}>Confirm</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Filters */}
         <div style={{ display: "flex", gap: "8px", marginBottom: "1.5rem", flexWrap: "wrap" as const }}>

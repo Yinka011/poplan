@@ -24,6 +24,8 @@ type Product = {
   base_price: number;
   photo_url?: string;
   square_catalog_id?: string;
+  review_status?: string;
+  review_note?: string;
   variations?: Variation[];
 };
 
@@ -177,6 +179,19 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
     setUploadingToSquare(null);
   };
 
+  const submitForReview = async (productId: number) => {
+    await supabase.from("brand_products").update({ review_status: "pending" }).eq("id", productId);
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, review_status: "pending" } : p));
+  };
+
+  const submitAllForReview = async () => {
+    const unsubmitted = products.filter(p => !p.review_status || p.review_status === "rejected");
+    for (const product of unsubmitted) {
+      await supabase.from("brand_products").update({ review_status: "pending" }).eq("id", product.id);
+    }
+    setProducts(prev => prev.map(p => (!p.review_status || p.review_status === "rejected") ? { ...p, review_status: "pending" } : p));
+  };
+
   const uploadAllToSquare = async () => {
     setUploadingAllToSquare(true);
     for (const product of products) {
@@ -215,9 +230,7 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
         </div>
         <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
           {products.length > 0 && products.some(p => !p.square_catalog_id) && (
-            <button onClick={uploadAllToSquare} disabled={uploadingAllToSquare} style={{ padding: "8px 14px", background: "#4a7c59", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.8rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
-              {uploadingAllToSquare ? "Uploading..." : "↑ Upload all to Square"}
-            </button>
+            <button onClick={submitAllForReview} style={{ padding: "8px 14px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.8rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>↑ Submit all for review</button>
           )}
           <button onClick={() => setAddingProduct(true)} style={{ padding: "8px 14px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.8rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add product</button>
         </div>
@@ -304,8 +317,8 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
                   </div>
                   <div style={{ display: "flex", gap: "6px" }}>
                     {!product.square_catalog_id && (product.variations || []).length > 0 && (
-                      <button onClick={() => uploadProductToSquare(product)} disabled={uploadingToSquare === product.id} style={{ fontSize: "0.75rem", padding: "5px 10px", background: "#4a7c59", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>
-                        {uploadingToSquare === product.id ? "..." : "↑ Square"}
+                      <button onClick={() => submitForReview(product.id)} disabled={product.review_status === "pending" || product.review_status === "approved"} style={{ fontSize: "0.75rem", padding: "5px 10px", background: product.review_status === "approved" ? "#4a7c59" : product.review_status === "pending" ? "#E8C97A" : "#1B3A2D", color: product.review_status === "pending" ? "#1B3A2D" : "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>
+                        {product.review_status === "approved" ? "✓ Approved" : product.review_status === "pending" ? "Pending review" : product.review_status === "rejected" ? "Resubmit" : "Submit for review"}
                       </button>
                     )}
                     <button onClick={() => deleteProduct(product.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "14px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
