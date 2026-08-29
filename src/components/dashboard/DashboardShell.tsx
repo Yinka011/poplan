@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -17,14 +18,29 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
   const slug = event?.slug || pathname.split("/")[5] || "atlanta";
   const [open, setOpen] = useState(false);
 
+  const [features, setFeatures] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const fetchFeatures = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("organizer_features").select("features").eq("organizer_email", user.email).eq("event_slug", slug).maybeSingle();
+      if (data?.features) setFeatures(data.features);
+    };
+    fetchFeatures();
+  }, [slug]);
+
+  const isEnabled = (key: string) => Object.keys(features).length === 0 || features[key] !== false;
+
   const navItems = [
     { label: "Overview", href: `/login/organizer/events/${slug}` },
-    { label: "Brand Tasks", href: `/login/organizer/events/${slug}/tasks` },
+    ...(isEnabled("brands") ? [{ label: "Brand Tasks", href: `/login/organizer/events/${slug}/tasks` }] : []),
     { label: "Expenses", href: `/login/organizer/events/${slug}/expenses` },
-    { label: "Planning Hub", href: `/login/organizer/events/${slug}/planning` },
-    { label: "Inventory", href: `/login/organizer/events/${slug}/inventory` },
-    { label: "Shipments", href: `/login/organizer/events/${slug}/shipments` },
-    { label: "Sales & Payouts", href: `/login/organizer/events/${slug}/sales` },
+    ...(isEnabled("planning") ? [{ label: "Planning Hub", href: `/login/organizer/events/${slug}/planning` }] : []),
+    ...(isEnabled("inventory") ? [{ label: "Inventory", href: `/login/organizer/events/${slug}/inventory` }] : []),
+    ...(isEnabled("shipments") ? [{ label: "Shipments", href: `/login/organizer/events/${slug}/shipments` }] : []),
+    ...(isEnabled("sales") ? [{ label: "Sales & Payouts", href: `/login/organizer/events/${slug}/sales` }] : []),
+    { label: "⚙ Settings", href: `/login/organizer/events/${slug}/settings` },
   ];
 
   return (
