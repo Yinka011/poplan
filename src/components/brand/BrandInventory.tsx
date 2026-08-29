@@ -339,9 +339,12 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
                   <select value={newVariation.size} onChange={e => setNewVariation({...newVariation, size: e.target.value})} style={inp()}>
                     {SIZES.map(s => <option key={s}>{s}</option>)}
                   </select>
-                  <select value={newVariation.colour} onChange={e => setNewVariation({...newVariation, colour: e.target.value})} style={inp()}>
+                  <select value={COLOURS.slice(0,-1).includes(newVariation.colour) ? newVariation.colour : "Other"} onChange={e => setNewVariation({...newVariation, colour: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
                     {COLOURS.map(c => <option key={c}>{c}</option>)}
                   </select>
+                  {(!COLOURS.slice(0,-1).includes(newVariation.colour)) && (
+                    <input placeholder="Enter colour e.g. Burgundy" value={newVariation.colour} onChange={e => setNewVariation({...newVariation, colour: e.target.value})} style={{...inp(), marginTop: "4px"}} />
+                  )}
                   <input placeholder="Qty" type="number" value={newVariation.quantity} onChange={e => setNewVariation({...newVariation, quantity: e.target.value})} style={inp()} />
                   <input placeholder={`Price (default $${product.base_price})`} type="number" value={newVariation.price} onChange={e => setNewVariation({...newVariation, price: e.target.value})} style={inp()} />
                   <div style={{ display: "flex", gap: "6px" }}>
