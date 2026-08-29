@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
@@ -19,6 +20,9 @@ const BRANDS = [
 ];
 
 export default function UploadsPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState("All");
@@ -91,7 +95,7 @@ export default function UploadsPage() {
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <Link href="/login/organizer/events/atlanta" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to Atlanta</Link>
+          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to {eventName}</Link>
           <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", marginTop: "0.5rem" }}>Brand Uploads</h1>
           <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>All files uploaded by your brands</p>
         </div>

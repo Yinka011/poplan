@@ -197,9 +197,9 @@ export default function PlanningHub() {
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <Link href="/login/organizer/events/atlanta" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to Atlanta</Link>
+          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to {eventName}</Link>
           <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", marginTop: "0.5rem" }}>Planning Hub</h1>
-          <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>Decor, refreshments and staffing for Atlanta</p>
+          <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>Decor, refreshments and staffing for {eventName}</p>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "12px", marginBottom: "1.5rem" }}>

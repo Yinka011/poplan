@@ -104,9 +104,9 @@ export default function ExpensesPage({ params }: { params: any }) {
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <Link href="/login/organizer/events/atlanta" style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to Atlanta</Link>
+          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to {eventName}</Link>
           <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", marginTop: "0.5rem" }}>Expenses</h1>
-          <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>Track every cost for Atlanta Pop-up</p>
+          <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>Track every cost for {eventName} Pop-up</p>
         </div>
 
         {/* Summary tiles */}

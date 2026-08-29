@@ -346,7 +346,7 @@ export default function OrganizerBrandPage() {
 
         {/* Header */}
         <div style={{ marginBottom: "1.5rem" }}>
-          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to Atlanta</Link>
+          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to {eventName}</Link>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "0.5rem" }}>
             <div>
               <h1 style={{ fontSize: "2rem", color: "#1B3A2D", fontWeight: "normal", fontFamily: "Didot, 'Playfair Display', serif", fontStyle: "italic", margin: 0 }}>{brand.name}</h1>
