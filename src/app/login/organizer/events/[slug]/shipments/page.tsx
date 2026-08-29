@@ -20,19 +20,24 @@ export default function ShipmentsPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [shipments, setShipments] = useState<Shipment[]>([]);
-  const [brands, setBrands] = useState<{email: string; name: string}[]>([]);
+  const [brands, setBrands] = useState<{email: string; name: string; shipped: boolean; shipped_at?: string; courier?: string; tracking_number?: string; shipping_invoice?: string;}[]>([]);
+  const [brandInvoices, setBrandInvoices] = useState<{id: number; brand_email: string; file_name: string; file_url: string; amount: number; description: string; created_at: string;}[]>([]);
+  const [expandedBrand, setExpandedBrand] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
   useEffect(() => { fetchData(); }, [slug]);
 
   const fetchData = async () => {
-    const [shipmentsRes, brandsRes] = await Promise.all([
+    const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+    const [shipmentsRes, brandsRes, invoicesRes] = await Promise.all([
       supabase.from("shipments").select("*").eq("event_slug", slug).order("created_at"),
-      supabase.from("brands").select("email, name").eq("event", slug.charAt(0).toUpperCase() + slug.slice(1)),
+      supabase.from("brands").select("email, name, shipped, shipped_at, courier, tracking_number, shipping_invoice").eq("event", eventName),
+      supabase.from("brand_shipment_invoices").select("*").eq("event", eventName).order("created_at", { ascending: false }),
     ]);
     if (shipmentsRes.data) setShipments(shipmentsRes.data);
     if (brandsRes.data) setBrands(brandsRes.data);
+    if (invoicesRes.data) setBrandInvoices(invoicesRes.data);
     setLoading(false);
   };
 
@@ -72,6 +77,48 @@ export default function ShipmentsPage() {
               <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.12em", marginTop: "4px" }}>{stat.label}</div>
             </div>
           ))}
+        </div>
+
+        {/* Brand shipping summary */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "8px" }}>BRAND SHIPMENTS</div>
+          {brands.map(brand => {
+            const invoices = brandInvoices.filter(inv => inv.brand_email === brand.email);
+            const isExpanded = expandedBrand === brand.email;
+            return (
+              <div key={brand.email} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "8px", border: "1px solid #e4ebe6", borderLeft: `3px solid ${brand.shipped ? "#4a7c59" : "#e4ebe6"}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "4px" }}>{brand.name}</div>
+                    {brand.courier && <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>🚚 {brand.courier} {brand.tracking_number && `· ${brand.tracking_number}`}</div>}
+                    {brand.shipping_invoice && <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>Invoice #: {brand.shipping_invoice}</div>}
+                  </div>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: "20px", background: brand.shipped ? "#4a7c5922" : "#f0f4f1", color: brand.shipped ? "#4a7c59" : "#4a5a52" }}>
+                      {brand.shipped ? "✓ Shipped" : "Not shipped"}
+                    </span>
+                    {invoices.length > 0 && (
+                      <button onClick={() => setExpandedBrand(isExpanded ? null : brand.email)} style={{ fontSize: "0.72rem", padding: "3px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52", fontFamily: "Georgia, serif" }}>
+                        {invoices.length} invoice{invoices.length > 1 ? "s" : ""} {isExpanded ? "▲" : "▼"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {isExpanded && invoices.map(inv => (
+                  <div key={inv.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px", padding: "8px", background: "#f8faf8", borderRadius: "8px" }}>
+                    <div>
+                      <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{inv.description || inv.file_name}</div>
+                      <div style={{ fontSize: "0.68rem", color: "#4a5a52" }}>{new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      {inv.amount > 0 && <span style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>${Number(inv.amount).toFixed(2)}</span>}
+                      <a href={inv.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.72rem", padding: "4px 10px", background: "#1B3A2D", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>↓</a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
 
         {/* Filters */}
