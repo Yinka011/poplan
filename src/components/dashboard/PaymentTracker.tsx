@@ -120,7 +120,7 @@ export default function PaymentTracker({ event }: { event: string }) {
 
   const totalFees = brands.reduce((sum, b) => sum + Number(b.fee_owed), 0);
   const totalReceived = brands.reduce((sum, b) => sum + Number(b.amount_paid), 0);
-  const totalOutstanding = brands.reduce((sum, b) => sum + Number(b.balance), 0);
+  const totalOutstanding = brands.reduce((sum, b) => sum + Math.max(0, Number(b.fee_owed) - Number(b.amount_paid)), 0);
 
   const iconBtn = (onClick: () => void, icon: React.ReactNode, title: string, danger = false) => (
     <button
@@ -206,7 +206,7 @@ export default function PaymentTracker({ event }: { event: string }) {
                   <span style={{ color: "#1B3A2D" }}>${Number(brand.amount_paid).toFixed(2)}</span>
                 )}
               </td>
-              <td style={{ padding: "10px", fontWeight: 500, color: Number(brand.balance) > 0 ? "#c0392b" : "#4a7c59" }}>${Number(brand.balance).toFixed(2)}</td>
+              <td style={{ padding: "10px", fontWeight: 500, color: (Number(brand.fee_owed) - Number(brand.amount_paid)) > 0 ? "#c0392b" : "#4a7c59" }}>${Math.max(0, Number(brand.fee_owed) - Number(brand.amount_paid)).toFixed(2)}</td>
               <td style={{ padding: "10px" }}>
                 <span style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "20px", ...statusColor(brand.status) }}>{brand.status}</span>
               </td>
