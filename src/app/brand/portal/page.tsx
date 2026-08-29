@@ -73,10 +73,15 @@ export default function BrandPortal() {
   const [brandEmail, setBrandEmail] = useState("");
   const [venueAddress, setVenueAddress] = useState("");
   const [markingShipped, setMarkingShipped] = useState(false);
+  const [shipmentInvoices, setShipmentInvoices] = useState<{id: number; file_name: string; file_url: string; amount: number; description: string; created_at: string;}[]>([]);
+  const [uploadingInvoice, setUploadingInvoice] = useState(false);
+  const [newInvoiceFile, setNewInvoiceFile] = useState<File | null>(null);
+  const [newInvoiceDesc, setNewInvoiceDesc] = useState("");
+  const [newInvoiceAmount, setNewInvoiceAmount] = useState("");
   const [editingShipping, setEditingShipping] = useState(false);
   const [shippingDetails, setShippingDetails] = useState({ courier: "", tracking_number: "", shipping_invoice: "" });
   const [showTutorial, setShowTutorial] = useState(false);
-  const [activeTab, setActiveTab] = useState<"home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "profile" | "faq">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "shipments" | "profile" | "faq">("home");
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({ instagram: "", website: "", bio: "" });
   const [savingProfile, setSavingProfile] = useState(false);
@@ -133,6 +138,8 @@ export default function BrandPortal() {
         if (eventRes.data.dates_label) setEventDates(eventRes.data.dates_label);
       }
 
+      const invRes = await supabase.from("brand_shipment_invoices").select("*").eq("brand_email", resolvedBrandEmail).order("created_at", { ascending: false });
+      if (invRes.data) setShipmentInvoices(invRes.data);
       setLoading(false);
 
       // Notify organizer of brand login
@@ -168,6 +175,20 @@ export default function BrandPortal() {
     }).eq("id", brand.id);
     setBrand(prev => prev ? { ...prev, ...shippingDetails } : prev);
     setEditingShipping(false);
+  };
+
+  const uploadShipmentInvoice = async () => {
+    if (!newInvoiceFile || !brandEmail) return;
+    setUploadingInvoice(true);
+    const path = `${brandEmail}/shipment-invoices/${Date.now()}_${newInvoiceFile.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const { error } = await supabase.storage.from("brand-uploads").upload(path, newInvoiceFile, { upsert: true });
+    if (!error) {
+      const { data: urlData } = supabase.storage.from("brand-uploads").getPublicUrl(path);
+      const { data } = await supabase.from("brand_shipment_invoices").insert({ brand_email: brandEmail, event: brand?.event || "Atlanta", file_name: newInvoiceFile.name, file_url: urlData.publicUrl, amount: parseFloat(newInvoiceAmount) || 0, description: newInvoiceDesc }).select().single();
+      if (data) setShipmentInvoices(prev => [data, ...prev]);
+      setNewInvoiceFile(null); setNewInvoiceDesc(""); setNewInvoiceAmount("");
+    }
+    setUploadingInvoice(false);
   };
 
   const toggleShipped = async () => {
@@ -265,6 +286,7 @@ export default function BrandPortal() {
 
   const tabs = [
     { key: "home", label: "Home" },
+    { key: "shipments", label: "Shipments" },
     { key: "tasks", label: `Tasks (${completed}/${deadlines.length})` },
     { key: "files", label: "Files" },
     { key: "messages", label: `Messages${messages.length > 0 ? ` (${messages.length})` : ""}` },
@@ -308,7 +330,7 @@ export default function BrandPortal() {
       {/* Nav tabs */}
       <div style={{ background: "#fff", borderBottom: "1px solid #e4ebe6", padding: "0 1rem", display: "flex", gap: "0", overflowX: "auto" as const, scrollbarWidth: "none" as const }}>
         {tabs.map(tab => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key as "home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "profile" | "faq")} style={{ padding: "0.85rem 1.25rem", background: "transparent", border: "none", borderBottom: activeTab === tab.key ? "2px solid #E8C97A" : "2px solid transparent", color: activeTab === tab.key ? "#1B3A2D" : "#4a5a52", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const, transition: "all 0.15s" }}>
+          <button key={tab.key} onClick={() => setActiveTab(tab.key as "home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "shipments" | "profile" | "faq")} style={{ padding: "0.85rem 1.25rem", background: "transparent", border: "none", borderBottom: activeTab === tab.key ? "2px solid #E8C97A" : "2px solid transparent", color: activeTab === tab.key ? "#1B3A2D" : "#4a5a52", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const, transition: "all 0.15s" }}>
             {tab.label}
           </button>
         ))}
@@ -364,67 +386,16 @@ export default function BrandPortal() {
             {/* Shipment + Tasks side by side */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1.5rem" }}>
               {/* Shipment card */}
-              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+              {/* Shipment card */}
+              <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6", cursor: "pointer" }} onClick={() => setActiveTab("shipments")}>
                 <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "8px" }}>SHIPMENT STATUS</div>
-                <div style={{ background: "#f0f4f1", borderRadius: "8px", padding: "8px 10px", marginBottom: "12px", borderLeft: "3px solid #1B3A2D" }}>
-                  <div style={{ fontSize: "0.65rem", color: "#1B3A2D", letterSpacing: "0.08em", marginBottom: "3px" }}>SHIP YOUR PRODUCTS TO</div>
-                  <div style={{ fontSize: "0.78rem", color: "#1c1714", lineHeight: 1.6 }}>{venueAddress || "Contact your organizer for shipping address"}</div>
-                </div>
-                <div style={{ marginBottom: "12px" }}>
-                  {brand.shipped ? (
-                    <div>
-                      <div style={{ fontSize: "1rem", color: "#4a7c59", marginBottom: "4px" }}>✓ Shipped</div>
-                      <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Marked on {formatDate(brand.shipped_at)}</div>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: "0.9rem", color: "#1B3A2D" }}>Not yet shipped</div>
-                  )}
-                </div>
-
-                {/* Shipping details */}
-                {editingShipping ? (
-                  <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginBottom: "12px" }}>
-                    <div>
-                      <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "3px" }}>COURIER</div>
-                      <select value={shippingDetails.courier} onChange={e => setShippingDetails({...shippingDetails, courier: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
-                        <option value="">Select courier...</option>
-                        {["DHL", "UPS", "FedEx", "USPS", "Amgray Logistics", "Other"].map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "3px" }}>TRACKING NUMBER</div>
-                      <input value={shippingDetails.tracking_number} onChange={e => setShippingDetails({...shippingDetails, tracking_number: e.target.value})} placeholder="e.g. 1Z999AA10123456784" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "3px" }}>SHIPPING INVOICE NUMBER</div>
-                      <input value={shippingDetails.shipping_invoice} onChange={e => setShippingDetails({...shippingDetails, shipping_invoice: e.target.value})} placeholder="e.g. INV-2026-001" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
-                    </div>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button onClick={saveShippingDetails} style={{ flex: 1, padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save details</button>
-                      <button onClick={() => setEditingShipping(false)} style={{ padding: "8px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ marginBottom: "12px" }}>
-                    {(brand.courier || brand.tracking_number || brand.shipping_invoice) ? (
-                      <div style={{ background: "#f0f4f1", borderRadius: "8px", padding: "8px 10px", marginBottom: "8px" }}>
-                        {brand.courier && <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginBottom: "2px" }}>🚚 {brand.courier}</div>}
-                        {brand.tracking_number && <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginBottom: "2px" }}>Tracking: {brand.tracking_number}</div>}
-                        {brand.shipping_invoice && <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Invoice: {brand.shipping_invoice}</div>}
-                      </div>
-                    ) : null}
-                    <button onClick={() => { setEditingShipping(true); setShippingDetails({ courier: brand.courier || "", tracking_number: brand.tracking_number || "", shipping_invoice: brand.shipping_invoice || "" }); }} style={{ fontSize: "0.78rem", color: "#1B3A2D", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "6px 12px", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%", marginBottom: "8px" }}>
-                      {(brand.courier || brand.tracking_number || brand.shipping_invoice) ? "✎ Edit shipping details" : "+ Add shipping details"}
-                    </button>
-                  </div>
-                )}
-
-                <button onClick={toggleShipped} disabled={markingShipped} style={{ padding: "8px 16px", background: brand.shipped ? "transparent" : "#1B3A2D", color: brand.shipped ? "#4a5a52" : "#fff", border: brand.shipped ? "1px solid #e4ebe6" : "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%" }}>
-                  {markingShipped ? "Saving..." : brand.shipped ? "Mark as not shipped" : "Mark as shipped"}
-                </button>
+                <div style={{ fontSize: "1.8rem", color: brand.shipped ? "#4a7c59" : "#1B3A2D", fontWeight: "normal", marginBottom: "4px" }}>{brand.shipped ? "✓" : "—"}</div>
+                <div style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "8px" }}>{brand.shipped ? `Shipped · ${formatDate(brand.shipped_at)}` : "Not yet shipped"}</div>
+                {brand.courier && <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>🚚 {brand.courier}</div>}
+                {brand.tracking_number && <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>Tracking: {brand.tracking_number}</div>}
+                <div style={{ fontSize: "0.72rem", color: "#E8C97A", marginTop: "8px" }}>Manage shipments →</div>
               </div>
 
-              {/* To-do card */}
               <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6", cursor: "pointer" }} onClick={() => setActiveTab("tasks")}>
                 <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "12px" }}>TO-DO LIST</div>
                 <div style={{ fontSize: "2rem", color: "#1B3A2D", fontWeight: "normal", lineHeight: 1, marginBottom: "4px" }}>{completed}<span style={{ fontSize: "1rem", color: "#4a5a52" }}>/{deadlines.length}</span></div>
@@ -440,6 +411,78 @@ export default function BrandPortal() {
         )}
 
         {/* TASKS TAB */}
+        {activeTab === "shipments" && (
+          <div>
+            <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6", marginBottom: "1rem" }}>
+              <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "12px" }}>SHIPPING DETAILS</div>
+              <div style={{ background: "#f0f4f1", borderRadius: "8px", padding: "8px 10px", marginBottom: "12px", borderLeft: "3px solid #1B3A2D" }}>
+                <div style={{ fontSize: "0.65rem", color: "#1B3A2D", letterSpacing: "0.08em", marginBottom: "3px" }}>SHIP TO</div>
+                <div style={{ fontSize: "0.78rem", color: "#1c1714", lineHeight: 1.6 }}>{venueAddress || "Contact your organizer for shipping address"}</div>
+              </div>
+              {editingShipping ? (
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginBottom: "12px" }}>
+                  <select value={shippingDetails.courier} onChange={e => setShippingDetails({...shippingDetails, courier: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
+                    <option value="">Select courier...</option>
+                    {["DHL", "UPS", "FedEx", "USPS", "Amgray Logistics", "Other"].map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <input value={shippingDetails.tracking_number} onChange={e => setShippingDetails({...shippingDetails, tracking_number: e.target.value})} placeholder="Tracking number" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
+                  <input value={shippingDetails.shipping_invoice} onChange={e => setShippingDetails({...shippingDetails, shipping_invoice: e.target.value})} placeholder="Shipping invoice number" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={saveShippingDetails} style={{ flex: 1, padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
+                    <button onClick={() => setEditingShipping(false)} style={{ padding: "8px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ marginBottom: "12px" }}>
+                  {(brand.courier || brand.tracking_number || brand.shipping_invoice) && (
+                    <div style={{ background: "#f0f4f1", borderRadius: "8px", padding: "8px 10px", marginBottom: "8px" }}>
+                      {brand.courier && <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginBottom: "2px" }}>🚚 {brand.courier}</div>}
+                      {brand.tracking_number && <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginBottom: "2px" }}>Tracking: {brand.tracking_number}</div>}
+                      {brand.shipping_invoice && <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Invoice #: {brand.shipping_invoice}</div>}
+                    </div>
+                  )}
+                  <button onClick={() => { setEditingShipping(true); setShippingDetails({ courier: brand.courier || "", tracking_number: brand.tracking_number || "", shipping_invoice: brand.shipping_invoice || "" }); }} style={{ fontSize: "0.78rem", color: "#1B3A2D", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "6px 12px", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%", marginBottom: "8px" }}>
+                    {(brand.courier || brand.tracking_number || brand.shipping_invoice) ? "✎ Edit shipping details" : "+ Add shipping details"}
+                  </button>
+                </div>
+              )}
+              <button onClick={toggleShipped} disabled={markingShipped} style={{ padding: "8px 16px", background: brand.shipped ? "transparent" : "#1B3A2D", color: brand.shipped ? "#4a5a52" : "#fff", border: brand.shipped ? "1px solid #e4ebe6" : "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%" }}>
+                {markingShipped ? "Saving..." : brand.shipped ? "✓ Shipped — Mark as not shipped" : "Mark as shipped"}
+              </button>
+            </div>
+            <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+              <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "8px" }}>SHIPPING INVOICES</div>
+              <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1rem" }}>Upload invoices from your shipping carrier so your organizer can reconcile payments.</p>
+              <div style={{ border: "1px dashed #e4ebe6", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                  <input placeholder="Description e.g. Lagos shipment" value={newInvoiceDesc} onChange={e => setNewInvoiceDesc(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+                  <input placeholder="Amount" type="number" value={newInvoiceAmount} onChange={e => setNewInvoiceAmount(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+                </div>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setNewInvoiceFile(e.target.files?.[0] || null)} style={{ marginBottom: "8px", fontSize: "0.82rem", width: "100%" }} />
+                <button onClick={uploadShipmentInvoice} disabled={uploadingInvoice || !newInvoiceFile} style={{ width: "100%", padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+                  {uploadingInvoice ? "Uploading..." : "↑ Upload invoice"}
+                </button>
+              </div>
+              {shipmentInvoices.length === 0 ? (
+                <div style={{ textAlign: "center" as const, padding: "2rem", color: "#4a5a52", fontSize: "0.82rem" }}>No invoices uploaded yet.</div>
+              ) : (
+                shipmentInvoices.map(inv => (
+                  <div key={inv.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f0f4f1" }}>
+                    <div>
+                      <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>{inv.description || inv.file_name}</div>
+                      <div style={{ fontSize: "0.7rem", color: "#4a5a52" }}>{new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      {inv.amount > 0 && <span style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>${Number(inv.amount).toFixed(2)}</span>}
+                      <a href={inv.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.75rem", padding: "4px 10px", background: "#f0f4f1", color: "#1B3A2D", borderRadius: "6px", textDecoration: "none" }}>↓</a>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === "tasks" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
