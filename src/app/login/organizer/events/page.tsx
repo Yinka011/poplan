@@ -14,6 +14,8 @@ type Event = {
   start_date: string;
   end_date: string;
   organizer_email: string;
+  archived?: boolean;
+  year?: number;
   event_type?: string;
   brand_name?: string;
   brandsCount?: number;
@@ -61,6 +63,7 @@ export default function EventsPage() {
   const [plannerEvents, setPlannerEvents] = useState<PlannerEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [yearFilter, setYearFilter] = useState<number>(2026);
   const [inviting, setInviting] = useState<number | null>(null);
   const [addingType, setAddingType] = useState<"my_event" | "planner_event">("my_event");
   const [userEmail, setUserEmail] = useState("");
@@ -178,11 +181,19 @@ export default function EventsPage() {
     setMyEvents(prev => prev.map(e => e.id === event.id ? { ...e, dates_label } : e));
   };
 
+  const archiveEvent = async (id: number) => {
+    if (!confirm("Archive this event? It will be read-only and moved to your archive.")) return;
+    await supabase.from("events").update({ archived: true, status: "Completed" }).eq("id", id);
+    setMyEvents(prev => prev.map(e => e.id === id ? { ...e, archived: true, status: "Completed" } : e));
+  };
+
   const updateStatus = async (event: Event, status: string) => {
     await supabase.from("events").update({ status }).eq("id", event.id);
     setMyEvents(prev => prev.map(e => e.id === event.id ? { ...e, status } : e));
   };
 
+  const years = [...new Set(myEvents.map(e => e.year || 2026))].sort((a, b) => b - a);
+  const filteredEvents = myEvents.filter(e => !e.year || e.year === yearFilter);
   if (loading) return (
     <DashboardShell>
       <div style={{ fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading events...</div>
@@ -199,6 +210,11 @@ export default function EventsPage() {
             <p style={{ color: "#4a5a52", fontSize: "0.9rem", marginTop: "4px" }}>Manage all your pop-up events in one place.</p>
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
+            <div style={{ display: "flex", gap: "4px" }}>
+              {years.map(y => (
+                <button key={y} onClick={() => setYearFilter(y)} style={{ padding: "6px 14px", background: yearFilter === y ? "#1B3A2D" : "#fff", color: yearFilter === y ? "#fff" : "#4a5a52", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{y}</button>
+              ))}
+            </div>
             <button onClick={() => { setAdding(!adding); setAddingType("my_event"); }} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ My event</button>
             <button onClick={() => { setAdding(!adding); setAddingType("planner_event"); }} style={{ padding: "8px 16px", background: "transparent", color: "#1B3A2D", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Planning for a brand</button>
           </div>
@@ -253,7 +269,7 @@ export default function EventsPage() {
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
-              {myEvents.map(event => {
+              {filteredEvents.map(event => {
                 const statusStyle = STATUS_COLORS[event.status] || STATUS_COLORS.Planning;
                 return (
                   <div key={event.id} style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6", position: "relative" as const }}>
@@ -286,7 +302,13 @@ export default function EventsPage() {
                         <div style={{ fontSize: "1.2rem", color: "#c0392b" }}>${Number(event.outstandingBalance).toFixed(2)}</div>
                       </div>
                     </div>
-                    <Link href={`/login/organizer/events/${event.slug}`} style={{ marginTop: "1rem", fontSize: "0.78rem", color: "#4a5a52", textDecoration: "none", display: "block" }}>View dashboard →</Link>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem" }}>
+                      <Link href={`/login/organizer/events/${event.slug}`} style={{ fontSize: "0.78rem", color: "#4a5a52", textDecoration: "none" }}>View dashboard →</Link>
+                      {!event.archived && event.status === "Completed" && (
+                        <button onClick={() => archiveEvent(event.id)} style={{ fontSize: "0.72rem", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52", fontFamily: "Georgia, serif" }}>Archive</button>
+                      )}
+                      {event.archived && <span style={{ fontSize: "0.72rem", color: "#4a5a52" }}>📦 Archived</span>}
+                    </div>
                   </div>
                 );
               })}
