@@ -84,7 +84,7 @@ export default function EventsPage() {
     if (profile?.name) setUserName(profile.name);
 
     const [eventsRes, plannerRes] = await Promise.all([
-      supabase.from("events").select("*").eq("organizer_email", user.email).order("created_at"),
+      supabase.from("events").select("*").eq("organizer_email", user.email).order("year", { ascending: false }).order("created_at"),
       supabase.from("event_planners").select("*").eq("planner_email", user.email),
     ]);
 
@@ -210,11 +210,9 @@ export default function EventsPage() {
             <p style={{ color: "#4a5a52", fontSize: "0.9rem", marginTop: "4px" }}>Manage all your pop-up events in one place.</p>
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
-            <div style={{ display: "flex", gap: "4px" }}>
-              {years.map(y => (
-                <button key={y} onClick={() => setYearFilter(y)} style={{ padding: "6px 14px", background: yearFilter === y ? "#1B3A2D" : "#fff", color: yearFilter === y ? "#fff" : "#4a5a52", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{y}</button>
-              ))}
-            </div>
+            <select value={yearFilter} onChange={e => setYearFilter(Number(e.target.value))} style={{ padding: "7px 12px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", background: "#fff", color: "#1B3A2D" }}>
+              {years.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
             <button onClick={() => { setAdding(!adding); setAddingType("my_event"); }} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ My event</button>
             <button onClick={() => { setAdding(!adding); setAddingType("planner_event"); }} style={{ padding: "8px 16px", background: "transparent", color: "#1B3A2D", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Planning for a brand</button>
           </div>
