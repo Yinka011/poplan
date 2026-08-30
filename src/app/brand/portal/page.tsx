@@ -87,7 +87,7 @@ export default function BrandPortal() {
   const [profileData, setProfileData] = useState({ instagram: "", website: "", bio: "" });
   const [savingProfile, setSavingProfile] = useState(false);
   const [eventName, setEventName] = useState("Atlanta Pop-Up");
-  const [resolvedEvent, setResolvedEvent] = useState("Atlanta");
+  const [resolvedEvent, setResolvedEvent] = useState("");
   const [eventDates, setEventDates] = useState("Sep 11–13, 2026");
   const [organizerName] = useState("AO Curates");
 
@@ -100,7 +100,7 @@ export default function BrandPortal() {
       setUserEmail(user.email || "");
 
       let resolvedBrandEmail = user.email || "";
-      let resolvedEvent = "Atlanta";
+      let resolvedEvent = "";
 
       const brandRes = await supabase.from("brands").select("*").eq("email", user.email).order("id", { ascending: false }).limit(1).maybeSingle();
 
@@ -113,7 +113,7 @@ export default function BrandPortal() {
         const { data: memberRes } = await supabase.from("brand_members").select("brand_email, event").eq("member_email", user.email).limit(1).maybeSingle();
         if (memberRes?.brand_email) {
           resolvedBrandEmail = memberRes.brand_email;
-          resolvedEvent = memberRes.event || "Atlanta";
+          resolvedEvent = memberRes.event || "";
           const { data: linkedBrand } = await supabase.from("brands").select("*").eq("email", memberRes.brand_email).single();
           if (linkedBrand) {
             setBrand(linkedBrand);
