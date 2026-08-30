@@ -3,6 +3,8 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function LandingPage() {
+  const [unlocked, setUnlocked] = useState(false);
+  const [pw, setPw] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("organizer");
   const [submitted, setSubmitted] = useState(false);
@@ -24,6 +26,16 @@ export default function LandingPage() {
     setSubmitting(false);
     setSubmitted(true);
   };
+
+  if (!unlocked) return (
+    <div style={{ minHeight: "100vh", background: "#1B3A2D", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
+      <div style={{ textAlign: "center", padding: "2rem" }}>
+        <div style={{ fontSize: "1.2rem", letterSpacing: "0.2em", color: "#fff", marginBottom: "2rem" }}>NALPOP</div>
+        <input type="password" placeholder="Enter password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === "Enter" && pw === "nalpop2027" && setUnlocked(true)} style={{ padding: "10px 16px", borderRadius: "8px", border: "none", fontSize: "0.9rem", fontFamily: "Georgia, serif", marginBottom: "10px", display: "block", width: "240px" }} autoFocus />
+        <button onClick={() => pw === "nalpop2027" && setUnlocked(true)} style={{ padding: "10px 24px", background: "#E8C97A", color: "#1B3A2D", border: "none", borderRadius: "8px", fontSize: "0.9rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Enter</button>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ fontFamily: "Georgia, serif", background: "#fff", color: "#1c1714" }}>
