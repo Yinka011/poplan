@@ -302,7 +302,7 @@ export default function EventsPage() {
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem" }}>
                       <Link href={`/login/organizer/events/${event.slug}`} style={{ fontSize: "0.78rem", color: "#4a5a52", textDecoration: "none" }}>View dashboard →</Link>
-                      {!event.archived && event.status === "Completed" && (
+                      {!event.archived && (
                         <button onClick={() => archiveEvent(event.id)} style={{ fontSize: "0.72rem", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52", fontFamily: "Georgia, serif" }}>Archive</button>
                       )}
                       {event.archived && <span style={{ fontSize: "0.72rem", color: "#4a5a52" }}>📦 Archived</span>}
