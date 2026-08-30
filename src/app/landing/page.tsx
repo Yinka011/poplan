@@ -73,7 +73,7 @@ export default function LandingPage() {
               <div style={{ padding: "1.25rem", background: "#f8faf8" }}>
                 <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "1rem" }}>OVERVIEW — LAGOS POP-UP 2027</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginBottom: "1rem" }}>
-                  {[["24", "BRANDS"], ["$18,400", "FEES COLLECTED"], ["$2,100", "OUTSTANDING"], ["18", "DAYS TO EVENT"]].map(([val, label]) => (
+                  {[["24", "BRANDS"], ["312", "PRODUCTS"], ["18", "DAYS TO EVENT"], ["89%", "TASKS DONE"]].map(([val, label]) => (
                     <div key={label} style={{ background: "#fff", borderRadius: "8px", padding: "0.65rem", border: "1px solid #e4ebe6" }}>
                       <div style={{ fontSize: "1.1rem", color: "#1B3A2D" }}>{val}</div>
                       <div style={{ fontSize: "0.55rem", color: "#4a5a52", letterSpacing: "0.08em" }}>{label}</div>
@@ -118,7 +118,7 @@ export default function LandingPage() {
               <p style={{ fontSize: "1rem", color: "#4a5a52", lineHeight: 1.8, marginBottom: "2rem" }}>Every brand, every payment, every shipment tracked in one dashboard. Know exactly what is coming to your venue before it arrives.</p>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: "1rem" }}>
                 {[
-                  ["Brand management", "Invite brands, track payments, approve inventory and message directly."],
+                  ["Brand management", "Invite brands, approve inventory, message directly and track tasks — all in one place."],
                   ["Shipment tracking", "Brands add courier and tracking details. You mark items received."],
                   ["Planning hub", "Decor, refreshments and staffing in one place. Track every cost."],
                   ["Attendee registration", "Replace Eventbrite. Collect RSVPs and own your audience data."],
@@ -184,6 +184,15 @@ export default function LandingPage() {
                   <div style={{ fontSize: "0.6rem", color: "#1B3A2D", letterSpacing: "0.08em" }}>ANNOUNCEMENT</div>
                   <div style={{ fontSize: "0.7rem", color: "#4a5a52", marginTop: "2px" }}>All inventory must be uploaded by Aug 30. Tag every item with price and brand name.</div>
                 </div>
+                <div style={{ marginBottom: "8px" }}>
+                  <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.1em", marginBottom: "4px" }}>MOOD BOARD</div>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    {["#1B3A2D", "#E8C97A", "#f8f0e8", "#4a7c59"].map(c => (
+                      <div key={c} style={{ width: "28px", height: "28px", borderRadius: "4px", background: c, border: "1px solid #e4ebe6" }} />
+                    ))}
+                    <div style={{ width: "28px", height: "28px", borderRadius: "4px", background: "#f8faf8", border: "1px dashed #e4ebe6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "#4a5a52" }}>+</div>
+                  </div>
+                </div>
                 <div style={{ display: "flex", gap: "6px" }}>
                   <div style={{ flex: 1, background: "#f8faf8", borderRadius: "8px", padding: "8px", border: "1px solid #e4ebe6", textAlign: "center" as const }}>
                     <div style={{ fontSize: "0.95rem", color: "#E8C97A" }}>3/5</div>
@@ -206,6 +215,7 @@ export default function LandingPage() {
                   ["Inventory management", "Upload your full product catalogue with sizes, colours and quantities."],
                   ["Shipment tracking", "Add your courier and tracking number. Your organizer tracks delivery."],
                   ["Sales data", "See your Square sales in real time. Know which products sold and what is left."],
+                  ["Mood board", "Share your aesthetic vision with your organizer. Pin inspiration images, colours and references."],
                 ].map(([title, desc]) => (
                   <div key={title} style={{ display: "flex", gap: "12px" }}>
                     <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#E8C97A", marginTop: "8px", flexShrink: 0 }} />
@@ -234,6 +244,7 @@ export default function LandingPage() {
                   ["City dashboard", "Switch between cities instantly. Budget, tasks, shipments per location."],
                   ["Planning hub access", "Review decor, refreshments and staffing plans from your planner."],
                   ["Receipts and expenses", "Download all payment receipts. Full financial transparency per event."],
+                  ["Mood board", "Share inspiration and creative direction with your planner on a shared visual board."],
                   ["Team access", "Invite your team without sharing your login."],
                 ].map(([title, desc]) => (
                   <div key={title} style={{ display: "flex", gap: "12px" }}>
@@ -265,6 +276,51 @@ export default function LandingPage() {
                   <div style={{ height: "3px", background: "#f0f4f1", borderRadius: "2px" }}>
                     <div style={{ height: "100%", width: `${city.spent}%`, background: "#E8C97A", borderRadius: "2px" }} />
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* FEATURES */}
+      <section style={{ padding: "6rem 2rem", background: "#f8faf8" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            <div style={{ fontSize: "0.72rem", letterSpacing: "0.2em", color: "#4a7c59", marginBottom: "1rem" }}>FEATURES</div>
+            <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.8rem)", fontWeight: "normal", color: "#1B3A2D", lineHeight: 1.2 }}>Built for the details that matter.</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.5rem" }}>
+            {[
+              { icon: "✅", title: "Task management", desc: "Organizers assign tasks to brands with due dates. Brands tick them off. Overdue items are flagged automatically. No more chasing." },
+              { icon: "🖼", title: "Mood board", desc: "Shared inspiration boards between organizers and brands. Pin images, set categories and notes. Get everyone aligned on the aesthetic before the event." },
+              { icon: "📦", title: "Inventory upload", desc: "Brands upload their full product catalogue — sizes, colours, quantities and photos. Organizer reviews and approves before it goes live." },
+              { icon: "🚚", title: "Shipment tracking", desc: "Brands add courier and tracking numbers. Organizers mark items as received. Everyone knows exactly where products are at all times." },
+              { icon: "💬", title: "Direct messaging", desc: "Organizers and brands communicate directly inside the platform. No switching between WhatsApp, email and Instagram DMs." },
+              { icon: "📋", title: "Planning hub", desc: "Decor, refreshments and staffing all in one place. Add costs, assign vendors, upload receipts and track your total spend per category." },
+            ].map(feature => (
+              <div key={feature.title} style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+                <div style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{feature.icon}</div>
+                <div style={{ fontSize: "0.95rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>{feature.title}</div>
+                <div style={{ fontSize: "0.82rem", color: "#4a5a52", lineHeight: 1.7 }}>{feature.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mood board visual */}
+          <div style={{ marginTop: "4rem", background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+            <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "1rem" }}>MOOD BOARD — LAGOS POP-UP 2027</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "8px" }}>
+              {[
+                { label: "Colour palette", bg: "#E8C97A", color: "#1B3A2D" },
+                { label: "Venue inspo", bg: "#1B3A2D", color: "#E8C97A" },
+                { label: "Rack display", bg: "#f0ece6", color: "#4a5a52" },
+                { label: "Lighting", bg: "#4a7c59", color: "#fff" },
+                { label: "Signage", bg: "#2a4d3e", color: "#E8C97A" },
+              ].map(pin => (
+                <div key={pin.label} style={{ background: pin.bg, borderRadius: "10px", padding: "1rem", aspectRatio: "1", display: "flex", alignItems: "flex-end" }}>
+                  <div style={{ fontSize: "0.65rem", color: pin.color, lineHeight: 1.2 }}>{pin.label}</div>
                 </div>
               ))}
             </div>
