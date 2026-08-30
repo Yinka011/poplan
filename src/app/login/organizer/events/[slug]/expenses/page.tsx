@@ -27,7 +27,7 @@ const categoryColors: Record<string, string> = {
 
 export default function ExpensesPage({ params }: { params: any }) {
   const slug = params?.slug || "";
-  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1) || "Atlanta";
+  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [decorTotal, setDecorTotal] = useState(0);
   const [refreshTotal, setRefreshTotal] = useState(0);

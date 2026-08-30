@@ -139,7 +139,7 @@ export default function PaymentTracker({ event }: { event: string }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
         <div>
           <div style={{ fontSize: "1.1rem", color: "#1B3A2D", fontFamily: "Georgia, serif" }}>Payment tracker</div>
-          <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginTop: "2px" }}>Brand fees for Atlanta pop-up</div>
+          <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginTop: "2px" }}>Brand fees for {event} pop-up</div>
         </div>
         <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add brand</button>
       </div>

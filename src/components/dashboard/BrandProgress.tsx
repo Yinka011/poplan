@@ -44,7 +44,7 @@ export default function BrandProgress({ event }: { event: string }) {
   return (
     <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
       <div style={{ fontSize: "1.1rem", color: "#1B3A2D", marginBottom: "0.3rem", fontFamily: "Georgia, serif" }}>Brand progress</div>
-      <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginBottom: "1.25rem" }}>Task completion across all Atlanta brands</div>
+      <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginBottom: "1.25rem" }}>Task completion across all {event} brands</div>
       {brands.filter(b => b.email).map(brand => {
         const { completed, total, percent } = getProgress(brand.email);
         const status = getStatus(percent);
