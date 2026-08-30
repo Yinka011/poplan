@@ -40,6 +40,7 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
     ...(isEnabled("inventory") ? [{ label: "Inventory", href: `/login/organizer/events/${slug}/inventory` }] : []),
     ...(isEnabled("shipments") ? [{ label: "Shipments", href: `/login/organizer/events/${slug}/shipments` }] : []),
     ...(isEnabled("sales") ? [{ label: "Sales & Payouts", href: `/login/organizer/events/${slug}/sales` }] : []),
+    { label: "Attendees", href: `/login/organizer/events/${slug}/attendees` },
     { label: "⚙ Settings", href: `/login/organizer/events/${slug}/settings` },
   ];
 
