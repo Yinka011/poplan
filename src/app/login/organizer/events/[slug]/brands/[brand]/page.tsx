@@ -108,6 +108,7 @@ export default function OrganizerBrandPage() {
   const [newAmount, setNewAmount] = useState("");
   const [newFee, setNewFee] = useState("");
   const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
@@ -320,8 +321,8 @@ export default function OrganizerBrandPage() {
     const { data } = await supabase.from("brand_messages").insert({
       event: slug.charAt(0).toUpperCase() + slug.slice(1),
       brand_email: brand.email,
-      organizer_email: "aocurates@gmail.com",
-      sender_email: "aocurates@gmail.com",
+      organizer_email: userEmail,
+      sender_email: userEmail,
       sender_name: "AO Curates",
       message: newMessage.trim(),
     }).select().single();
@@ -541,8 +542,8 @@ export default function OrganizerBrandPage() {
                 <div style={{ fontSize: "0.82rem", color: "#4a5a52", textAlign: "center", padding: "1rem" }}>No messages yet</div>
               ) : (
                 messages.map(msg => (
-                  <div key={msg.id} style={{ display: "flex", flexDirection: "column" as const, alignItems: msg.sender_email === "aocurates@gmail.com" ? "flex-end" : "flex-start" }}>
-                    <div style={{ maxWidth: "80%", padding: "8px 12px", borderRadius: "10px", background: msg.sender_email === "aocurates@gmail.com" ? "#1B3A2D" : "#f0f4f1", color: msg.sender_email === "aocurates@gmail.com" ? "#fff" : "#1c1714", fontSize: "0.85rem", lineHeight: 1.5 }}>
+                  <div key={msg.id} style={{ display: "flex", flexDirection: "column" as const, alignItems: msg.sender_email === userEmail ? "flex-end" : "flex-start" }}>
+                    <div style={{ maxWidth: "80%", padding: "8px 12px", borderRadius: "10px", background: msg.sender_email === userEmail ? "#1B3A2D" : "#f0f4f1", color: msg.sender_email === userEmail ? "#fff" : "#1c1714", fontSize: "0.85rem", lineHeight: 1.5 }}>
                       {msg.message}
                     </div>
                     <div style={{ fontSize: "0.68rem", color: "#8b7355", marginTop: "2px" }}>{msg.sender_name} · {new Date(msg.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>

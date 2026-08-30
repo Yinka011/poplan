@@ -28,6 +28,7 @@ type Brand = {
   website?: string;
   bio?: string;
   logo_url?: string;
+  organizer_email?: string;
 };
 
 type Deadline = { id: number; task: string; due_date: string; category: string; };
@@ -86,6 +87,7 @@ export default function BrandPortal() {
   const [profileData, setProfileData] = useState({ instagram: "", website: "", bio: "" });
   const [savingProfile, setSavingProfile] = useState(false);
   const [eventName, setEventName] = useState("Atlanta Pop-Up");
+  const [resolvedEvent, setResolvedEvent] = useState("Atlanta");
   const [eventDates, setEventDates] = useState("Sep 11–13, 2026");
   const [organizerName] = useState("AO Curates");
 
@@ -105,6 +107,7 @@ export default function BrandPortal() {
       if (brandRes.data) {
         setBrand(brandRes.data);
         resolvedEvent = brandRes.data.event;
+        setResolvedEvent(brandRes.data.event);
         setProfileData({ instagram: brandRes.data.instagram || "", website: brandRes.data.website || "", bio: brandRes.data.bio || "" });
       } else {
         const { data: memberRes } = await supabase.from("brand_members").select("brand_email, event").eq("member_email", user.email).limit(1).maybeSingle();
@@ -233,7 +236,7 @@ export default function BrandPortal() {
     if (!newMessage.trim()) return;
     const { data } = await supabase.from("brand_messages").insert({
       event: brand?.event || "Atlanta", brand_email: brandEmail,
-      organizer_email: "aocurates@gmail.com", sender_email: userEmail,
+      organizer_email: brand?.organizer_email || "", sender_email: userEmail,
       sender_name: brand?.name || userEmail, message: newMessage,
     }).select().single();
     if (data) {
@@ -247,7 +250,7 @@ export default function BrandPortal() {
       });
       // Email the organizer
       await sendEmail({
-        to: "aocurates@gmail.com",
+        to: brand?.organizer_email || "aocurates@gmail.com",
         subject: `New message from ${brand?.name}`,
         html: emailTemplate({
           title: `Message from ${brand?.name}`,
@@ -532,7 +535,7 @@ export default function BrandPortal() {
                 ))}
               </div>
             </div>
-            <FileUpload brandName={brand.name} brandEmail={brandEmail} />
+            <FileUpload brandName={brand.name} brandEmail={brandEmail} event={brand.event || "Atlanta"} />
           </div>
         )}
 

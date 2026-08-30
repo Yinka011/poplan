@@ -34,7 +34,7 @@ const CATEGORY_TASK_MAP: Record<string, number> = {
 
 const TEMPLATE_URL = "https://framesmhcepkdheoclsl.supabase.co/storage/v1/object/public/Templates/Brand%20Inventory%20Sheet%20-%20Template.xlsx";
 
-export default function FileUpload({ brandName, brandEmail }: { brandName: string; brandEmail: string }) {
+export default function FileUpload({ brandName, brandEmail, event }: { brandName: string; brandEmail: string; event: string }) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [approvals, setApprovals] = useState<FileApproval[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -77,7 +77,7 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
       .from("file_approvals")
       .select("file_name, status")
       .eq("brand_email", brandEmail)
-      .eq("event", "Atlanta");
+      .eq("event", event);
     if (data) setApprovals(data);
   };
 
@@ -115,7 +115,7 @@ export default function FileUpload({ brandName, brandEmail }: { brandName: strin
 
       if (deadline) {
         await supabase.from("brand_tasks").insert({
-          event: "Atlanta",
+          event: event,
           task: deadline.task,
           due_date: deadline.due_date,
           brand_email: brandEmail,
