@@ -250,7 +250,8 @@ export default function BrandPortal() {
       });
       // Email the organizer
       await sendEmail({
-        to: brand?.organizer_email || "aocurates@gmail.com",
+        to: brand?.organizer_email || "",
+
         subject: `New message from ${brand?.name}`,
         html: emailTemplate({
           title: `Message from ${brand?.name}`,

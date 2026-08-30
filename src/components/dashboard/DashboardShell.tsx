@@ -15,7 +15,7 @@ type DashboardShellProps = {
 
 export function DashboardShell({ children, event }: DashboardShellProps) {
   const pathname = usePathname();
-  const slug = event?.slug || pathname.split("/")[5] || "atlanta";
+  const slug = event?.slug || pathname.split("/")[5] || "";
   const [open, setOpen] = useState(false);
 
   const [features, setFeatures] = useState<Record<string, boolean>>({});
