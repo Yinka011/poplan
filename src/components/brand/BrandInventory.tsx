@@ -48,6 +48,7 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
   const [uploadingAllToSquare, setUploadingAllToSquare] = useState(false);
   const [addingVariation, setAddingVariation] = useState<number | null>(null);
   const [editingProduct, setEditingProduct] = useState<number | null>(null);
+  const [submitted, setSubmitted] = useState(false);
   const [editProductData, setEditProductData] = useState({ name: "", category: "", base_price: "" });
   const [newProduct, setNewProduct] = useState({ name: "", category: "Clothing", base_price: "", photo_url: "" });
   const [newVariation, setNewVariation] = useState({ size: "One Size", colour: "Black", quantity: "", price: "" });
@@ -194,6 +195,8 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
   const submitForReview = async (productId: number) => {
     await supabase.from("brand_products").update({ review_status: "pending" }).eq("id", productId);
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, review_status: "pending" } : p));
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 3000);
   };
 
   const submitAllForReview = async () => {
@@ -202,6 +205,8 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
       await supabase.from("brand_products").update({ review_status: "pending" }).eq("id", product.id);
     }
     setProducts(prev => prev.map(p => (!p.review_status || p.review_status === "rejected") ? { ...p, review_status: "pending" } : p));
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 3000);
   };
 
   const uploadAllToSquare = async () => {
@@ -416,6 +421,11 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
             <div><div style={{ fontSize: "0.6rem", color: "#d4c87a", letterSpacing: "0.1em" }}>TOTAL VALUE</div><div style={{ fontSize: "1.1rem" }}>${totalValue.toFixed(2)}</div></div>
           </div>
           <div style={{ fontSize: "0.75rem", color: "#d4c87a" }}>{inSquare}/{products.length} uploaded to Square</div>
+        </div>
+      )}
+      {submitted && (
+        <div style={{ position: "fixed", bottom: "2rem", left: "50%", transform: "translateX(-50%)", background: "#1B3A2D", color: "#fff", padding: "12px 24px", borderRadius: "10px", fontSize: "0.88rem", fontFamily: "Georgia, serif", zIndex: 9999, boxShadow: "0 4px 20px #00000033", display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ color: "#4a7c59" }}>✓</span> Submitted for review. Your organizer will approve shortly.
         </div>
       )}
     </div>
