@@ -411,13 +411,15 @@ export default function BrandPortal() {
             {/* Shipment + Tasks side by side */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1.5rem" }}>
               {/* Shipment card */}
-              {/* Shipment card */}
               <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6", cursor: "pointer" }} onClick={() => setActiveTab("shipments")}>
-                <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "8px" }}>SHIPMENT STATUS</div>
-                <div style={{ fontSize: "1.8rem", color: brand.shipped ? "#4a7c59" : "#1B3A2D", fontWeight: "normal", marginBottom: "4px" }}>{brand.shipped ? "✓" : "—"}</div>
-                <div style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "8px" }}>{brand.shipped ? `Shipped · ${formatDate(brand.shipped_at)}` : "Not yet shipped"}</div>
-                {brand.courier && <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>🚚 {brand.courier}</div>}
-                {brand.tracking_number && <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>Tracking: {brand.tracking_number}</div>}
+                <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "8px" }}>SHIPMENTS</div>
+                <div style={{ fontSize: "1.8rem", color: brandShipments.length > 0 ? "#4a7c59" : "#1B3A2D", fontWeight: "normal", marginBottom: "4px" }}>{brandShipments.length}</div>
+                <div style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "8px" }}>
+                  {brandShipments.length === 0 ? "No packages added yet" : `package${brandShipments.length > 1 ? "s" : ""} · ${brandShipments.filter(s => s.received).length} received`}
+                </div>
+                {brandShipments.slice(0, 2).map(s => (
+                  <div key={s.id} style={{ fontSize: "0.72rem", color: "#4a5a52", marginBottom: "2px" }}>🚚 {s.courier} {s.tracking_number && `· ${s.tracking_number}`}</div>
+                ))}
                 <div style={{ fontSize: "0.72rem", color: "#E8C97A", marginTop: "8px" }}>Manage shipments →</div>
               </div>
 
