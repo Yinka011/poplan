@@ -30,7 +30,7 @@ type Product = {
 };
 
 const CATEGORIES = ["Clothing", "Accessories", "Shoes", "Bags", "Jewellery", "Beauty", "Home", "Other"];
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "6", "8", "10", "12", "14", "16", "18", "One Size", "N/A"];
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "One Size", "N/A", "Other"];
 const COLOURS = ["Black", "White", "Beige", "Brown", "Camel", "Grey", "Navy", "Blue", "Green", "Red", "Pink", "Purple", "Orange", "Yellow", "Gold", "Silver", "Multi", "Other"];
 
 type Props = {
@@ -378,9 +378,12 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
             {addingVariation === product.id ? (
               <div style={{ borderTop: "1px solid #f0f4f1", padding: "1rem 1.25rem", background: "#f8faf8" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: "8px", alignItems: "center" }}>
-                  <select value={newVariation.size} onChange={e => setNewVariation({...newVariation, size: e.target.value})} style={inp()}>
+                  <select value={SIZES.slice(0,-1).includes(newVariation.size) ? newVariation.size : "Other"} onChange={e => setNewVariation({...newVariation, size: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
                     {SIZES.map(s => <option key={s}>{s}</option>)}
                   </select>
+                  {(!SIZES.slice(0,-1).includes(newVariation.size)) && (
+                    <input placeholder="Enter size e.g. 20" value={newVariation.size} onChange={e => setNewVariation({...newVariation, size: e.target.value})} style={{...inp(), marginTop: "4px"}} />
+                  )}
                   <select value={COLOURS.slice(0,-1).includes(newVariation.colour) ? newVariation.colour : "Other"} onChange={e => setNewVariation({...newVariation, colour: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
                     {COLOURS.map(c => <option key={c}>{c}</option>)}
                   </select>
