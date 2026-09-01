@@ -75,6 +75,9 @@ export default function BrandPortal() {
   const [venueAddress, setVenueAddress] = useState("");
   const [markingShipped, setMarkingShipped] = useState(false);
   const [shipmentInvoices, setShipmentInvoices] = useState<{id: number; file_name: string; file_url: string; amount: number; description: string; created_at: string;}[]>([]);
+  const [brandShipments, setBrandShipments] = useState<{id: number; courier: string; tracking_number: string; description: string; shipped: boolean; received: boolean; created_at: string;}[]>([]);
+  const [addingShipment, setAddingShipment] = useState(false);
+  const [newShipment, setNewShipment] = useState({ courier: "", tracking_number: "", description: "" });
   const [uploadingInvoice, setUploadingInvoice] = useState(false);
   const [newInvoiceFile, setNewInvoiceFile] = useState<File | null>(null);
   const [newInvoiceDesc, setNewInvoiceDesc] = useState("");
@@ -142,6 +145,8 @@ export default function BrandPortal() {
       }
 
       const invRes = await supabase.from("brand_shipment_invoices").select("*").eq("brand_email", resolvedBrandEmail).order("created_at", { ascending: false });
+      const shipRes = await supabase.from("brand_shipments").select("*").eq("brand_email", resolvedBrandEmail).order("created_at", { ascending: false });
+      if (shipRes.data) setBrandShipments(shipRes.data);
       if (invRes.data) setShipmentInvoices(invRes.data);
       setLoading(false);
 
@@ -168,6 +173,22 @@ export default function BrandPortal() {
 
   const eventDate = new Date("2026-09-12");
   const daysToEvent = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  const addShipmentPackage = async () => {
+    if (!newShipment.courier || !brandEmail) return;
+    const { data } = await supabase.from("brand_shipments").insert({
+      brand_email: brandEmail,
+      event: brand?.event || "",
+      courier: newShipment.courier,
+      tracking_number: newShipment.tracking_number,
+      description: newShipment.description,
+      shipped: true,
+      shipped_at: new Date().toISOString(),
+    }).select().single();
+    if (data) setBrandShipments(prev => [data, ...prev]);
+    setNewShipment({ courier: "", tracking_number: "", description: "" });
+    setAddingShipment(false);
+  };
 
   const saveShippingDetails = async () => {
     if (!brand) return;
@@ -418,48 +439,48 @@ export default function BrandPortal() {
         {activeTab === "shipments" && (
           <div>
             <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6", marginBottom: "1rem" }}>
-              <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "12px" }}>SHIPPING DETAILS</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em" }}>SHIPMENT PACKAGES</div>
+                <button onClick={() => setAddingShipment(true)} style={{ fontSize: "0.78rem", padding: "5px 12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add package</button>
+              </div>
               <div style={{ background: "#f0f4f1", borderRadius: "8px", padding: "8px 10px", marginBottom: "12px", borderLeft: "3px solid #1B3A2D" }}>
                 <div style={{ fontSize: "0.65rem", color: "#1B3A2D", letterSpacing: "0.08em", marginBottom: "3px" }}>SHIP TO</div>
                 <div style={{ fontSize: "0.78rem", color: "#1c1714", lineHeight: 1.6 }}>{venueAddress || "Contact your organizer for shipping address"}</div>
               </div>
-              {editingShipping ? (
-                <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px", marginBottom: "12px" }}>
-                  <select value={shippingDetails.courier} onChange={e => setShippingDetails({...shippingDetails, courier: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
-                    <option value="">Select courier...</option>
-                    {["DHL", "UPS", "FedEx", "USPS", "Amgray Logistics", "Other"].map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <input value={shippingDetails.tracking_number} onChange={e => setShippingDetails({...shippingDetails, tracking_number: e.target.value})} placeholder="Tracking number" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
-                  <input value={shippingDetails.shipping_invoice} onChange={e => setShippingDetails({...shippingDetails, shipping_invoice: e.target.value})} placeholder="Shipping invoice number" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button onClick={saveShippingDetails} style={{ flex: 1, padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
-                    <button onClick={() => setEditingShipping(false)} style={{ padding: "8px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
+              {addingShipment && (
+                <div style={{ border: "1px solid #e4ebe6", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
+                  <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
+                    <input placeholder="Description e.g. Box 1 - 10 dresses" value={newShipment.description} onChange={e => setNewShipment({...newShipment, description: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+                    <select value={newShipment.courier} onChange={e => setNewShipment({...newShipment, courier: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
+                      <option value="">Select courier...</option>
+                      {["DHL", "UPS", "FedEx", "USPS", "Amgray Logistics", "Other"].map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <input placeholder="Tracking number" value={newShipment.tracking_number} onChange={e => setNewShipment({...newShipment, tracking_number: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button onClick={addShipmentPackage} style={{ flex: 1, padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save package</button>
+                      <button onClick={() => setAddingShipment(false)} style={{ padding: "8px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div style={{ marginBottom: "12px" }}>
-                  {(brand.courier || brand.tracking_number || brand.shipping_invoice) && (
-                    <div style={{ background: "#f0f4f1", borderRadius: "8px", padding: "8px 10px", marginBottom: "8px" }}>
-                      {brand.courier && <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginBottom: "2px" }}>🚚 {brand.courier}</div>}
-                      {brand.tracking_number && <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginBottom: "2px" }}>Tracking: {brand.tracking_number}</div>}
-                      {brand.shipping_invoice && <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Invoice #: {brand.shipping_invoice}</div>}
-                    </div>
-                  )}
-                  <button onClick={() => { setEditingShipping(true); setShippingDetails({ courier: brand.courier || "", tracking_number: brand.tracking_number || "", shipping_invoice: brand.shipping_invoice || "" }); }} style={{ fontSize: "0.78rem", color: "#1B3A2D", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "6px 12px", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%", marginBottom: "8px" }}>
-                    {(brand.courier || brand.tracking_number || brand.shipping_invoice) ? "✎ Edit shipping details" : "+ Add shipping details"}
-                  </button>
-                </div>
               )}
-              <button onClick={toggleShipped} disabled={markingShipped} style={{ padding: "8px 16px", background: brand.shipped ? "transparent" : "#1B3A2D", color: brand.shipped ? "#4a5a52" : "#fff", border: brand.shipped ? "1px solid #e4ebe6" : "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", width: "100%" }}>
-                {markingShipped ? "Saving..." : brand.shipped ? "✓ Shipped — Mark as not shipped" : "Mark as shipped"}
-              </button>
+              {brandShipments.length === 0 ? (
+                <div style={{ textAlign: "center" as const, padding: "1.5rem", color: "#4a5a52", fontSize: "0.82rem" }}>No packages added yet. Click + Add package to start.</div>
+              ) : brandShipments.map(s => (
+                <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid #f0f4f1" }}>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>{s.description || "Shipment package"}</div>
+                    <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>🚚 {s.courier} {s.tracking_number && `· ${s.tracking_number}`}</div>
+                  </div>
+                  <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: "10px", background: s.received ? "#4a7c5922" : "#E8C97A22", color: s.received ? "#4a7c59" : "#b87333" }}>{s.received ? "✓ Received" : "Shipped"}</span>
+                </div>
+              ))}
             </div>
             <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
               <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "8px" }}>SHIPPING INVOICES</div>
               <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1rem" }}>Upload invoices from your shipping carrier so your organizer can reconcile payments.</p>
               <div style={{ border: "1px dashed #e4ebe6", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
-                  <input placeholder="Description e.g. Lagos shipment" value={newInvoiceDesc} onChange={e => setNewInvoiceDesc(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+                  <input placeholder="Description e.g. DHL invoice" value={newInvoiceDesc} onChange={e => setNewInvoiceDesc(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
                   <input placeholder="Amount" type="number" value={newInvoiceAmount} onChange={e => setNewInvoiceAmount(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
                 </div>
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setNewInvoiceFile(e.target.files?.[0] || null)} style={{ marginBottom: "8px", fontSize: "0.82rem", width: "100%" }} />
@@ -468,21 +489,19 @@ export default function BrandPortal() {
                 </button>
               </div>
               {shipmentInvoices.length === 0 ? (
-                <div style={{ textAlign: "center" as const, padding: "2rem", color: "#4a5a52", fontSize: "0.82rem" }}>No invoices uploaded yet.</div>
-              ) : (
-                shipmentInvoices.map(inv => (
-                  <div key={inv.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f0f4f1" }}>
-                    <div>
-                      <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>{inv.description || inv.file_name}</div>
-                      <div style={{ fontSize: "0.7rem", color: "#4a5a52" }}>{new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
-                    </div>
-                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                      {inv.amount > 0 && <span style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>${Number(inv.amount).toFixed(2)}</span>}
-                      <a href={inv.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.75rem", padding: "4px 10px", background: "#f0f4f1", color: "#1B3A2D", borderRadius: "6px", textDecoration: "none" }}>↓</a>
-                    </div>
+                <div style={{ textAlign: "center" as const, padding: "1.5rem", color: "#4a5a52", fontSize: "0.82rem" }}>No invoices uploaded yet.</div>
+              ) : shipmentInvoices.map(inv => (
+                <div key={inv.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f0f4f1" }}>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>{inv.description || inv.file_name}</div>
+                    <div style={{ fontSize: "0.7rem", color: "#4a5a52" }}>{new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
                   </div>
-                ))
-              )}
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    {inv.amount > 0 && <span style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>${Number(inv.amount).toFixed(2)}</span>}
+                    <a href={inv.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.75rem", padding: "4px 10px", background: "#f0f4f1", color: "#1B3A2D", borderRadius: "6px", textDecoration: "none" }}>↓</a>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
