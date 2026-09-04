@@ -37,6 +37,8 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [reviewTab, setReviewTab] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [reviewNote, setReviewNote] = useState("");
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(0);
   const [reviewingProduct, setReviewingProduct] = useState<number | null>(null);
   const [brandFilter, setBrandFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -86,6 +88,35 @@ export default function InventoryPage() {
     const uploaded = brandProducts.filter(p => p.square_catalog_id).length;
     return { brand, products: brandProducts.length, units, value, uploaded, total: brandProducts.length };
   });
+
+  const uploadAllApprovedToSquare = async () => {
+    const toUpload = products.filter(p => p.review_status === "approved" && !p.square_catalog_id);
+    if (toUpload.length === 0) { alert("All approved products are already in Square."); return; }
+    if (!confirm(`Upload ${toUpload.length} approved products to Square?`)) return;
+    setBulkUploading(true);
+    setBulkProgress(0);
+    let done = 0;
+    for (const product of toUpload) {
+      try {
+        const variations = product.variations.map(v => ({
+          size: v.size, colour: v.colour, quantity: v.quantity, price: v.price || product.base_price
+        }));
+        const res = await fetch("/api/square/upload-inventory", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: product.name, category: product.category, basePrice: product.base_price, brandName: product.brand_name, variations, productId: product.id }),
+        });
+        if (res.ok) {
+          await supabase.from("brand_products").update({ square_catalog_id: "uploaded" }).eq("id", product.id);
+          setProducts(prev => prev.map(p => p.id === product.id ? { ...p, square_catalog_id: "uploaded" } : p));
+        }
+      } catch (e) { console.log("Failed for", product.name, e); }
+      done++;
+      setBulkProgress(Math.round((done / toUpload.length) * 100));
+    }
+    setBulkUploading(false);
+    alert(`Done! ${done} products uploaded to Square.`);
+  };
 
   const approveProduct = async (productId: number) => {
     await supabase.from("brand_products").update({ review_status: "approved", review_note: "" }).eq("id", productId);
@@ -176,6 +207,19 @@ export default function InventoryPage() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Bulk upload button */}
+        {products.filter(p => p.review_status === "approved" && !p.square_catalog_id).length > 0 && (
+          <div style={{ background: "#E8C97A22", borderRadius: "10px", padding: "1rem 1.25rem", marginBottom: "1.5rem", border: "1px solid #E8C97A44", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{products.filter(p => p.review_status === "approved" && !p.square_catalog_id).length} approved products not yet in Square</div>
+              {bulkUploading && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>Uploading... {bulkProgress}%</div>}
+            </div>
+            <button onClick={uploadAllApprovedToSquare} disabled={bulkUploading} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+              {bulkUploading ? `Uploading ${bulkProgress}%...` : "↑ Upload all to Square"}
+            </button>
           </div>
         )}
 
