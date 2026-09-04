@@ -49,7 +49,7 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
   const [addingVariation, setAddingVariation] = useState<number | null>(null);
   const [editingProduct, setEditingProduct] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [editProductData, setEditProductData] = useState({ name: "", category: "", base_price: "" });
+  const [editProductData, setEditProductData] = useState({ name: "", category: "Clothing", base_price: "" });
   const [newProduct, setNewProduct] = useState({ name: "", category: "Clothing", base_price: "", photo_url: "" });
   const [newVariation, setNewVariation] = useState({ size: "One Size", colour: "Black", quantity: "", price: "" });
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
