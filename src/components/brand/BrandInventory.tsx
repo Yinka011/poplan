@@ -336,13 +336,30 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
                       </div>
                     )}
                     {editingProduct === product.id && (
-                      <div style={{ marginTop: "8px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
+                      <div style={{ marginTop: "8px", background: "#f8faf8", borderRadius: "10px", padding: "1rem", border: "1px solid #e4ebe6", display: "flex", flexDirection: "column" as const, gap: "8px" }}>
+                        <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.1em" }}>EDIT PRODUCT</div>
                         <input value={editProductData.name} onChange={e => setEditProductData({...editProductData, name: e.target.value})} placeholder="Product name" style={inp()} />
-                        <input value={editProductData.base_price} onChange={e => setEditProductData({...editProductData, base_price: e.target.value})} placeholder="Price" type="number" style={inp()} />
-                        <div style={{ display: "flex", gap: "6px" }}>
-                          <button onClick={() => saveProductEdit(product.id)} style={{ flex: 1, padding: "6px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save</button>
-                          <button onClick={() => setEditingProduct(null)} style={{ padding: "6px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Cancel</button>
+                        <select value={editProductData.category} onChange={e => setEditProductData({...editProductData, category: e.target.value})} style={inp()}>
+                          {["Clothing", "Shoes", "Accessories", "Jewellery", "Beauty", "Food & Drink", "Home", "Art", "Other"].map(c => <option key={c}>{c}</option>)}
+                        </select>
+                        <input value={editProductData.base_price} onChange={e => setEditProductData({...editProductData, base_price: e.target.value})} placeholder="Base price" type="number" style={inp()} />
+                        <div>
+                          <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "4px" }}>UPDATE PHOTO (optional)</div>
+                          <input type="file" accept="image/*" onChange={async e => {
+                            const file = e.target.files?.[0];
+                            if (!file || !brandEmail) return;
+                            const path = `${brandEmail}/products/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+                            await supabase.storage.from("brand-uploads").upload(path, file, { upsert: true });
+                            const { data: urlData } = supabase.storage.from("brand-uploads").getPublicUrl(path);
+                            await supabase.from("brand_products").update({ photo_url: urlData.publicUrl }).eq("id", product.id);
+                            setProducts(prev => prev.map(p => p.id === product.id ? { ...p, photo_url: urlData.publicUrl } : p));
+                          }} style={{ fontSize: "0.82rem", width: "100%" }} />
                         </div>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <button onClick={() => saveProductEdit(product.id)} style={{ flex: 1, padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save changes</button>
+                          <button onClick={() => setEditingProduct(null)} style={{ padding: "8px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
+                        </div>
+                        <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>You can also edit or add variations below after saving.</div>
                       </div>
                     )}
                   </div>
