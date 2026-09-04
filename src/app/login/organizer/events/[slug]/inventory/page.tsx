@@ -104,7 +104,11 @@ export default function InventoryPage() {
         const res = await fetch("/api/square/upload-inventory", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: product.name, category: product.category, basePrice: product.base_price, brandName: product.brand_name, variations, productId: product.id }),
+          body: JSON.stringify({
+            brandName: product.brand_name,
+            brandEmail: product.brand_email || "",
+            items: [{ name: product.name, base_price: product.base_price, category: product.category, variations }],
+          }),
         });
         if (res.ok) {
           await supabase.from("brand_products").update({ square_catalog_id: "uploaded" }).eq("id", product.id);
