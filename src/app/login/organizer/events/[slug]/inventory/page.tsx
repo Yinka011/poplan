@@ -90,15 +90,29 @@ export default function InventoryPage() {
   const approveProduct = async (productId: number) => {
     await supabase.from("brand_products").update({ review_status: "approved", review_note: "" }).eq("id", productId);
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, review_status: "approved", review_note: "" } : p));
-    // Upload to Square
+    // Upload to Square using the same endpoint as brand portal
     const product = products.find(p => p.id === productId);
     if (product) {
       try {
-        await fetch("/api/square-upload", {
+        const variations = product.variations.map(v => ({
+          size: v.size, colour: v.colour, quantity: v.quantity, price: v.price || product.base_price
+        }));
+        const res = await fetch("/api/square/upload-inventory", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId, eventSlug: slug }),
+          body: JSON.stringify({
+            name: product.name,
+            category: product.category,
+            basePrice: product.base_price,
+            brandName: product.brand_name,
+            variations,
+            productId,
+          }),
         });
+        if (res.ok) {
+          await supabase.from("brand_products").update({ square_catalog_id: "uploaded" }).eq("id", productId);
+          setProducts(prev => prev.map(p => p.id === productId ? { ...p, square_catalog_id: "uploaded" } : p));
+        }
       } catch (e) { console.log("Square upload failed", e); }
     }
   };
