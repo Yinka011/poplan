@@ -107,7 +107,7 @@ export default function InventoryPage() {
           body: JSON.stringify({
             brandName: product.brand_name,
             brandEmail: product.brand_email || "",
-            items: [{ name: product.name, base_price: product.base_price, category: product.category, variations }],
+            items: [{ name: product.name, base_price: product.base_price, category: product.category, photo_url: product.photo_url || "", variations }],
           }),
         });
         if (res.ok) {
