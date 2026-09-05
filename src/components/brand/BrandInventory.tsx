@@ -215,6 +215,28 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
   };
 
   const submitForReview = async (productId: number) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    // Validate photo
+    if (!product.photo_url) {
+      alert("Please upload a product photo before submitting for review.");
+      return;
+    }
+
+    // Validate variations
+    if (!product.variations || product.variations.length === 0) {
+      alert("Please add at least one variation (size and colour) before submitting for review.");
+      return;
+    }
+
+    // Validate each variation
+    for (const v of product.variations) {
+      if (!v.size) { alert(`Please add a size to all variations for ${product.name}.`); return; }
+      if (!v.colour) { alert(`Please add a colour to all variations for ${product.name}.`); return; }
+      if (!v.quantity || v.quantity <= 0) { alert(`Please add a quantity greater than 0 to all variations for ${product.name}.`); return; }
+    }
+
     await supabase.from("brand_products").update({ review_status: "pending" }).eq("id", productId);
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, review_status: "pending" } : p));
     setSubmitted(true);
@@ -223,10 +245,21 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
 
   const submitAllForReview = async () => {
     const unsubmitted = products.filter(p => !p.review_status || p.review_status === "rejected");
+    const errors: string[] = [];
+
     for (const product of unsubmitted) {
+      if (!product.photo_url) { errors.push(`${product.name}: missing photo`); continue; }
+      if (!product.variations || product.variations.length === 0) { errors.push(`${product.name}: no variations added`); continue; }
+      const badVariation = product.variations.find(v => !v.size || !v.colour || !v.quantity || v.quantity <= 0);
+      if (badVariation) { errors.push(`${product.name}: incomplete variation (check size, colour, quantity)`); continue; }
       await supabase.from("brand_products").update({ review_status: "pending" }).eq("id", product.id);
     }
-    setProducts(prev => prev.map(p => (!p.review_status || p.review_status === "rejected") ? { ...p, review_status: "pending" } : p));
+
+    if (errors.length > 0) {
+      alert("Some products could not be submitted:\n\n" + errors.join("\n"));
+    }
+
+    setProducts(prev => prev.map(p => (!p.review_status || p.review_status === "rejected") && p.photo_url && (p.variations || []).length > 0 ? { ...p, review_status: "pending" } : p));
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 3000);
   };
