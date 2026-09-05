@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { supabase } from "@/lib/supabase";
 
 type Sale = {
