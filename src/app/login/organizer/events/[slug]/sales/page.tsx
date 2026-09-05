@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useState } from "react";
+import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -141,6 +142,39 @@ export default function SalesPage() {
             <div>
               <div style={{ fontSize: "0.6rem", color: "#E8C97A", letterSpacing: "0.15em", marginBottom: "6px" }}>BRANDS</div>
               <div style={{ fontSize: "1.5rem" }}>{payouts.length}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Charts */}
+        {payouts.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+            {/* Revenue by brand pie chart */}
+            <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+              <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "1rem" }}>REVENUE BY BRAND</div>
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={payouts.map(p => ({ name: p.brand_name, value: Number(p.total_revenue) }))} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => name && percent ? `${name.toString().split(" ")[0]} ${(percent * 100).toFixed(0)}%` : ""} labelLine={false} fontSize={10}>
+                    {payouts.map((_, i) => (
+                      <Cell key={i} fill={["#1B3A2D","#E8C97A","#4a7c59","#2a4d3e","#8b6ab0","#5b7fa6","#a0522d","#E8C97A88","#4a7c5988","#1B3A2D88","#d4a574","#7a9e7e","#c4956a"][i % 13]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(val: any) => `$${Number(val).toFixed(2)}`} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Revenue by brand bar chart */}
+            <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+              <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "1rem" }}>REVENUE RANKING</div>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={[...payouts].sort((a, b) => Number(b.total_revenue) - Number(a.total_revenue)).map(p => ({ name: p.brand_name.split(" ")[0], revenue: Number(p.total_revenue) }))} layout="vertical">
+                  <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `$${v}`} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={70} />
+                  <Tooltip formatter={(val: any) => `$${Number(val).toFixed(2)}`} />
+                  <Bar dataKey="revenue" fill="#1B3A2D" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         )}
