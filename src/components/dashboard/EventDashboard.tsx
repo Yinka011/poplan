@@ -3,8 +3,8 @@ import Link from "next/link";
 import OrganizerBell from "@/components/dashboard/OrganizerBell";
 import { useEffect, useState } from "react";
 import Checklist from "@/components/dashboard/Checklist";
+import BrandActivityOverview from "@/components/dashboard/BrandActivityOverview";
 import MarketingDeadlines from "@/components/dashboard/MarketingDeadlines";
-import PaymentTracker from "@/components/dashboard/PaymentTracker";
 import AnnouncementManager from "@/components/dashboard/AnnouncementManager";
 import { type EventSummary } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
@@ -172,7 +172,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
 
 
-      <PaymentTracker event={event.city} />
+      <BrandActivityOverview eventCity={event.city} eventSlug={event.slug} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Checklist event={event.city} />
