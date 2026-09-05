@@ -495,7 +495,7 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
               </div>
             ) : (
               <div style={{ borderTop: "1px solid #f0f4f1", padding: "10px 16px" }}>
-                <button onClick={() => setAddingVariation(product.id)} style={{ fontSize: "0.78rem", color: "#E8C97A", background: "transparent", border: "none", cursor: "pointer", padding: 0 }}>+ Add variation (size / colour)</button>
+                {(product.review_status !== "pending" && product.review_status !== "approved") && <button onClick={() => setAddingVariation(product.id)} style={{ fontSize: "0.78rem", color: "#E8C97A", background: "transparent", border: "none", cursor: "pointer", padding: 0 }}>+ Add variation (size / colour)</button>}
               </div>
             )}
           </div>
