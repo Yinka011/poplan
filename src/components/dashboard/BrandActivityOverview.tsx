@@ -64,7 +64,7 @@ export default function BrandActivityOverview({ eventCity, eventSlug }: { eventC
           <tbody>
             {brands.map(brand => (
               <tr key={brand.id} style={{ borderBottom: "1px solid #f5f2ee" }}>
-                <td style={{ padding: "8px 8px" }}><Link href={`/login/organizer/events/${eventSlug}/brands/${brand.email}`} style={{ color: "#1B3A2D", textDecoration: "none", fontSize: "0.85rem" }}>{brand.name}</Link></td>
+                <td style={{ padding: "8px 8px" }}><Link href={`/login/organizer/events/${eventSlug}/brands/${encodeURIComponent(brand.email)}`} style={{ color: "#1B3A2D", textDecoration: "none", fontSize: "0.85rem" }}>{brand.name}</Link></td>
                 <td style={{ padding: "8px 8px", textAlign: "center" as const }}>
                   <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: "10px", background: brand.status === "Paid" ? "#4a7c5922" : brand.status === "Partial" ? "#E8C97A22" : "#f0f4f1", color: brand.status === "Paid" ? "#4a7c59" : brand.status === "Partial" ? "#b87333" : "#4a5a52" }}>{brand.status || "Unpaid"}</span>
                 </td>
