@@ -37,6 +37,8 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [reviewTab, setReviewTab] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [reviewNote, setReviewNote] = useState("");
+  const [collapsedBrands, setCollapsedBrands] = useState<Set<string>>(new Set());
+  const toggleBrand = (b: string) => setCollapsedBrands(prev => { const n = new Set(prev); n.has(b) ? n.delete(b) : n.add(b); return n; });
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
   const [reviewingProduct, setReviewingProduct] = useState<number | null>(null);
