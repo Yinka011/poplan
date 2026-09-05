@@ -48,6 +48,8 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
   const [uploadingAllToSquare, setUploadingAllToSquare] = useState(false);
   const [addingVariation, setAddingVariation] = useState<number | null>(null);
   const [editingProduct, setEditingProduct] = useState<number | null>(null);
+  const [editingVariation, setEditingVariation] = useState<number | null>(null);
+  const [editVariationData, setEditVariationData] = useState({ size: "", colour: "", quantity: "", price: "" });
   const [submitted, setSubmitted] = useState(false);
   const [editProductData, setEditProductData] = useState({ name: "", category: "Clothing", base_price: "" });
   const [newProduct, setNewProduct] = useState({ name: "", category: "Clothing", base_price: "", photo_url: "" });
@@ -180,6 +182,26 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
       alert("Error: " + (data.error || "Upload failed"));
     }
     setUploadingToSquare(null);
+  };
+
+  const saveVariationEdit = async (productId: number, variationId: number) => {
+    await supabase.from("brand_product_variations").update({
+      size: editVariationData.size,
+      colour: editVariationData.colour,
+      quantity: parseInt(editVariationData.quantity) || 0,
+      price: parseFloat(editVariationData.price) || 0,
+    }).eq("id", variationId);
+    setProducts(prev => prev.map(p => p.id === productId ? {
+      ...p,
+      variations: (p.variations || []).map(v => v.id === variationId ? {
+        ...v,
+        size: editVariationData.size,
+        colour: editVariationData.colour,
+        quantity: parseInt(editVariationData.quantity) || 0,
+        price: parseFloat(editVariationData.price) || 0,
+      } : v)
+    } : p));
+    setEditingVariation(null);
   };
 
   const saveProductEdit = async (productId: number) => {
@@ -385,12 +407,30 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
                   <div>SIZE</div><div>COLOUR</div><div>QTY</div><div>PRICE</div><div></div>
                 </div>
                 {(product.variations || []).map(v => (
-                  <div key={v.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 40px", padding: "8px 16px", borderTop: "1px solid #f5f2ee", alignItems: "center" }}>
-                    <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{v.size || "—"}</div>
-                    <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{v.colour || "—"}</div>
-                    <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{v.quantity}</div>
-                    <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>${Number(v.price || product.base_price).toFixed(2)}</div>
-                    <button onClick={() => deleteVariation(product.id, v.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
+                  <div key={v.id}>
+                    {editingVariation === v.id ? (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 80px", padding: "6px 16px", borderTop: "1px solid #f5f2ee", gap: "4px", alignItems: "center" }}>
+                        <select value={SIZES.slice(0,-1).includes(editVariationData.size) ? editVariationData.size : "Other"} onChange={e => setEditVariationData({...editVariationData, size: e.target.value === "Other" ? "" : e.target.value})} style={{ padding: "4px", border: "1px solid #E8C97A", borderRadius: "4px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }}>{SIZES.map(s => <option key={s}>{s}</option>)}</select>
+                        <input value={editVariationData.colour} onChange={e => setEditVariationData({...editVariationData, colour: e.target.value})} style={{ padding: "4px", border: "1px solid #E8C97A", borderRadius: "4px", fontSize: "0.78rem" }} />
+                        <input type="number" value={editVariationData.quantity} onChange={e => setEditVariationData({...editVariationData, quantity: e.target.value})} style={{ padding: "4px", border: "1px solid #E8C97A", borderRadius: "4px", fontSize: "0.78rem" }} />
+                        <input type="number" value={editVariationData.price} onChange={e => setEditVariationData({...editVariationData, price: e.target.value})} style={{ padding: "4px", border: "1px solid #E8C97A", borderRadius: "4px", fontSize: "0.78rem" }} />
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          <button onClick={() => saveVariationEdit(product.id, v.id)} style={{ padding: "3px 6px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", fontSize: "0.7rem", cursor: "pointer" }}>✓</button>
+                          <button onClick={() => setEditingVariation(null)} style={{ padding: "3px 6px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "4px", fontSize: "0.7rem", cursor: "pointer" }}>✕</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 40px", padding: "8px 16px", borderTop: "1px solid #f5f2ee", alignItems: "center" }}>
+                        <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{v.size || "—"}</div>
+                        <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{v.colour || "—"}</div>
+                        <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{v.quantity}</div>
+                        <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>${Number(v.price || product.base_price).toFixed(2)}</div>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {product.review_status === "rejected" && <button onClick={() => { setEditingVariation(v.id); setEditVariationData({ size: v.size || "", colour: v.colour || "", quantity: String(v.quantity), price: String(v.price || product.base_price) }); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "11px" }}>✎</button>}
+                          <button onClick={() => deleteVariation(product.id, v.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
