@@ -39,6 +39,45 @@ export default function InventoryPage() {
   const [reviewNote, setReviewNote] = useState("");
   const [collapsedBrands, setCollapsedBrands] = useState<Set<string>>(new Set());
   const toggleBrand = (b: string) => setCollapsedBrands(prev => { const n = new Set(prev); n.has(b) ? n.delete(b) : n.add(b); return n; });
+
+  const exportBrandCSV = (bName: string) => {
+    const bProducts = filtered.filter(p => p.brand_name === bName);
+    const rows: string[][] = [["Brand", "Product", "Category", "Size", "Colour", "Quantity", "Price", "Photo URL"]];
+    bProducts.forEach(p => {
+      if (p.variations.length > 0) {
+        p.variations.forEach(v => {
+          rows.push([bName, p.name, p.category, v.size || "", v.colour || "", String(v.quantity), String(v.price || p.base_price), p.photo_url || ""]);
+        });
+      } else {
+        rows.push([bName, p.name, p.category, "", "", "", String(p.base_price), p.photo_url || ""]);
+      }
+    });
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${bName.replace(/\s+/g, "-")}-inventory.csv`;
+    a.click();
+  };
+
+  const exportAllCSV = () => {
+    const rows: string[][] = [["Brand", "Product", "Category", "Size", "Colour", "Quantity", "Price", "Photo URL"]];
+    filtered.forEach(p => {
+      if (p.variations.length > 0) {
+        p.variations.forEach(v => {
+          rows.push([p.brand_name, p.name, p.category, v.size || "", v.colour || "", String(v.quantity), String(v.price || p.base_price), p.photo_url || ""]);
+        });
+      } else {
+        rows.push([p.brand_name, p.name, p.category, "", "", "", String(p.base_price), p.photo_url || ""]);
+      }
+    });
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${slug}-full-inventory.csv`;
+    a.click();
+  };
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
   const [reviewingProduct, setReviewingProduct] = useState<number | null>(null);
@@ -231,6 +270,11 @@ export default function InventoryPage() {
             </button>
           </div>
         )}
+
+        {/* Export all */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
+          <button onClick={exportAllCSV} style={{ padding: "7px 14px", background: "#fff", color: "#1B3A2D", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>↓ Export all CSV</button>
+        </div>
 
         {/* Filters */}
         <div style={{ display: "flex", gap: "8px", marginBottom: "1.5rem", flexWrap: "wrap" as const }}>
