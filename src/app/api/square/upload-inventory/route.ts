@@ -79,8 +79,10 @@ export async function POST(request: Request) {
     const catalogItemId = data.objects?.find((o: { item_data?: { name: string }; id: string }) => o.item_data?.name?.includes(item.name))?.id;
     if (!catalogItemId) continue;
     try {
+      console.log("Fetching image from:", item.photo_url);
       const imgRes = await fetch(item.photo_url);
-      if (!imgRes.ok) continue;
+      console.log("Image fetch status:", imgRes.status);
+      if (!imgRes.ok) { console.error("Failed to fetch image:", item.photo_url); continue; }
       const imgBlob = await imgRes.blob();
       const imgType = imgBlob.type || "image/jpeg";
       const ext = imgType.split("/")[1] || "jpg";
@@ -97,7 +99,7 @@ export async function POST(request: Request) {
         body: formData,
       });
       const imgData = await imgResponse.json();
-      console.log("Image upload:", imgData.errors || "success");
+      if (imgData.errors) { console.error("Image upload error:", JSON.stringify(imgData.errors)); } else { console.log("Image uploaded successfully for:", item.name); }
     } catch (e) {
       console.error("Image upload failed:", e);
     }
