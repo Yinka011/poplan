@@ -82,8 +82,13 @@ export default function SalesPage() {
   const updateCommission = async (brandEmail: string, rate: number) => {
     const payout = payouts.find(p => p.brand_email === brandEmail);
     if (!payout) return;
-    const commission = payout.total_revenue * (rate / 100);
-    const payoutAmount = payout.total_revenue - commission;
+    const grossRevenue = Number(payout.total_revenue);
+    const taxRate = 0.08;
+    const netSales = grossRevenue / (1 + taxRate);
+    const processingFee = netSales * 0.0271;
+    const afterProcessing = netSales - processingFee;
+    const commission = afterProcessing * (rate / 100);
+    const payoutAmount = afterProcessing - commission;
     await supabase.from("event_payouts").update({ commission_rate: rate, commission_amount: commission, payout_amount: payoutAmount }).eq("event", event).eq("brand_email", brandEmail);
     setPayouts(prev => prev.map(p => p.brand_email === brandEmail ? { ...p, commission_rate: rate, commission_amount: commission, payout_amount: payoutAmount } : p));
   };

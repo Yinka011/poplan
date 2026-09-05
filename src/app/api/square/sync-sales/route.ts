@@ -120,9 +120,17 @@ export async function POST(request: Request) {
   }
 
   // Update payout calculations for each brand
+  // Store tax per order for accurate payout calculation
+  const orderTaxMap: Record<string, number> = {};
+  for (const order of orders) {
+    const tax = Number(order.total_tax_money?.amount || 0) / 100;
+    const gross = Number(order.total_money?.amount || 0) / 100;
+    orderTaxMap[order.id] = gross > 0 ? tax / gross : 0; // tax rate per order
+  }
+
   const { data: allBrands } = await supabase
     .from("brand_sales")
-    .select("brand_email, brand_name, total_revenue")
+    .select("brand_email, brand_name, total_revenue, square_order_id")
     .eq("event", event);
 
   if (allBrands) {
@@ -136,8 +144,18 @@ export async function POST(request: Request) {
 
     for (const [email, data] of Object.entries(brandTotals)) {
       const commissionRate = 20;
-      const commissionAmount = data.revenue * (commissionRate / 100);
-      const payoutAmount = data.revenue - commissionAmount;
+      const processingFeeRate = 0.0271;
+      // Gross sales from Square includes tax
+      const grossRevenue = data.revenue;
+      // Deduct tax (Square collects this separately)
+      const taxRate = 0.08; // approx - Square handles exact tax
+      const netSales = grossRevenue / (1 + taxRate); // approximate net
+      // Deduct processing fee
+      const processingFee = netSales * processingFeeRate;
+      const afterProcessing = netSales - processingFee;
+      // Deduct AO Curates commission
+      const commissionAmount = afterProcessing * (commissionRate / 100);
+      const payoutAmount = afterProcessing - commissionAmount;
 
       await supabase.from("event_payouts").upsert({
         event,
