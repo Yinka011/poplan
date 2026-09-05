@@ -98,16 +98,19 @@ export default function InventoryPage() {
     let done = 0;
     for (const product of toUpload) {
       try {
-        const variations = product.variations.map(v => ({
-          size: v.size, colour: v.colour, quantity: v.quantity, price: v.price || product.base_price
-        }));
         const res = await fetch("/api/square/upload-inventory", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             brandName: product.brand_name,
             brandEmail: product.brand_email || "",
-            items: [{ name: product.name, base_price: product.base_price, category: product.category, photo_url: product.photo_url || "", variations }],
+            items: [{
+              name: product.name,
+              base_price: product.base_price,
+              category: product.category,
+              photo_url: product.photo_url || "",
+              variations: product.variations,
+            }],
           }),
         });
         if (res.ok) {
