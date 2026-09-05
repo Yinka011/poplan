@@ -426,7 +426,7 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
                         <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{v.quantity}</div>
                         <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>${Number(v.price || product.base_price).toFixed(2)}</div>
                         <div style={{ display: "flex", gap: "4px" }}>
-                          {product.review_status === "rejected" && <button onClick={() => { setEditingVariation(v.id); setEditVariationData({ size: v.size || "", colour: v.colour || "", quantity: String(v.quantity), price: String(v.price || product.base_price) }); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "11px" }}>✎</button>}
+                          {(product.review_status === "rejected" || !product.review_status) && <button onClick={() => { setEditingVariation(v.id); setEditVariationData({ size: v.size || "", colour: v.colour || "", quantity: String(v.quantity), price: String(v.price || product.base_price) }); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#4a5a52", fontSize: "11px" }}>✎</button>}
                           <button onClick={() => deleteVariation(product.id, v.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button>
                         </div>
                       </div>
