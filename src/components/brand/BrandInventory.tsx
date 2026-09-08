@@ -487,10 +487,8 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
                   </div>
                   <div>
                      <input placeholder="0" type="number" value={newVariation.quantity} onChange={e => setNewVariation({...newVariation, quantity: e.target.value})} style={{...inp(), width: "100%", boxSizing: "border-box" as const}} />
-                    <input placeholder="0" type="number" value={newVariation.quantity} onChange={e => setNewVariation({...newVariation, quantity: e.target.value})} style={inp()} />
                   </div>
                   <div>
-                     <input placeholder={`$${product.base_price}`} type="number" value={newVariation.price} onChange={e => setNewVariation({...newVariation, price: e.target.value})} style={{...inp(), width: "100%", boxSizing: "border-box" as const}} />
                     <input placeholder={`$${product.base_price}`} type="number" value={newVariation.price} onChange={e => setNewVariation({...newVariation, price: e.target.value})} style={inp()} />
                   </div>
                 </div>
