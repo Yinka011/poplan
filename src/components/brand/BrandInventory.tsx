@@ -474,25 +474,25 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
               <div style={{ borderTop: "1px solid #f0f4f1", padding: "1rem 1.25rem", background: "#f8faf8" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
                   <div>
-                    <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "3px" }}>SIZE</div>
+                     <select value={SIZES.slice(0,-1).includes(newVariation.size) ? newVariation.size : "Other"} onChange={e => setNewVariation({...newVariation, size: e.target.value === "Other" ? "" : e.target.value})} style={{...inp(), width: "100%"}}>
                     <select value={SIZES.slice(0,-1).includes(newVariation.size) ? newVariation.size : "Other"} onChange={e => setNewVariation({...newVariation, size: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
                       {SIZES.map(s => <option key={s}>{s}</option>)}
                     </select>
                     {!SIZES.slice(0,-1).includes(newVariation.size) && <input placeholder="e.g. 20" value={newVariation.size} onChange={e => setNewVariation({...newVariation, size: e.target.value})} style={{...inp(), marginTop: "4px"}} />}
                   </div>
                   <div>
-                    <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "3px" }}>COLOUR</div>
+                     <select value={COLOURS.slice(0,-1).includes(newVariation.colour) ? newVariation.colour : "Other"} onChange={e => setNewVariation({...newVariation, colour: e.target.value === "Other" ? "" : e.target.value})} style={{...inp(), width: "100%"}}>
                     <select value={COLOURS.slice(0,-1).includes(newVariation.colour) ? newVariation.colour : "Other"} onChange={e => setNewVariation({...newVariation, colour: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
                       {COLOURS.map(c => <option key={c}>{c}</option>)}
                     </select>
                     {!COLOURS.slice(0,-1).includes(newVariation.colour) && <input placeholder="e.g. Burgundy" value={newVariation.colour} onChange={e => setNewVariation({...newVariation, colour: e.target.value})} style={{...inp(), marginTop: "4px"}} />}
                   </div>
                   <div>
-                    <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "3px" }}>QTY</div>
+                     <input placeholder="0" type="number" value={newVariation.quantity} onChange={e => setNewVariation({...newVariation, quantity: e.target.value})} style={{...inp(), width: "100%", boxSizing: "border-box" as const}} />
                     <input placeholder="0" type="number" value={newVariation.quantity} onChange={e => setNewVariation({...newVariation, quantity: e.target.value})} style={inp()} />
                   </div>
                   <div>
-                    <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "3px" }}>PRICE</div>
+                     <input placeholder={`$${product.base_price}`} type="number" value={newVariation.price} onChange={e => setNewVariation({...newVariation, price: e.target.value})} style={{...inp(), width: "100%", boxSizing: "border-box" as const}} />
                     <input placeholder={`$${product.base_price}`} type="number" value={newVariation.price} onChange={e => setNewVariation({...newVariation, price: e.target.value})} style={inp()} />
                   </div>
                 </div>
