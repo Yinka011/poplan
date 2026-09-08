@@ -474,14 +474,12 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
               <div style={{ borderTop: "1px solid #f0f4f1", padding: "1rem 1.25rem", background: "#f8faf8" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
                   <div>
-                     <select value={SIZES.slice(0,-1).includes(newVariation.size) ? newVariation.size : "Other"} onChange={e => setNewVariation({...newVariation, size: e.target.value === "Other" ? "" : e.target.value})} style={{...inp(), width: "100%"}}>
                     <select value={SIZES.slice(0,-1).includes(newVariation.size) ? newVariation.size : "Other"} onChange={e => setNewVariation({...newVariation, size: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
                       {SIZES.map(s => <option key={s}>{s}</option>)}
                     </select>
                     {!SIZES.slice(0,-1).includes(newVariation.size) && <input placeholder="e.g. 20" value={newVariation.size} onChange={e => setNewVariation({...newVariation, size: e.target.value})} style={{...inp(), marginTop: "4px"}} />}
                   </div>
                   <div>
-                     <select value={COLOURS.slice(0,-1).includes(newVariation.colour) ? newVariation.colour : "Other"} onChange={e => setNewVariation({...newVariation, colour: e.target.value === "Other" ? "" : e.target.value})} style={{...inp(), width: "100%"}}>
                     <select value={COLOURS.slice(0,-1).includes(newVariation.colour) ? newVariation.colour : "Other"} onChange={e => setNewVariation({...newVariation, colour: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
                       {COLOURS.map(c => <option key={c}>{c}</option>)}
                     </select>
