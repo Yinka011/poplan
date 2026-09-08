@@ -472,29 +472,33 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
             {/* Add variation form */}
             {addingVariation === product.id ? (
               <div style={{ borderTop: "1px solid #f0f4f1", padding: "1rem 1.25rem", background: "#f8faf8" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 0.6fr 0.6fr", gap: "10px", marginBottom: "10px", alignItems: "end" }}>
                   <div>
-                    <select value={SIZES.slice(0,-1).includes(newVariation.size) ? newVariation.size : "Other"} onChange={e => setNewVariation({...newVariation, size: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
+                    <div style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "4px" }}>SIZE</div>
+                    <select value={SIZES.slice(0,-1).includes(newVariation.size) ? newVariation.size : "Other"} onChange={e => setNewVariation({...newVariation, size: e.target.value === "Other" ? "" : e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }}>
                       {SIZES.map(s => <option key={s}>{s}</option>)}
                     </select>
-                    {!SIZES.slice(0,-1).includes(newVariation.size) && <input placeholder="e.g. 20" value={newVariation.size} onChange={e => setNewVariation({...newVariation, size: e.target.value})} style={{...inp(), marginTop: "4px"}} />}
+                    {!SIZES.slice(0,-1).includes(newVariation.size) && <input placeholder="e.g. 20" value={newVariation.size} onChange={e => setNewVariation({...newVariation, size: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const, marginTop: "4px" }} />}
                   </div>
                   <div>
-                    <select value={COLOURS.slice(0,-1).includes(newVariation.colour) ? newVariation.colour : "Other"} onChange={e => setNewVariation({...newVariation, colour: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
+                    <div style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "4px" }}>COLOUR</div>
+                    <select value={COLOURS.slice(0,-1).includes(newVariation.colour) ? newVariation.colour : "Other"} onChange={e => setNewVariation({...newVariation, colour: e.target.value === "Other" ? "" : e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }}>
                       {COLOURS.map(c => <option key={c}>{c}</option>)}
                     </select>
-                    {!COLOURS.slice(0,-1).includes(newVariation.colour) && <input placeholder="e.g. Burgundy" value={newVariation.colour} onChange={e => setNewVariation({...newVariation, colour: e.target.value})} style={{...inp(), marginTop: "4px"}} />}
+                    {!COLOURS.slice(0,-1).includes(newVariation.colour) && <input placeholder="e.g. Burgundy" value={newVariation.colour} onChange={e => setNewVariation({...newVariation, colour: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const, marginTop: "4px" }} />}
                   </div>
                   <div>
-                     <input placeholder="0" type="number" value={newVariation.quantity} onChange={e => setNewVariation({...newVariation, quantity: e.target.value})} style={{...inp(), width: "100%", boxSizing: "border-box" as const}} />
+                    <div style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "4px" }}>QTY</div>
+                    <input placeholder="0" type="number" min="1" value={newVariation.quantity} onChange={e => setNewVariation({...newVariation, quantity: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
                   </div>
                   <div>
-                    <input placeholder={`$${product.base_price}`} type="number" value={newVariation.price} onChange={e => setNewVariation({...newVariation, price: e.target.value})} style={inp()} />
+                    <div style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "4px" }}>PRICE</div>
+                    <input placeholder={`$${product.base_price}`} type="number" value={newVariation.price} onChange={e => setNewVariation({...newVariation, price: e.target.value})} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif", boxSizing: "border-box" as const }} />
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: "6px" }}>
-                  <button onClick={() => addVariation(product.id)} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Add variation</button>
-                  <button onClick={() => setAddingVariation(null)} style={{ padding: "7px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button onClick={() => addVariation(product.id)} style={{ padding: "8px 18px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Add variation</button>
+                  <button onClick={() => setAddingVariation(null)} style={{ padding: "8px 14px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Cancel</button>
                 </div>
               </div>
             ) : (
