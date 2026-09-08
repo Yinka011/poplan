@@ -472,25 +472,33 @@ export default function BrandInventory({ event, brandEmail, brandName }: Props) 
             {/* Add variation form */}
             {addingVariation === product.id ? (
               <div style={{ borderTop: "1px solid #f0f4f1", padding: "1rem 1.25rem", background: "#f8faf8" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: "8px", alignItems: "center" }}>
-                  <select value={SIZES.slice(0,-1).includes(newVariation.size) ? newVariation.size : "Other"} onChange={e => setNewVariation({...newVariation, size: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
-                    {SIZES.map(s => <option key={s}>{s}</option>)}
-                  </select>
-                  {(!SIZES.slice(0,-1).includes(newVariation.size)) && (
-                    <input placeholder="Enter size e.g. 20" value={newVariation.size} onChange={e => setNewVariation({...newVariation, size: e.target.value})} style={{...inp(), marginTop: "4px"}} />
-                  )}
-                  <select value={COLOURS.slice(0,-1).includes(newVariation.colour) ? newVariation.colour : "Other"} onChange={e => setNewVariation({...newVariation, colour: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
-                    {COLOURS.map(c => <option key={c}>{c}</option>)}
-                  </select>
-                  {(!COLOURS.slice(0,-1).includes(newVariation.colour)) && (
-                    <input placeholder="Enter colour e.g. Burgundy" value={newVariation.colour} onChange={e => setNewVariation({...newVariation, colour: e.target.value})} style={{...inp(), marginTop: "4px"}} />
-                  )}
-                  <input placeholder="Qty" type="number" value={newVariation.quantity} onChange={e => setNewVariation({...newVariation, quantity: e.target.value})} style={inp()} />
-                  <input placeholder={`Price (default $${product.base_price})`} type="number" value={newVariation.price} onChange={e => setNewVariation({...newVariation, price: e.target.value})} style={inp()} />
-                  <div style={{ display: "flex", gap: "6px" }}>
-                    <button onClick={() => addVariation(product.id)} style={{ padding: "7px 12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Add</button>
-                    <button onClick={() => setAddingVariation(null)} style={{ padding: "7px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>✕</button>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                  <div>
+                    <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "3px" }}>SIZE</div>
+                    <select value={SIZES.slice(0,-1).includes(newVariation.size) ? newVariation.size : "Other"} onChange={e => setNewVariation({...newVariation, size: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
+                      {SIZES.map(s => <option key={s}>{s}</option>)}
+                    </select>
+                    {!SIZES.slice(0,-1).includes(newVariation.size) && <input placeholder="e.g. 20" value={newVariation.size} onChange={e => setNewVariation({...newVariation, size: e.target.value})} style={{...inp(), marginTop: "4px"}} />}
                   </div>
+                  <div>
+                    <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "3px" }}>COLOUR</div>
+                    <select value={COLOURS.slice(0,-1).includes(newVariation.colour) ? newVariation.colour : "Other"} onChange={e => setNewVariation({...newVariation, colour: e.target.value === "Other" ? "" : e.target.value})} style={inp()}>
+                      {COLOURS.map(c => <option key={c}>{c}</option>)}
+                    </select>
+                    {!COLOURS.slice(0,-1).includes(newVariation.colour) && <input placeholder="e.g. Burgundy" value={newVariation.colour} onChange={e => setNewVariation({...newVariation, colour: e.target.value})} style={{...inp(), marginTop: "4px"}} />}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "3px" }}>QTY</div>
+                    <input placeholder="0" type="number" value={newVariation.quantity} onChange={e => setNewVariation({...newVariation, quantity: e.target.value})} style={inp()} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "3px" }}>PRICE</div>
+                    <input placeholder={`$${product.base_price}`} type="number" value={newVariation.price} onChange={e => setNewVariation({...newVariation, price: e.target.value})} style={inp()} />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button onClick={() => addVariation(product.id)} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Add variation</button>
+                  <button onClick={() => setAddingVariation(null)} style={{ padding: "7px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
             ) : (
