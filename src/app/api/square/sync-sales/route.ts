@@ -88,7 +88,7 @@ export async function POST(request: Request) {
         productName = parts.slice(1).join(separator).trim();
 
         // Find brand email from inventory
-        const brandProduct = inventory?.find(p => p.brand_name === brandName);
+        const brandProduct = inventory?.find(p => p.brand_name?.trim() === brandName?.trim());
         if (brandProduct) brandEmail = brandProduct.brand_email;
       }
 
