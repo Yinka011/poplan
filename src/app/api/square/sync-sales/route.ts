@@ -78,6 +78,7 @@ export async function POST(request: Request) {
       let brandName = "";
       let productName = itemName;
       const variationName = lineItem.variation_name || "";
+      console.log("Item name from Square:", JSON.stringify(itemName));
 
       // Match by catalog ID or name pattern "BrandName — ProductName" or "BrandName - ProductName"
       const separator = itemName.includes(" — ") ? " — " : itemName.includes(" - ") ? " - " : null;
