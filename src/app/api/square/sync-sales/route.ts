@@ -157,7 +157,9 @@ export async function POST(request: Request) {
       const commissionAmount = afterProcessing * (commissionRate / 100);
       const payoutAmount = afterProcessing - commissionAmount;
 
-      await supabase.from("event_payouts").upsert({
+      // Delete existing payout record and reinsert
+      await supabase.from("event_payouts").delete().eq("event", event).eq("brand_email", email);
+      await supabase.from("event_payouts").insert({
         event,
         brand_email: email,
         brand_name: data.name,
@@ -166,7 +168,7 @@ export async function POST(request: Request) {
         commission_amount: commissionAmount,
         payout_amount: payoutAmount,
         payout_status: "pending",
-      }, { onConflict: "event,brand_email" });
+      });
     }
   }
 
