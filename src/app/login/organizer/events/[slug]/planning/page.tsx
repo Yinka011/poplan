@@ -113,6 +113,39 @@ export default function PlanningHub() {
     setAdding(false);
   };
 
+  const inviteStaff = async (staffEmail: string, staffRole: string, staffName: string) => {
+    if (!staffEmail) return;
+    const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from("event_staff").upsert({
+      event: eventName,
+      organizer_email: user?.email || "",
+      staff_email: staffEmail,
+      name: staffName || "",
+      role: staffRole,
+      hourly_rate: 0,
+      invite_token: token,
+      joined: false,
+    }, { onConflict: "staff_email,event" });
+    await fetch("/api/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: staffEmail,
+        subject: `You have been invited to join the ${eventName} event staff`,
+        html: `<div style="font-family:Georgia,serif;max-width:500px;margin:0 auto;padding:2rem">
+          <h2 style="color:#1B3A2D">You are on the team!</h2>
+          <p style="color:#4a5a52">You have been invited as <strong>${staffRole}</strong> for the <strong>${eventName}</strong> pop-up event.</p>
+          <p style="color:#4a5a52">Click below to set up your staff profile and start logging your hours.</p>
+          <a href="https://nalpop.com/staff?token=${token}" style="display:inline-block;padding:12px 24px;background:#1B3A2D;color:#fff;text-decoration:none;border-radius:8px;margin:1rem 0">Set up my profile</a>
+          <p style="color:#4a5a52;font-size:0.85rem">If the button does not work, copy this link: https://nalpop.com/staff?token=${token}</p>
+        </div>`
+      })
+    });
+    alert("Invite sent to " + staffEmail);
+  };
+
   const addStaff = async () => {
     if (!newStaff.name.trim()) return;
     const { data } = await supabase.from("planning_staff").insert({
@@ -431,7 +464,12 @@ export default function PlanningHub() {
                     ) : (
                       <div>
                         {member.phone && <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "2px" }}>📞 {member.phone}</div>}
-                        {member.email && <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "2px" }}>✉️ {member.email}</div>}
+                        {member.email && (
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2px" }}>
+                            <div style={{ fontSize: "0.78rem", color: "#4a5a52" }}>✉️ {member.email}</div>
+                            <button onClick={() => inviteStaff(member.email, member.role, member.name)} style={{ fontSize: "0.68rem", padding: "2px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontFamily: "Georgia, serif" }}>Send invite</button>
+                          </div>
+                        )}
                         {member.instagram && <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "2px" }}>📸 {member.instagram}</div>}
                         {member.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic", marginTop: "4px" }}>{member.notes}</div>}
 
