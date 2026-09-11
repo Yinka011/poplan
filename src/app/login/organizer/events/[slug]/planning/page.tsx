@@ -65,14 +65,16 @@ export default function PlanningHub() {
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
-    const [d, r, s, sh] = await Promise.all([
+    const [d, r, s, sh, hours] = await Promise.all([
       supabase.from("planning_decor").select("*").eq("event", eventName).order("category"),
       supabase.from("planning_refreshments").select("*").eq("event", eventName),
       supabase.from("planning_staff").select("*").eq("event", eventName),
       supabase.from("planning_staff_shifts").select("*").eq("event", eventName),
+      supabase.from("staff_hours").select("*").eq("event", eventName).order("work_date", { ascending: false }),
     ]);
     if (d.data) setDecor(d.data);
     if (r.data) setRefresh(r.data);
+    if (hours.data) setStaffHours(hours.data);
     if (s.data && sh.data) {
       const staffWithShifts = s.data.map(member => ({
         ...member,
