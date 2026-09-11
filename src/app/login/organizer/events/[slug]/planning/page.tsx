@@ -118,7 +118,9 @@ export default function PlanningHub() {
     const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
     const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
     const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from("event_staff").upsert({
+    // Delete existing record if any, then insert fresh
+    await supabase.from("event_staff").delete().eq("staff_email", staffEmail).eq("event", eventName);
+    const { error } = await supabase.from("event_staff").insert({
       event: eventName,
       organizer_email: user?.email || "",
       staff_email: staffEmail,
@@ -127,7 +129,8 @@ export default function PlanningHub() {
       hourly_rate: 0,
       invite_token: token,
       joined: false,
-    }, { onConflict: "staff_email,event" });
+    });
+    if (error) { console.error("Staff invite error:", error); alert("Failed to save invite: " + error.message); return; }
     await fetch("/api/send-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
