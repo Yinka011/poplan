@@ -84,7 +84,7 @@ export async function POST(request: Request) {
       const separator = itemName.includes(" — ") ? " — " : itemName.includes(" - ") ? " - " : null;
       if (separator) {
         const parts = itemName.split(separator);
-        brandName = parts[0].trim();
+        brandName = parts[0].trim().replace(/\s+/g, " ");
         productName = parts.slice(1).join(separator).trim();
 
         // Find brand email from inventory
