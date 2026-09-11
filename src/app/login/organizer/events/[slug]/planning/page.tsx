@@ -52,6 +52,7 @@ export default function PlanningHub() {
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
   const [staff, setStaff] = useState<StaffItem[]>([]);
+  const [staffHours, setStaffHours] = useState<any[]>([]);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>({});
@@ -111,6 +112,11 @@ export default function PlanningHub() {
     if (data) setRefresh(prev => [...prev, data]);
     setNewRefresh({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
     setAdding(false);
+  };
+
+  const approveHours = async (hourId: number) => {
+    await supabase.from("staff_hours").update({ approved: true }).eq("id", hourId);
+    setStaffHours(prev => prev.map(h => h.id === hourId ? { ...h, approved: true } : h));
   };
 
   const inviteStaff = async (staffEmail: string, staffRole: string, staffName: string) => {
@@ -475,6 +481,25 @@ export default function PlanningHub() {
                         )}
                         {member.instagram && <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "2px" }}>📸 {member.instagram}</div>}
                         {member.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic", marginTop: "4px" }}>{member.notes}</div>}
+
+                        {/* Hours logged via staff portal */}
+                        {staffHours.filter(h => h.staff_email === member.email).length > 0 && (
+                          <div style={{ marginTop: "10px", borderTop: "1px solid #f0f4f1", paddingTop: "10px" }}>
+                            <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.05em", marginBottom: "6px" }}>HOURS FROM PORTAL</div>
+                            {staffHours.filter(h => h.staff_email === member.email).map((h: any) => (
+                              <div key={h.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", borderBottom: "1px solid #f8f5f0", fontSize: "0.8rem" }}>
+                                <div style={{ color: "#1B3A2D" }}>{new Date(h.work_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                                <div style={{ color: "#4a5a52" }}>{h.description || "Work session"}</div>
+                                <div style={{ color: "#E8C97A" }}>{h.hours}hrs · ${(Number(h.hours) * Number(member.pay_rate)).toFixed(2)}</div>
+                                {!h.approved ? (
+                                  <button onClick={() => approveHours(h.id)} style={{ padding: "2px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", fontSize: "0.68rem", cursor: "pointer" }}>Approve</button>
+                                ) : (
+                                  <span style={{ fontSize: "0.68rem", color: "#4a7c59" }}>✓</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
                         <div style={{ marginTop: "10px", borderTop: "1px solid #f0f4f1", paddingTop: "10px" }}>
                           <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.05em", marginBottom: "6px" }}>SHIFTS</div>
