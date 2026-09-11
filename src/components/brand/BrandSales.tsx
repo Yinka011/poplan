@@ -118,6 +118,40 @@ export default function BrandSales({ event, brandEmail }: Props) {
         </div>
       </div>
 
+      {/* Charts */}
+      {filteredSales.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6" }}>
+            <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "0.75rem" }}>REVENUE BY PRODUCT</div>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={Object.entries(filteredSales.reduce((acc: Record<string, number>, s) => { acc[s.product_name] = (acc[s.product_name] || 0) + Number(s.total_revenue); return acc; }, {})).map(([name, value]) => ({ name, value }))}
+                  dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70}
+                  label={({ name, percent }) => name && percent ? `${name.split(" ")[0]} ${(percent * 100).toFixed(0)}%` : ""}
+                  labelLine={false} fontSize={9}>
+                  {filteredSales.map((_, i) => <Cell key={i} fill={["#1B3A2D","#E8C97A","#4a7c59","#2a4d3e","#8b6ab0","#5b7fa6","#a0522d","#d4a574"][i % 8]} />)}
+                </Pie>
+                <Tooltip formatter={(val: any) => `$${Number(val).toFixed(2)}`} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6" }}>
+            <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "0.75rem" }}>UNITS SOLD BY PRODUCT</div>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart
+                data={Object.entries(filteredSales.reduce((acc: Record<string, number>, s) => { acc[s.product_name] = (acc[s.product_name] || 0) + Number(s.quantity_sold); return acc; }, {})).map(([name, value]) => ({ name: name.split(" ")[0], value }))}
+                layout="vertical">
+                <XAxis type="number" tick={{ fontSize: 9 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 9 }} width={70} />
+                <Tooltip />
+                <Bar dataKey="value" fill="#1B3A2D" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
       {/* Sales table */}
       <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e4ebe6", overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "10px 16px", background: "#f8faf8", fontSize: "0.68rem", color: "#4a5a52", letterSpacing: "0.08em" }}>
