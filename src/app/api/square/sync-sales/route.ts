@@ -79,11 +79,12 @@ export async function POST(request: Request) {
       let productName = itemName;
       const variationName = lineItem.variation_name || "";
 
-      // Match by catalog ID or name pattern "BrandName — ProductName"
-      if (itemName.includes(" — ")) {
-        const parts = itemName.split(" — ");
+      // Match by catalog ID or name pattern "BrandName — ProductName" or "BrandName - ProductName"
+      const separator = itemName.includes(" — ") ? " — " : itemName.includes(" - ") ? " - " : null;
+      if (separator) {
+        const parts = itemName.split(separator);
         brandName = parts[0].trim();
-        productName = parts.slice(1).join(" — ").trim();
+        productName = parts.slice(1).join(separator).trim();
 
         // Find brand email from inventory
         const brandProduct = inventory?.find(p => p.brand_name === brandName);
