@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       let productName = itemName;
       const variationName = lineItem.variation_name || "";
       console.log("Item name from Square:", JSON.stringify(itemName));
-      console.log("Line item:", JSON.stringify({ name: itemName, qty: lineItem.quantity, base_price: lineItem.base_price_money, gross: lineItem.gross_sales_money, total: lineItem.total_money }));
+      console.log("Full line item keys:", Object.keys(lineItem).join(", "));
 
       // Match by catalog ID or name pattern "BrandName — ProductName" or "BrandName - ProductName"
       const separator = itemName.includes(" — ") ? " — " : itemName.includes(" - ") ? " - " : null;
