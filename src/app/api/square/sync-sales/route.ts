@@ -93,6 +93,42 @@ export async function POST(request: Request) {
         if (brandProduct) brandEmail = brandProduct.brand_email;
       }
 
+      // Manual mapping for items without brand prefix
+      const manualMap: Record<string, string> = {
+        "limited bubu": "Moelle Essentials",
+        "slip dress": "Cladini",
+        "palm top": "Ciscacecil",
+        "saffra midi skirt": "Ciscacecil",
+        "saffra mini skirt": "Ciscacecil",
+        "zaya pant": "Ciscacecil",
+        "tessa top": "Ciscacecil",
+        "tessa - custom": "Ciscacecil",
+        "north dress": "Jayda Woman",
+        "havillah bubu (blue neckline)": "Cladini",
+        "mari bubu": "Cladini",
+        "low back linen kaftan": "Jayda Woman",
+        "cladini top": "Cladini",
+        "athena pant & shirt (black)": "Cladini",
+        "ivoru dress": "Moelle Essentials",
+        "l4 -  ara beaded summer dress": "Ara Lagos",
+        "l15 - elana beaded kaftan green": "Ara Lagos",
+        "l23 - olanna aso oke pants vintage (blue/crem/gold mix)": "Ara Lagos",
+      };
+
+      if (!brandName) {
+        const mapped = manualMap[itemName.toLowerCase().trim()];
+        if (mapped) {
+          brandName = mapped;
+          productName = itemName;
+        }
+      }
+
+      if (!brandEmail) {
+        // Try to find brand email from brands table using brandName
+        const brandProduct = inventory?.find(p => p.brand_name?.trim() === brandName?.trim());
+        if (brandProduct) brandEmail = brandProduct.brand_email;
+      }
+
       if (!brandEmail) continue;
 
       // Check if this order line already exists
