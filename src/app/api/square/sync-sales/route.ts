@@ -95,7 +95,7 @@ export async function POST(request: Request) {
 
       // Manual mapping for items without brand prefix
       const manualMap: Record<string, string> = {
-        "limited bubu": "Moelle Essentials",
+        "limited bubu": "Cladini",
         "slip dress": "Cladini",
         "palm top": "Ciscacecil",
         "saffra midi skirt": "Ciscacecil",
