@@ -70,7 +70,8 @@ export async function POST(request: Request) {
       const catalogObjectId = lineItem.catalog_object_id;
       const quantity = parseInt(lineItem.quantity || "1");
       const unitPrice = Number(lineItem.base_price_money?.amount || 0) / 100;
-      const totalRevenue = unitPrice * quantity;
+      const grossSales = Number((lineItem as any).gross_sales_money?.amount || 0) / 100;
+      const totalRevenue = grossSales || (unitPrice * quantity);
       const itemName = lineItem.name || "";
 
       // Find which brand this item belongs to
