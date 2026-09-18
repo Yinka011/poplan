@@ -53,6 +53,7 @@ export default function PlanningHub() {
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
   const [staff, setStaff] = useState<StaffItem[]>([]);
   const [staffHours, setStaffHours] = useState<any[]>([]);
+  const [eventStaff, setEventStaff] = useState<any[]>([]);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>({});
@@ -65,16 +66,18 @@ export default function PlanningHub() {
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
-    const [d, r, s, sh, hours] = await Promise.all([
+    const [d, r, s, sh, hours, es] = await Promise.all([
       supabase.from("planning_decor").select("*").eq("event", eventName).order("category"),
       supabase.from("planning_refreshments").select("*").eq("event", eventName),
       supabase.from("planning_staff").select("*").eq("event", eventName),
       supabase.from("planning_staff_shifts").select("*").eq("event", eventName),
       supabase.from("staff_hours").select("*").eq("event", eventName).order("work_date", { ascending: false }),
+      supabase.from("event_staff").select("*").eq("event", eventName),
     ]);
     if (d.data) setDecor(d.data);
     if (r.data) setRefresh(r.data);
     if (hours.data) setStaffHours(hours.data);
+    if (es.data) setEventStaff(es.data);
     if (s.data && sh.data) {
       const staffWithShifts = s.data.map(member => ({
         ...member,
@@ -484,6 +487,22 @@ export default function PlanningHub() {
                         {member.instagram && <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginBottom: "2px" }}>📸 {member.instagram}</div>}
                         {member.notes && <div style={{ fontSize: "0.75rem", color: "#aaa", fontStyle: "italic", marginTop: "4px" }}>{member.notes}</div>}
 
+                        {/* Payment info from staff portal */}
+                        {(() => {
+                          const es = eventStaff.find(e => e.staff_email === member.email);
+                          const memberHours = staffHours.filter(h => h.staff_email === member.email);
+                          const approvedHours = memberHours.filter(h => h.approved).reduce((s: number, h: any) => s + Number(h.hours), 0);
+                          const totalFees = approvedHours * Number(member.pay_rate);
+                          return es ? (
+                            <div style={{ marginTop: "8px", background: "#f8faf8", borderRadius: "8px", padding: "8px 10px", fontSize: "0.78rem" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <div style={{ color: "#4a5a52" }}>💳 {es.payment_method} · <strong style={{ color: "#1B3A2D" }}>{es.payment_details}</strong></div>
+                                {approvedHours > 0 && <div style={{ color: "#4a7c59" }}>Total: <strong>${totalFees.toFixed(2)}</strong></div>}
+                              </div>
+                            </div>
+                          ) : null;
+                        })()}
+
                         {/* Hours logged via staff portal */}
                         {staffHours.filter(h => h.staff_email === member.email).length > 0 && (
                           <div style={{ marginTop: "10px", borderTop: "1px solid #f0f4f1", paddingTop: "10px" }}>
@@ -496,7 +515,7 @@ export default function PlanningHub() {
                                 {!h.approved ? (
                                   <button onClick={() => approveHours(h.id)} style={{ padding: "2px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", fontSize: "0.68rem", cursor: "pointer" }}>Approve</button>
                                 ) : (
-                                  <span style={{ fontSize: "0.68rem", color: "#4a7c59" }}>✓</span>
+                                  <span style={{ fontSize: "0.68rem", color: "#4a7c59" }}>✓ ${(Number(h.hours) * Number(member.pay_rate)).toFixed(2)}</span>
                                 )}
                               </div>
                             ))}
