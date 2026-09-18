@@ -234,7 +234,11 @@ export default function PlanningHub() {
 
   const totalStaffCost = staff.reduce((s, m) => {
     const totalHours = (m.shifts || []).reduce((h, sh) => h + Number(sh.hours), 0);
-    return s + (totalHours * Number(m.pay_rate));
+    // Add hours from planning shifts
+    const shiftHours = (m.shifts || []).reduce((h: number, sh: any) => h + Number(sh.hours), 0);
+    // Add approved hours from staff portal
+    const portalHours = staffHours.filter((h: any) => h.staff_email === m.email && h.approved).reduce((h: number, sh: any) => h + Number(sh.hours), 0);
+    return s + ((shiftHours + portalHours) * Number(m.pay_rate));
   }, 0);
   const totalRefreshCost = refresh.reduce((s, x) => s + Number(x.cost), 0);
   const totalDecorCost = decor.reduce((s, x) => s + Number(x.cost), 0);
