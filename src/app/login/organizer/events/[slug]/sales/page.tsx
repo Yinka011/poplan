@@ -79,8 +79,10 @@ export default function SalesPage() {
 
   const uploadReport = async (brandEmail: string, brandName: string, file: File) => {
     setUploadingReport(brandEmail);
+    console.log("Starting upload for", brandEmail, file.name);
     const path = `payout-reports/${event}/${brandEmail}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     const { error } = await supabase.storage.from("brand-uploads").upload(path, file, { upsert: true });
+    console.log("Storage upload result:", error || "success");
     if (error) { alert("Upload failed: " + error.message); setUploadingReport(null); return; }
     const { data: urlData } = supabase.storage.from("brand-uploads").getPublicUrl(path);
     // Delete existing and insert fresh
