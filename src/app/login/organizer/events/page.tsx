@@ -64,6 +64,7 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [yearFilter, setYearFilter] = useState<number>(2026);
+  const [onboardingFeaturesPending, setOnboardingFeaturesPending] = useState<any>(null);
   const [inviting, setInviting] = useState<number | null>(null);
   const [addingType, setAddingType] = useState<"my_event" | "planner_event">("my_event");
   const [userEmail, setUserEmail] = useState("");
