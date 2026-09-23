@@ -30,6 +30,10 @@ type Props = {
 export default function BrandSales({ event, brandEmail }: Props) {
   const [sales, setSales] = useState<Sale[]>([]);
   const [payout, setPayout] = useState<Payout | null>(null);
+  const [report, setReport] = useState<any>(null);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({ method: "Zelle", details: "" });
+  const [savingPayment, setSavingPayment] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeDay, setActiveDay] = useState("all");
 
@@ -38,6 +42,11 @@ export default function BrandSales({ event, brandEmail }: Props) {
   }, [event, brandEmail]);
 
   const fetchSales = async () => {
+    const reportRes = await supabase.from("brand_payout_reports").select("*").eq("brand_email", brandEmail).eq("event", event).maybeSingle();
+    if (reportRes.data) {
+      setReport(reportRes.data);
+      if (!reportRes.data.payment_confirmed) setShowPaymentForm(true);
+    }
     const [salesRes, payoutRes] = await Promise.all([
       supabase.from("brand_sales").select("*").eq("event", event).eq("brand_email", brandEmail).order("sale_date"),
       supabase.from("event_payouts").select("*").eq("event", event).eq("brand_email", brandEmail).maybeSingle(),
@@ -54,6 +63,15 @@ export default function BrandSales({ event, brandEmail }: Props) {
   const dayUnits = filteredSales.reduce((s, sale) => s + sale.quantity_sold, 0);
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const savePaymentDetails = async () => {
+    if (!paymentForm.details.trim() || !report) return;
+    setSavingPayment(true);
+    await supabase.from("brand_payout_reports").update({ payment_method: paymentForm.method, payment_details: paymentForm.details, payment_confirmed: true }).eq("id", report.id);
+    setReport((prev: any) => ({ ...prev, payment_method: paymentForm.method, payment_details: paymentForm.details, payment_confirmed: true }));
+    setShowPaymentForm(false);
+    setSavingPayment(false);
+  };
+
   const formatCurrency = (n: number) => `$${Number(n).toFixed(2)}`;
 
   if (loading) return <div style={{ fontSize: "0.85rem", color: "#4a5a52", padding: "1rem" }}>Loading sales data...</div>;
@@ -117,6 +135,36 @@ export default function BrandSales({ event, brandEmail }: Props) {
           <div style={{ fontSize: "2rem", color: "#1B3A2D", fontWeight: "normal" }}>{formatCurrency(dayTotal)}</div>
         </div>
       </div>
+
+      {/* Payout report */}
+      {report && (
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6", marginBottom: "1rem" }}>
+          <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "0.75rem" }}>PAYOUT REPORT</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <a href={report.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.88rem", color: "#1B3A2D", textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}>
+              📄 <span style={{ textDecoration: "underline" }}>{report.file_name}</span>
+            </a>
+            <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>↓ Download</span>
+          </div>
+          {report.payment_confirmed && (
+            <div style={{ marginTop: "8px", fontSize: "0.78rem", color: "#4a7c59" }}>✓ Payment details confirmed · {report.payment_method} · {report.payment_details}</div>
+          )}
+          {showPaymentForm && (
+            <div style={{ marginTop: "1rem", padding: "1rem", background: "#f8faf8", borderRadius: "8px", border: "1px solid #E8C97A" }}>
+              <div style={{ fontSize: "0.72rem", color: "#b87333", marginBottom: "0.75rem" }}>Please confirm your payment details to receive your payout</div>
+              <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+                <select value={paymentForm.method} onChange={e => setPaymentForm({...paymentForm, method: e.target.value})} style={{ padding: "7px 10px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }}>
+                  {["Zelle","Bank Transfer","Cash App","PayPal","Venmo"].map(m => <option key={m}>{m}</option>)}
+                </select>
+                <input placeholder="Phone, email or account number" value={paymentForm.details} onChange={e => setPaymentForm({...paymentForm, details: e.target.value})} style={{ flex: 1, padding: "7px 10px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+              </div>
+              <button onClick={savePaymentDetails} disabled={savingPayment || !paymentForm.details.trim()} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+                {savingPayment ? "Saving..." : "Confirm payment details"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Charts */}
       {filteredSales.length > 0 && (

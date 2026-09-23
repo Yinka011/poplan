@@ -39,6 +39,8 @@ export default function SalesPage() {
   const [sales, setSales] = useState<BrandSale[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [uploadingReport, setUploadingReport] = useState<string | null>(null);
+  const [reports, setReports] = useState<any[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [commissionRate, setCommissionRate] = useState(20);
   const [startDate, setStartDate] = useState("2026-09-11");
@@ -47,6 +49,8 @@ export default function SalesPage() {
   useEffect(() => { fetchData(); }, [slug]);
 
   const fetchData = async () => {
+    const reportsRes = await supabase.from("brand_payout_reports").select("*").eq("event", event);
+    if (reportsRes.data) setReports(reportsRes.data);
     const [payoutsRes, salesRes] = await Promise.all([
       supabase.from("event_payouts").select("*").eq("event", event).order("brand_name"),
       supabase.from("brand_sales").select("*").eq("event", event).order("sale_date"),
@@ -71,6 +75,39 @@ export default function SalesPage() {
       alert("Error: " + (data.error || "Sync failed"));
     }
     setSyncing(false);
+  };
+
+  const uploadReport = async (brandEmail: string, brandName: string, file: File) => {
+    setUploadingReport(brandEmail);
+    const path = `payout-reports/${event}/${brandEmail}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const { error } = await supabase.storage.from("brand-uploads").upload(path, file, { upsert: true });
+    if (error) { alert("Upload failed: " + error.message); setUploadingReport(null); return; }
+    const { data: urlData } = supabase.storage.from("brand-uploads").getPublicUrl(path);
+    await supabase.from("brand_payout_reports").upsert({
+      event,
+      brand_email: brandEmail,
+      brand_name: brandName,
+      file_url: urlData.publicUrl,
+      file_name: file.name,
+      payment_confirmed: false,
+    }, { onConflict: "event,brand_email" });
+    setReports(prev => {
+      const existing = prev.find(r => r.brand_email === brandEmail);
+      if (existing) return prev.map(r => r.brand_email === brandEmail ? { ...r, file_url: urlData.publicUrl, file_name: file.name } : r);
+      return [...prev, { event, brand_email: brandEmail, brand_name: brandName, file_url: urlData.publicUrl, file_name: file.name, payment_confirmed: false }];
+    });
+    setUploadingReport(null);
+    // Notify brand
+    await fetch("/api/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: brandEmail,
+        subject: "Your payout report is ready",
+        html: `<div style="font-family:Georgia,serif;max-width:500px;margin:0 auto;padding:2rem"><h2 style="color:#1B3A2D">Your payout report is ready</h2><p style="color:#4a5a52">Log in to your Nalpop portal and go to the Sales tab to view your report and confirm your payment details.</p><a href="https://nalpop.com/brand/portal" style="display:inline-block;padding:12px 24px;background:#1B3A2D;color:#fff;text-decoration:none;border-radius:8px">View my report</a></div>`
+      })
+    });
+    alert(`Report uploaded for ${brandName} and email sent!`);
   };
 
   const markPaid = async (brandEmail: string) => {
@@ -227,6 +264,27 @@ export default function SalesPage() {
                     <button onClick={() => setSelectedBrand(selectedBrand === payout.brand_email ? null : payout.brand_email)} style={{ padding: "5px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer", color: "#4a5a52" }}>
                       {selectedBrand === payout.brand_email ? "Hide" : "View sales"}
                     </button>
+                  </div>
+                  {/* Report upload */}
+                  <div style={{ padding: "10px 16px", borderTop: "1px solid #f0f4f1", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafaf8" }}>
+                    <div style={{ fontSize: "0.78rem", color: "#4a5a52" }}>
+                      {(() => {
+                        const report = reports.find(r => r.brand_email === payout.brand_email);
+                        if (report) return (
+                          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                            <span style={{ color: "#4a7c59" }}>✓ Report uploaded</span>
+                            <a href={report.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.72rem", color: "#1B3A2D", textDecoration: "underline" }}>{report.file_name}</a>
+                            {report.payment_confirmed && <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>💳 Payment confirmed: {report.payment_method} · {report.payment_details}</span>}
+                            {!report.payment_confirmed && <span style={{ fontSize: "0.72rem", color: "#b87333" }}>⏳ Awaiting payment details</span>}
+                          </div>
+                        );
+                        return <span style={{ color: "#4a5a52" }}>No report uploaded yet</span>;
+                      })()}
+                    </div>
+                    <label style={{ padding: "5px 12px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+                      {uploadingReport === payout.brand_email ? "Uploading..." : "↑ Upload report"}
+                      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.csv" onChange={e => { const f = e.target.files?.[0]; if (f) uploadReport(payout.brand_email, payout.brand_name, f); }} style={{ display: "none" }} />
+                    </label>
                   </div>
                 </div>
 
