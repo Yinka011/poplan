@@ -83,14 +83,17 @@ export default function SalesPage() {
     const { error } = await supabase.storage.from("brand-uploads").upload(path, file, { upsert: true });
     if (error) { alert("Upload failed: " + error.message); setUploadingReport(null); return; }
     const { data: urlData } = supabase.storage.from("brand-uploads").getPublicUrl(path);
-    await supabase.from("brand_payout_reports").upsert({
+    // Delete existing and insert fresh
+    await supabase.from("brand_payout_reports").delete().eq("event", event).eq("brand_email", brandEmail);
+    const { error: insertError } = await supabase.from("brand_payout_reports").insert({
       event,
       brand_email: brandEmail,
       brand_name: brandName,
       file_url: urlData.publicUrl,
       file_name: file.name,
       payment_confirmed: false,
-    }, { onConflict: "event,brand_email" });
+    });
+    if (insertError) { console.error("Report insert error:", insertError); alert("Failed to save report: " + insertError.message); setUploadingReport(null); return; }
     setReports(prev => {
       const existing = prev.find(r => r.brand_email === brandEmail);
       if (existing) return prev.map(r => r.brand_email === brandEmail ? { ...r, file_url: urlData.publicUrl, file_name: file.name } : r);
