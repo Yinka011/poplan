@@ -283,26 +283,34 @@ export default function SalesPage() {
                     </button>
                   </div>
                   {/* Report upload */}
-                  <div style={{ padding: "10px 16px", borderTop: "1px solid #f0f4f1", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafaf8" }}>
-                    <div style={{ fontSize: "0.78rem", color: "#4a5a52" }}>
-                      {(() => {
-                        const report = reports.find(r => r.brand_email === payout.brand_email);
-                        if (report) return (
-                          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                            <span style={{ color: "#4a7c59" }}>✓ Report uploaded</span>
-                            <a href={report.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.72rem", color: "#1B3A2D", textDecoration: "underline" }}>{report.file_name}</a>
-                            {report.payment_confirmed && <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>💳 Payment confirmed: {report.payment_method} · {report.payment_details}</span>}
-                            {!report.payment_confirmed && <span style={{ fontSize: "0.72rem", color: "#b87333" }}>⏳ Awaiting payment details</span>}
-                          </div>
-                        );
-                        return <span style={{ color: "#4a5a52" }}>No report uploaded yet</span>;
-                      })()}
-                    </div>
-                    <label style={{ padding: "5px 12px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
-                      {uploadingReport === payout.brand_email ? "Uploading..." : "↑ Upload report"}
-                      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.csv" onChange={e => { const f = e.target.files?.[0]; if (f) uploadReport(payout.brand_email, payout.brand_name, f); }} style={{ display: "none" }} />
-                    </label>
-                  </div>
+                  {(() => {
+                    const report = reports.find(r => r.brand_email === payout.brand_email);
+                    return (
+                      <div style={{ padding: "10px 16px", borderTop: "1px solid #f0f4f1", background: "#fafaf8", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", flexDirection: "column" as const, gap: "3px" }}>
+                          {report ? (
+                            <>
+                              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>✓ Report ready</span>
+                                <a href={report.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.72rem", color: "#4a5a52", textDecoration: "underline" }}>View</a>
+                              </div>
+                              {report.payment_confirmed ? (
+                                <div style={{ fontSize: "0.72rem", color: "#1B3A2D" }}>💳 {report.payment_method} · <strong>{report.payment_details}</strong></div>
+                              ) : (
+                                <div style={{ fontSize: "0.72rem", color: "#b87333" }}>⏳ Awaiting payment details from brand</div>
+                              )}
+                            </>
+                          ) : (
+                            <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>No report uploaded</div>
+                          )}
+                        </div>
+                        <label style={{ padding: "5px 12px", background: report ? "transparent" : "#1B3A2D", color: report ? "#4a5a52" : "#fff", border: report ? "1px solid #e4ebe6" : "none", borderRadius: "8px", fontSize: "0.72rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const }}>
+                          {uploadingReport === payout.brand_email ? "Uploading..." : report ? "↑ Replace" : "↑ Upload report"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.csv" onChange={e => { const f = e.target.files?.[0]; if (f) uploadReport(payout.brand_email, payout.brand_name, f); }} style={{ display: "none" }} />
+                        </label>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Brand sales breakdown */}
