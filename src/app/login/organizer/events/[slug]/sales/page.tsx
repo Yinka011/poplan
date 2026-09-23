@@ -95,7 +95,6 @@ export default function SalesPage() {
     await supabase.from("brand_payout_reports").delete().eq("file_url", "test").eq("brand_email", brandEmail);
     const path = `payout-reports/${event}/${brandEmail}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     const { error } = await supabase.storage.from("brand-uploads").upload(path, file, { upsert: true });
-    console.log("Storage upload result:", error || "success");
     if (error) { alert("Upload failed: " + error.message); setUploadingReport(null); return; }
     const { data: urlData } = supabase.storage.from("brand-uploads").getPublicUrl(path);
     // Delete existing and insert fresh
