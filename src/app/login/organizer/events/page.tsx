@@ -238,6 +238,15 @@ export default function EventsPage() {
           </div>
         </div>
 
+        {showInvite && (
+          <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6", marginBottom: "1rem", display: "flex", gap: "8px", alignItems: "center" }}>
+            <div style={{ fontSize: "0.82rem", color: "#1B3A2D", whiteSpace: "nowrap" as const }}>Invite organizer:</div>
+            <input type="email" placeholder="their@email.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && inviteOrganizer()} style={{ flex: 1, padding: "8px 12px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", outline: "none" }} autoFocus />
+            <button onClick={inviteOrganizer} disabled={invitingOrganizer || !inviteEmail.trim()} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{invitingOrganizer ? "Sending..." : "Send invite"}</button>
+            <button onClick={() => setShowInvite(false)} style={{ padding: "8px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>✕</button>
+          </div>
+        )}
+
         {adding && addingType === "my_event" && (
           <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
             <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "1rem" }}>New event I am organizing</div>
