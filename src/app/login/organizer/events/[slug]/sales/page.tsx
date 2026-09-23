@@ -79,7 +79,20 @@ export default function SalesPage() {
 
   const uploadReport = async (brandEmail: string, brandName: string, file: File) => {
     setUploadingReport(brandEmail);
-    console.log("Starting upload for", brandEmail, file.name);
+    console.log("Starting upload for", brandEmail, file.name, "event:", event);
+    // Test: insert directly first
+    const testInsert = await supabase.from("brand_payout_reports").insert({
+      event,
+      brand_email: brandEmail,
+      brand_name: brandName,
+      file_url: "test",
+      file_name: file.name,
+      payment_confirmed: false,
+    });
+    console.log("Test insert result:", testInsert.error || "success");
+    if (testInsert.error) { alert("DB Error: " + testInsert.error.message); setUploadingReport(null); return; }
+    // Clean up test
+    await supabase.from("brand_payout_reports").delete().eq("file_url", "test").eq("brand_email", brandEmail);
     const path = `payout-reports/${event}/${brandEmail}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     const { error } = await supabase.storage.from("brand-uploads").upload(path, file, { upsert: true });
     console.log("Storage upload result:", error || "success");
