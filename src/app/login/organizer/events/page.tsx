@@ -65,7 +65,7 @@ export default function EventsPage() {
   const [adding, setAdding] = useState(false);
   const [yearFilter, setYearFilter] = useState<number>(2026);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviting, setInviting] = useState(false);
+  const [invitingOrganizer, setInvitingOrganizer] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [onboardingFeaturesPending, setOnboardingFeaturesPending] = useState<any>(null);
   const [inviting, setInviting] = useState<number | null>(null);
@@ -187,7 +187,7 @@ export default function EventsPage() {
 
   const inviteOrganizer = async () => {
     if (!inviteEmail.trim()) return;
-    setInviting(true);
+    setInvitingOrganizer(true);
     const res = await fetch("/api/invite-organizer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -196,7 +196,7 @@ export default function EventsPage() {
     const data = await res.json();
     alert(data.success ? "Invite sent to " + inviteEmail : "Failed to send invite.");
     setInviteEmail("");
-    setInviting(false);
+    setInvitingOrganizer(false);
     setShowInvite(false);
   };
 
