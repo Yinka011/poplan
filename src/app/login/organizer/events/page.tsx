@@ -64,6 +64,9 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [yearFilter, setYearFilter] = useState<number>(2026);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [onboardingFeaturesPending, setOnboardingFeaturesPending] = useState<any>(null);
   const [inviting, setInviting] = useState<number | null>(null);
   const [addingType, setAddingType] = useState<"my_event" | "planner_event">("my_event");
@@ -182,6 +185,21 @@ export default function EventsPage() {
     setMyEvents(prev => prev.map(e => e.id === event.id ? { ...e, dates_label } : e));
   };
 
+  const inviteOrganizer = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    const res = await fetch("/api/invite-organizer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: inviteEmail }),
+    });
+    const data = await res.json();
+    alert(data.success ? "Invite sent to " + inviteEmail : "Failed to send invite.");
+    setInviteEmail("");
+    setInviting(false);
+    setShowInvite(false);
+  };
+
   const archiveEvent = async (id: number) => {
     if (!confirm("Archive this event? It will be read-only and moved to your archive.")) return;
     await supabase.from("events").update({ archived: true, status: "Completed" }).eq("id", id);
@@ -215,6 +233,7 @@ export default function EventsPage() {
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
             <button onClick={() => { setAdding(!adding); setAddingType("my_event"); }} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ My event</button>
+            <button onClick={() => setShowInvite(!showInvite)} style={{ padding: "8px 16px", background: "transparent", color: "#1B3A2D", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Invite organizer</button>
             <button onClick={() => { setAdding(!adding); setAddingType("planner_event"); }} style={{ padding: "8px 16px", background: "transparent", color: "#1B3A2D", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Planning for a brand</button>
           </div>
         </div>
