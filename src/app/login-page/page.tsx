@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -9,6 +9,39 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [settingPassword, setSettingPassword] = useState(false);
+  const [isInvite, setIsInvite] = useState(false);
+
+  useEffect(() => {
+    // Handle invite token from URL hash
+    const hash = window.location.hash;
+    if (hash.includes("type=invite") || hash.includes("type=recovery")) {
+      setIsInvite(true);
+      setMode("organizer-login");
+      // Extract and set session from hash
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) setIsInvite(true);
+      });
+    }
+  }, []);
+
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword.trim() || newPassword.length < 6) { setError("Password must be at least 6 characters"); return; }
+    setSettingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) { setError(error.message); setSettingPassword(false); return; }
+    // Check role and redirect
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_email", user.email).single();
+      if (!roleData) { window.location.href = "/onboarding"; }
+      else if (roleData.role === "brand_organizer") { window.location.href = "/brand-organizer"; }
+      else { window.location.href = "/login/organizer/events"; }
+    }
+    setSettingPassword(false);
+  };
 
   const handleOrganizerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +80,22 @@ export default function LoginPage() {
 
   const inp = { width: "100%", padding: "12px 14px", border: "1px solid #e8e2da", borderRadius: "10px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#fff", boxSizing: "border-box" as const, color: "#1c1714", outline: "none" };
   const btn = { width: "100%", padding: "12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: "0.03em" };
+
+  // Show password setup for invite links
+  if (isInvite) return (
+    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", padding: "2rem" }}>
+      <div style={{ maxWidth: "420px", width: "100%", background: "#fff", borderRadius: "16px", padding: "2.5rem", border: "1px solid #e4ebe6" }}>
+        <div style={{ fontSize: "1.5rem", letterSpacing: "0.15em", color: "#1B3A2D", marginBottom: "0.5rem", textAlign: "center" as const }}>NALPOP</div>
+        <h2 style={{ fontSize: "1.2rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" as const }}>Create your password</h2>
+        <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1.5rem", textAlign: "center" as const }}>Choose a password to secure your Nalpop account.</p>
+        <form onSubmit={handleSetPassword} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+          <input type="password" placeholder="Choose a password (min 6 characters)" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ ...inp, marginBottom: 0 }} autoFocus />
+          {error && <div style={{ fontSize: "0.82rem", color: "#c0392b" }}>{error}</div>}
+          <button type="submit" disabled={settingPassword} style={btn}>{settingPassword ? "Setting up..." : "Create account →"}</button>
+        </form>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", fontFamily: "Georgia, serif" }}>
