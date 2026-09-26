@@ -60,9 +60,9 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
   const fetchData = async () => {
     const [brandsRes, checklistRes, settingsRes] = await Promise.all([
-      supabase.from("brands").select("id").eq("event", event.slug),
-      supabase.from("checklist").select("completed").eq("event", event.slug),
-      supabase.from("event_settings").select("spots_to_fill, venue_address").eq("event", event.slug).single(),
+      supabase.from("brands").select("id").eq("event", event.city),
+      supabase.from("checklist").select("completed").eq("event", event.city),
+      supabase.from("event_settings").select("spots_to_fill, venue_address").eq("event", event.city).single(),
     ]);
 
     if (brandsRes.data) setBrandsCount(brandsRes.data.length);
@@ -76,13 +76,13 @@ export function EventDashboard({ event }: EventDashboardProps) {
   };
 
   const saveSpots = async () => {
-    await supabase.from("event_settings").update({ spots_to_fill: parseInt(newSpots) }).eq("event", event.slug);
+    await supabase.from("event_settings").update({ spots_to_fill: parseInt(newSpots) }).eq("event", event.city);
     setSpotsToFill(parseInt(newSpots));
     setEditingSpots(false);
   };
 
   const saveAddress = async () => {
-    await supabase.from("event_settings").update({ venue_address: newAddress }).eq("event", event.slug);
+    await supabase.from("event_settings").update({ venue_address: newAddress }).eq("event", event.city);
     setVenueAddress(newAddress);
     setEditingAddress(false);
   };
@@ -97,7 +97,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
             ← All events
           </Link>
           <div style={{ background: "#1B3A2D", padding: "6px 12px", borderRadius: "8px" }}>
-            <OrganizerBell event={event.slug} slug={event.slug} />
+            <OrganizerBell event={event.city} slug={event.slug} />
           </div>
         </div>
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-medium text-brown-800 sm:text-4xl">
@@ -180,11 +180,11 @@ export function EventDashboard({ event }: EventDashboardProps) {
       <BrandActivityOverview eventCity={event.city} eventSlug={event.slug} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Checklist event={event.slug} />
-        <MarketingDeadlines event={event.slug} />
+        <Checklist event={event.city} />
+        <MarketingDeadlines event={event.city} />
       </div>
 
-      <AnnouncementManager event={event.slug} />
+      <AnnouncementManager event={event.city} />
 
     </div>
   );
