@@ -62,8 +62,9 @@ export default function Onboarding() {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/"); return; }
-    // Save features — they'll create their first event and features will apply
-    // Store in localStorage for now, applied when first event is created
+    // Save features to profile so they persist across devices
+    await supabase.from("profiles").update({ default_features: features }).eq("email", user.email);
+    // Also store in localStorage as backup
     localStorage.setItem("nalpop_onboarding_features", JSON.stringify(features));
     router.push("/login/organizer/events");
   };
