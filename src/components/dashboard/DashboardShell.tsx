@@ -35,7 +35,6 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
   const navItems = [
     { label: "Overview", href: `/login/organizer/events/${slug}` },
     ...(isEnabled("brands") ? [{ label: "Brand Tasks", href: `/login/organizer/events/${slug}/tasks` }] : []),
-    ...(isEnabled("brands") ? [{ label: "Brand Tracker", href: `/login/organizer/events/${slug}/brand-tracker` }] : []),
     { label: "Expenses", href: `/login/organizer/events/${slug}/expenses` },
     ...(isEnabled("planning") ? [{ label: "Planning Hub", href: `/login/organizer/events/${slug}/planning` }] : []),
     ...(isEnabled("inventory") ? [{ label: "Inventory", href: `/login/organizer/events/${slug}/inventory` }] : []),

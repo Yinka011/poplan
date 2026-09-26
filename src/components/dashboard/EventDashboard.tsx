@@ -177,7 +177,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
 
 
-      <BrandActivityOverview eventCity={event.slug} eventSlug={event.slug} />
+      <BrandActivityOverview eventCity={event.city} eventSlug={event.slug} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Checklist event={event.slug} />
