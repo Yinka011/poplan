@@ -40,6 +40,10 @@ export default function ExpensesPage({ params }: { params: any }) {
   const [editData, setEditData] = useState<Partial<Expense>>({});
   const [newExpense, setNewExpense] = useState({ category: "Venue", item: "", cost: "", deposit: "", notes: "" });
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
+  }, []);
+
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {

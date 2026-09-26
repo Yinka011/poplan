@@ -38,6 +38,8 @@ export default function SalesPage() {
   const [payouts, setPayouts] = useState<BrandPayout[]>([]);
   const [sales, setSales] = useState<BrandSale[]>([]);
   const [loading, setLoading] = useState(true);
+  const [organizerEmail, setOrganizerEmail] = useState("");
+
   const [syncing, setSyncing] = useState(false);
   const [uploadingReport, setUploadingReport] = useState<string | null>(null);
   const [reports, setReports] = useState<any[]>([]);
@@ -45,6 +47,10 @@ export default function SalesPage() {
   const [commissionRate, setCommissionRate] = useState(20);
   const [startDate, setStartDate] = useState("2026-09-11");
   const [endDate, setEndDate] = useState("2026-09-14");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
+  }, []);
 
   useEffect(() => { fetchData(); }, [slug]);
 

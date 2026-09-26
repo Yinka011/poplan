@@ -43,6 +43,10 @@ export default function Checklist({ event }: { event: string }) {
   const [filter, setFilter] = useState("All");
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
+  }, []);
+
+  useEffect(() => {
     fetchItems();
     const channel = supabase
       .channel("checklist-changes")

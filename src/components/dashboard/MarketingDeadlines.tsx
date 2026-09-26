@@ -20,11 +20,17 @@ type Props = { event: string; };
 export default function MarketingPlans({ event }: Props) {
   const [items, setItems] = useState<MarketingItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [organizerEmail, setOrganizerEmail] = useState("");
+
   const [adding, setAdding] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState({ task: "", due_date: "", channel: "Instagram", assigned_to: "", notes: "" });
   const [newItem, setNewItem] = useState({ task: "", due_date: "", channel: "Instagram", assigned_to: "", notes: "" });
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
+  }, []);
 
   useEffect(() => { fetchItems(); }, [event]);
 

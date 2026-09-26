@@ -21,6 +21,10 @@ export default function BrandActivityOverview({ eventCity, eventSlug }: { eventC
   const [brands, setBrands] = useState<BrandActivity[]>([]);
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
+  }, []);
+
+  useEffect(() => {
     const fetch = async () => {
       const [brandsRes, productsRes, tasksRes] = await Promise.all([
         supabase.from("brands").select("*").eq("event", eventCity),

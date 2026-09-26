@@ -39,6 +39,10 @@ export default function PaymentTracker({ event }: { event: string }) {
   const [newBrand, setNewBrand] = useState({ name: "", email: "", fee_owed: "400", amount_paid: "0" });
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
+  }, []);
+
+  useEffect(() => {
     fetchBrands();
     const channel = supabase
       .channel("brands-realtime")

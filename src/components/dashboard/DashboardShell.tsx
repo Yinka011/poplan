@@ -30,7 +30,7 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
     fetchFeatures();
   }, [slug]);
 
-  const isEnabled = (key: string) => Object.keys(features).length > 0 && features[key] !== false;
+  const isEnabled = (key: string) => Object.keys(features).length === 0 || features[key] !== false;
 
   const navItems = [
     { label: "Overview", href: `/login/organizer/events/${slug}` },
