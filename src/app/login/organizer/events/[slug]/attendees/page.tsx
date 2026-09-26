@@ -22,13 +22,11 @@ export default function AttendeesPage() {
   const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
   const [shoppers, setShoppers] = useState<Shopper[]>([]);
   const [loading, setLoading] = useState(true);
-  const [organizerEmail, setOrganizerEmail] = useState("");
 
   const [cityFilter, setCityFilter] = useState("all");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
   }, []);
 
   useEffect(() => { fetchShoppers(); }, [slug]);

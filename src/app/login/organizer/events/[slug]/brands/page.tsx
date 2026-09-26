@@ -26,7 +26,6 @@ export default function BrandsPage() {
   const [selected, setSelected] = useState<Brand | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
   }, []);
 
   useEffect(() => {

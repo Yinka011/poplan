@@ -12,7 +12,6 @@ export default function BrandProgress({ event }: { event: string }) {
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
   }, []);
 
   useEffect(() => {

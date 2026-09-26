@@ -64,7 +64,6 @@ export default function PlanningHub() {
   const [newStaff, setNewStaff] = useState({ name: "", role: "Cashier", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
   }, []);
 
   useEffect(() => { fetchAll(); }, []);

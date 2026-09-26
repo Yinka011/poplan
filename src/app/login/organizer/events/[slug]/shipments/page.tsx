@@ -24,12 +24,10 @@ export default function ShipmentsPage() {
   const [brandInvoices, setBrandInvoices] = useState<{id: number; brand_email: string; file_name: string; file_url: string; amount: number; description: string; created_at: string;}[]>([]);
   const [expandedBrand, setExpandedBrand] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [organizerEmail, setOrganizerEmail] = useState("");
 
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
   }, []);
 
   useEffect(() => { fetchData(); }, [slug]);

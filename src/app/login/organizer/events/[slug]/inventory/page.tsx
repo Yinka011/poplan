@@ -35,7 +35,6 @@ export default function InventoryPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [organizerEmail, setOrganizerEmail] = useState("");
 
   const [reviewTab, setReviewTab] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [reviewNote, setReviewNote] = useState("");
@@ -87,7 +86,6 @@ export default function InventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
   }, []);
 
   useEffect(() => { fetchInventory(); }, [slug]);

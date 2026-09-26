@@ -27,7 +27,6 @@ export function EventDashboard({ event }: EventDashboardProps) {
   const [editingSpots, setEditingSpots] = useState(false);
   const [newSpots, setNewSpots] = useState("10");
   const [venueAddress, setVenueAddress] = useState("");
-  const [organizerEmail, setOrganizerEmail] = useState("");
   const [editingAddress, setEditingAddress] = useState(false);
   const [newAddress, setNewAddress] = useState("");
 
@@ -37,7 +36,6 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.email) setOrganizerEmail(user.email);
     });
   }, []);
 
@@ -62,9 +60,9 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
   const fetchData = async () => {
     const [brandsRes, checklistRes, settingsRes] = await Promise.all([
-      supabase.from("brands").select("id").eq("event", event.slug).eq("organizer_email", organizerEmail),
+      supabase.from("brands").select("id").eq("event", event.slug),
       supabase.from("checklist").select("completed").eq("event", event.slug),
-      supabase.from("event_settings").select("spots_to_fill, venue_address").eq("event", event.slug).eq("organizer_email", organizerEmail).single(),
+      supabase.from("event_settings").select("spots_to_fill, venue_address").eq("event", event.slug).single(),
     ]);
 
     if (brandsRes.data) setBrandsCount(brandsRes.data.length);

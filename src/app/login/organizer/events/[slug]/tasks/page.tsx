@@ -50,7 +50,6 @@ export default function TasksPage() {
   const [editItem, setEditItem] = useState({ task: "", due_date: "", category: "Admin" });
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => { if (user?.email) setOrganizerEmail(user.email); });
   }, []);
 
   useEffect(() => {
