@@ -4,14 +4,17 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 const FEATURES = [
+  { key: "brands", icon: "🏷", title: "Brand Management", desc: "Invite brands, send access links and track their progress all in one place." },
   { key: "payment_tracker", icon: "💳", title: "Payment Tracker", desc: "Collect and track participation fees from brands. See who has paid, who owes and how much." },
   { key: "inventory", icon: "📦", title: "Inventory Review", desc: "Brands upload their full product catalogue. You approve before connecting to your POS." },
   { key: "shipments", icon: "🚚", title: "Shipments", desc: "Track brand deliveries to your venue. Brands add courier and tracking — you mark received." },
+  { key: "messages", icon: "💬", title: "Messaging", desc: "Message brands directly from the platform. No WhatsApp, no email threads." },
   { key: "sales", icon: "💰", title: "Sales & Payouts", desc: "Sync with Square POS after the event. Automatic payout calculations per brand." },
   { key: "checklist", icon: "✅", title: "Event Checklist", desc: "60+ planning items across venue, brands, decor, staff, marketing and logistics." },
   { key: "marketing", icon: "📣", title: "Marketing Plans", desc: "Track marketing deadlines across Instagram, TikTok, Email and more." },
   { key: "planning", icon: "🏗", title: "Planning Hub", desc: "Decor, refreshments and staffing in one place. Assign costs and track spend." },
-  { key: "brands", icon: "🏷", title: "Brand Management", desc: "Invite brands, send access links, message directly and track their progress." },
+  { key: "brand_organizer_hub", icon: "🌍", title: "Brand Organizer Hub", desc: "For brands running their own pop-ups across multiple cities. Budget, planning and team access per city." },
+  { key: "attendees", icon: "👥", title: "Attendee Registration", desc: "Collect shopper RSVPs and own your audience data." },
 ];
 
 export default function Onboarding() {
@@ -22,8 +25,9 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [features, setFeatures] = useState<Record<string, boolean>>({
-    payment_tracker: true, inventory: true, shipments: true, sales: false,
-    checklist: true, marketing: false, planning: false, brands: true,
+    brands: true, payment_tracker: true, inventory: true, shipments: true,
+    messages: true, sales: false, checklist: true, marketing: false,
+    planning: false, brand_organizer_hub: false, attendees: false,
   });
 
   useEffect(() => {

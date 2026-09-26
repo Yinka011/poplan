@@ -30,18 +30,20 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
     fetchFeatures();
   }, [slug]);
 
-  const isEnabled = (key: string) => Object.keys(features).length === 0 || features[key] !== false;
+  const isEnabled = (key: string) => Object.keys(features).length > 0 && features[key] !== false;
 
   const navItems = [
     { label: "Overview", href: `/login/organizer/events/${slug}` },
     ...(isEnabled("brands") ? [{ label: "Brand Tasks", href: `/login/organizer/events/${slug}/tasks` }] : []),
+    ...(isEnabled("brands") ? [{ label: "Brand Tracker", href: `/login/organizer/events/${slug}/brand-tracker` }] : []),
     { label: "Expenses", href: `/login/organizer/events/${slug}/expenses` },
     ...(isEnabled("planning") ? [{ label: "Planning Hub", href: `/login/organizer/events/${slug}/planning` }] : []),
     ...(isEnabled("inventory") ? [{ label: "Inventory", href: `/login/organizer/events/${slug}/inventory` }] : []),
     ...(isEnabled("shipments") ? [{ label: "Shipments", href: `/login/organizer/events/${slug}/shipments` }] : []),
+    ...(isEnabled("messages") ? [{ label: "Messages", href: `/login/organizer/events/${slug}/messages` }] : []),
     ...(isEnabled("sales") ? [{ label: "Sales & Payouts", href: `/login/organizer/events/${slug}/sales` }] : []),
     { label: "Payments", href: `/login/organizer/events/${slug}/payments` },
-    { label: "Attendees", href: `/login/organizer/events/${slug}/attendees` },
+    ...(isEnabled("attendees") ? [{ label: "Attendees", href: `/login/organizer/events/${slug}/attendees` }] : []),
     { label: "⚙ Settings", href: `/login/organizer/events/${slug}/settings` },
   ];
 

@@ -4,33 +4,28 @@ import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
-type Features = {
-  payment_tracker: boolean;
-  checklist: boolean;
-  marketing: boolean;
-  planning: boolean;
-  inventory: boolean;
-  shipments: boolean;
-  sales: boolean;
-  brands: boolean;
-  notifications: boolean;
-};
+
 
 const FEATURE_LIST = [
-  { key: "brands", label: "Brands", desc: "Manage brands, send invites, track tasks" },
-  { key: "payment_tracker", label: "Payment Tracker", desc: "Track participation fees and payments" },
-  { key: "checklist", label: "Event Checklist", desc: "Task checklist for the event" },
-  { key: "marketing", label: "Marketing Plans", desc: "Track marketing tasks and deadlines" },
-  { key: "planning", label: "Planning Hub", desc: "Decor, refreshments and staffing" },
-  { key: "inventory", label: "Inventory", desc: "Review brand inventory submissions" },
-  { key: "shipments", label: "Shipments", desc: "Track brand shipments and deliveries" },
-  { key: "sales", label: "Sales & Payouts", desc: "Square sales data and brand payouts" },
+  { key: "brands", label: "Brand Management", desc: "Invite brands, send access links and track their progress" },
+  { key: "payment_tracker", label: "Payment Tracker", desc: "Collect and track participation fees from brands" },
+  { key: "inventory", label: "Inventory Review", desc: "Brands upload products, you approve before the event" },
+  { key: "shipments", label: "Shipments", desc: "Track brand shipments and deliveries to your venue" },
+  { key: "messages", label: "Messaging", desc: "Message brands directly from the platform" },
+  { key: "sales", label: "Sales & Payouts", desc: "Square sales data and brand payout calculations" },
+  { key: "checklist", label: "Event Checklist", desc: "60+ planning items across venue, brands and logistics" },
+  { key: "marketing", label: "Marketing Plans", desc: "Track marketing deadlines across all channels" },
+  { key: "planning", label: "Planning Hub", desc: "Decor, refreshments and staffing in one place" },
+  { key: "brand_organizer_hub", label: "Brand Organizer Hub", desc: "For brands running their own pop-ups across multiple cities" },
+  { key: "attendees", label: "Attendee Registration", desc: "Collect shopper RSVPs and own your audience data" },
   { key: "notifications", label: "Notifications", desc: "Brand activity log and alerts" },
 ];
 
+type Features = Record<string, boolean>;
 const DEFAULT_FEATURES: Features = {
-  payment_tracker: true, checklist: true, marketing: true, planning: true,
-  inventory: true, shipments: true, sales: true, brands: true, notifications: true,
+  brands: true, payment_tracker: true, inventory: true, shipments: true,
+  messages: true, sales: true, checklist: true, marketing: true,
+  planning: true, brand_organizer_hub: false, attendees: true, notifications: true,
 };
 
 export default function SettingsPage() {
