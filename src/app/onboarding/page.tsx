@@ -19,7 +19,19 @@ const FEATURES = [
 
 export default function Onboarding() {
   const router = useRouter();
-  const [step, setStep] = useState<"role" | "welcome" | "features">("role");
+  const [step, setStep] = useState<"password" | "role" | "welcome" | "features">("role");
+  const [newPassword, setNewPassword] = useState("");
+  const [settingPassword, setSettingPassword] = useState(false);
+
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) return;
+    setSettingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) { setSettingPassword(false); return; }
+    setStep("role");
+    setSettingPassword(false);
+  };
   const [selected, setSelected] = useState<"organizer" | "brand_organizer" | "planner" | null>(null);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,6 +80,22 @@ export default function Onboarding() {
     localStorage.setItem("nalpop_onboarding_features", JSON.stringify(features));
     router.push("/login/organizer/events");
   };
+
+  if (step === "password") return (
+    <div style={{ minHeight: "100vh", background: "#1B3A2D", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", padding: "2rem" }}>
+      <div style={{ maxWidth: "420px", width: "100%", background: "#fff", borderRadius: "16px", padding: "2.5rem", border: "1px solid #e4ebe6" }}>
+        <div style={{ fontSize: "1.5rem", letterSpacing: "0.15em", color: "#1B3A2D", marginBottom: "0.5rem", textAlign: "center" as const }}>NALPOP</div>
+        <h2 style={{ fontSize: "1.2rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" as const }}>Create your password</h2>
+        <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1.5rem", textAlign: "center" as const }}>Choose a password to secure your Nalpop account.</p>
+        <form onSubmit={handleSetPassword} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
+          <input type="password" placeholder="Choose a password (min 6 characters)" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ width: "100%", padding: "12px 14px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.95rem", fontFamily: "Georgia, serif", outline: "none", boxSizing: "border-box" as const }} autoFocus />
+          <button type="submit" disabled={settingPassword || newPassword.length < 6} style={{ width: "100%", padding: "12px", background: newPassword.length >= 6 ? "#1B3A2D" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+            {settingPassword ? "Setting up..." : "Create account →"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 
   if (checking) return (
     <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>

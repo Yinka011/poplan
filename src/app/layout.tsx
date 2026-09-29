@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OrganizerProvider } from "@/context/OrganizerContext";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -28,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${display.variable} ${sans.variable} antialiased`}>
-        {children}
+        <OrganizerProvider>{children}</OrganizerProvider>
       </body>
     </html>
   );

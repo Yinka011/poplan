@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -18,6 +19,7 @@ type BrandActivity = {
 };
 
 export default function BrandActivityOverview({ eventCity, eventSlug }: { eventCity: string; eventSlug: string }) {
+  const { organizerEmail } = useOrganizer();
   const [brands, setBrands] = useState<BrandActivity[]>([]);
 
   useEffect(() => {
@@ -26,9 +28,9 @@ export default function BrandActivityOverview({ eventCity, eventSlug }: { eventC
   useEffect(() => {
     const fetch = async () => {
       const [brandsRes, productsRes, tasksRes] = await Promise.all([
-        supabase.from("brands").select("*").eq("event", eventCity),
-        supabase.from("brand_products").select("brand_email, review_status").eq("event", eventCity),
-        supabase.from("brand_tasks").select("brand_email, completed").eq("event", eventCity),
+        supabase.from("brands").select("*").eq("event", eventCity).eq("organizer_email", organizerEmail),
+        supabase.from("brand_products").select("brand_email, review_status").eq("event", eventCity).eq("organizer_email", organizerEmail),
+        supabase.from("brand_tasks").select("brand_email, completed").eq("event", eventCity).eq("organizer_email", organizerEmail),
       ]);
 
       if (brandsRes.data) {

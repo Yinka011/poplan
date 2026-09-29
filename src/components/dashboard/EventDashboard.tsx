@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import Link from "next/link";
 import OrganizerBell from "@/components/dashboard/OrganizerBell";
 import { useEffect, useState } from "react";
@@ -21,6 +22,7 @@ const PencilIcon = () => (
 );
 
 export function EventDashboard({ event }: EventDashboardProps) {
+  const { organizerEmail } = useOrganizer();
   const [brandsCount, setBrandsCount] = useState(0);
   const [outstandingTasks, setOutstandingTasks] = useState(0);
   const [spotsToFill, setSpotsToFill] = useState(10);
@@ -76,13 +78,13 @@ export function EventDashboard({ event }: EventDashboardProps) {
   };
 
   const saveSpots = async () => {
-    await supabase.from("event_settings").update({ spots_to_fill: parseInt(newSpots) }).eq("event", event.city);
+    await supabase.from("event_settings").update({ spots_to_fill: parseInt(newSpots) }).eq("event", event.city).eq("organizer_email", organizerEmail);
     setSpotsToFill(parseInt(newSpots));
     setEditingSpots(false);
   };
 
   const saveAddress = async () => {
-    await supabase.from("event_settings").update({ venue_address: newAddress }).eq("event", event.city);
+    await supabase.from("event_settings").update({ venue_address: newAddress }).eq("event", event.city).eq("organizer_email", organizerEmail);
     setVenueAddress(newAddress);
     setEditingAddress(false);
   };
