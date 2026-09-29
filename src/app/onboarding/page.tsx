@@ -43,6 +43,17 @@ export default function Onboarding() {
   });
 
   useEffect(() => {
+    // Check if this is an invite link
+    const hash = window.location.hash;
+    const search = window.location.search;
+    if (hash.includes("type=invite") || hash.includes("type=signup") || search.includes("type=invite")) {
+      setStep("password");
+      setChecking(false);
+      return;
+    }
+  }, []);
+
+  useEffect(() => {
     const checkRole = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setChecking(false); return; }
