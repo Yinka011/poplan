@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { supabase } from "@/lib/supabase";
@@ -32,7 +31,6 @@ type BrandSale = {
 };
 
 export default function SalesPage() {
-  const { organizerEmail } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
   const event = slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -52,12 +50,11 @@ export default function SalesPage() {
   useEffect(() => {
   }, []);
 
-  useEffect(() => { if (organizerEmail) fetchData(); }, [slug, organizerEmail]);
+  useEffect(() => { fetchData(); }, [slug]);
 
   const fetchData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    console.log("user from supabase:", user?.email);
-    console.log("organizerEmail from context:", organizerEmail);
+    const organizerEmail = user?.email || "";
     if (!organizerEmail) return;
     const reportsRes = await supabase.from("brand_payout_reports").select("*").eq("event", event);
     if (reportsRes.data) setReports(reportsRes.data);
