@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
@@ -17,6 +18,7 @@ type Shopper = {
 };
 
 export default function AttendeesPage() {
+  const { organizerEmail } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
   const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
