@@ -90,9 +90,10 @@ export default function InventoryPage() {
   useEffect(() => {
   }, []);
 
-  useEffect(() => { fetchInventory(); }, [slug]);
+  useEffect(() => { fetchInventory(); }, [slug, organizerEmail]);
 
   const fetchInventory = async () => {
+    if (!organizerEmail) return;
     const { data: productsData } = await supabase
       .from("brand_products")
       .select("*")
