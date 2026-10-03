@@ -55,6 +55,7 @@ export default function SettingsPage() {
   };
 
   const saveFeatures = async () => {
+    alert("Saving...");
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
