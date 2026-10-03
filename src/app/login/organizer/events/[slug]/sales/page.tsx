@@ -55,7 +55,9 @@ export default function SalesPage() {
   useEffect(() => { if (organizerEmail) fetchData(); }, [slug, organizerEmail]);
 
   const fetchData = async () => {
-    console.log("organizerEmail:", organizerEmail);
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log("user from supabase:", user?.email);
+    console.log("organizerEmail from context:", organizerEmail);
     if (!organizerEmail) return;
     const reportsRes = await supabase.from("brand_payout_reports").select("*").eq("event", event);
     if (reportsRes.data) setReports(reportsRes.data);
