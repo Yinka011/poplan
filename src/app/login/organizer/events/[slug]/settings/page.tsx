@@ -55,15 +55,13 @@ export default function SettingsPage() {
   };
 
   const saveFeatures = async () => {
-    alert("Saving...");
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     if (recordId) {
       await supabase.from("organizer_features").update({ features }).eq("id", recordId);
     } else {
-      const { data, error } = await supabase.from("organizer_features").insert({ organizer_email: user.email, event_slug: slug, features }).select().single();
-      alert("Insert result: " + JSON.stringify(error || data));
+      const { data } = await supabase.from("organizer_features").insert({ organizer_email: user.email, event_slug: slug, features }).select().single();
       if (data) setRecordId(data.id);
     }
     setSaving(false);
