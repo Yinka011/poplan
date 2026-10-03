@@ -62,9 +62,9 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
   const fetchData = async () => {
     const [brandsRes, checklistRes, settingsRes] = await Promise.all([
-      supabase.from("brands").select("id").eq("event", event.city),
-      supabase.from("checklist").select("completed").eq("event", event.city),
-      supabase.from("event_settings").select("spots_to_fill, venue_address").eq("event", event.city).single(),
+      supabase.from("brands").select("id").eq("event", event.city).eq("organizer_email", organizerEmail),
+      supabase.from("checklist").select("completed").eq("event", event.city).eq("organizer_email", organizerEmail),
+      supabase.from("event_settings").select("spots_to_fill, venue_address").eq("event", event.city).eq("organizer_email", organizerEmail).maybeSingle(),
     ]);
 
     if (brandsRes.data) setBrandsCount(brandsRes.data.length);

@@ -61,7 +61,8 @@ export default function SettingsPage() {
     if (recordId) {
       await supabase.from("organizer_features").update({ features }).eq("id", recordId);
     } else {
-      const { data } = await supabase.from("organizer_features").insert({ organizer_email: user.email, event_slug: slug, features }).select().single();
+      const { data, error } = await supabase.from("organizer_features").insert({ organizer_email: user.email, event_slug: slug, features }).select().single();
+      console.log("Insert result:", data, error);
       if (data) setRecordId(data.id);
     }
     setSaving(false);

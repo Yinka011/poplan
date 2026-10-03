@@ -96,7 +96,7 @@ export default function EventsPage() {
       const enriched = await Promise.all(eventsRes.data.map(async (event) => {
         const [brandsRes, feesRes] = await Promise.all([
           supabase.from("brands").select("id").eq("event", event.city),
-          supabase.from("brands").select("amount_paid, balance").eq("event", event.city),
+          supabase.from("brands").select("amount_paid, balance").eq("event", event.city).eq("organizer_email", user.email),
         ]);
         return {
           ...event,
