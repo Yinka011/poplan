@@ -29,9 +29,10 @@ export default function AttendeesPage() {
   useEffect(() => {
   }, []);
 
-  useEffect(() => { fetchShoppers(); }, [slug]);
+  useEffect(() => { if (organizerEmail) fetchShoppers(); }, [slug, organizerEmail]);
 
   const fetchShoppers = async () => {
+    if (!organizerEmail) return;
     const { data } = await supabase.from("shopper_registrations").select("*").eq("event_slug", slug).order("created_at", { ascending: false });
     if (data) setShoppers(data);
     setLoading(false);

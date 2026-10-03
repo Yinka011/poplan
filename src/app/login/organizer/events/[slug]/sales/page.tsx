@@ -50,9 +50,10 @@ export default function SalesPage() {
   useEffect(() => {
   }, []);
 
-  useEffect(() => { fetchData(); }, [slug]);
+  useEffect(() => { if (organizerEmail) fetchData(); }, [slug, organizerEmail]);
 
   const fetchData = async () => {
+    if (!organizerEmail) return;
     const reportsRes = await supabase.from("brand_payout_reports").select("*").eq("event", event);
     if (reportsRes.data) setReports(reportsRes.data);
     const [payoutsRes, salesRes] = await Promise.all([

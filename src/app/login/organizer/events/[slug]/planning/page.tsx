@@ -68,9 +68,10 @@ export default function PlanningHub() {
   useEffect(() => {
   }, []);
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { if (organizerEmail) fetchAll(); }, [organizerEmail]);
 
   const fetchAll = async () => {
+    if (!organizerEmail) return;
     const [d, r, s, sh, hours, es] = await Promise.all([
       supabase.from("planning_decor").select("*").eq("event", eventName).eq("organizer_email", organizerEmail).order("category"),
       supabase.from("planning_refreshments").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),

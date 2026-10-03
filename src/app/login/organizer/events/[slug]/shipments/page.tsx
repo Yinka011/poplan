@@ -32,9 +32,10 @@ export default function ShipmentsPage() {
   useEffect(() => {
   }, []);
 
-  useEffect(() => { fetchData(); }, [slug]);
+  useEffect(() => { if (organizerEmail) fetchData(); }, [slug, organizerEmail]);
 
   const fetchData = async () => {
+    if (!organizerEmail) return;
     const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
     const [shipmentsRes, brandsRes, invoicesRes] = await Promise.all([
       supabase.from("shipments").select("*").eq("event_slug", slug).order("created_at"),

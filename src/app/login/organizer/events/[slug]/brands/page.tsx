@@ -32,6 +32,7 @@ export default function BrandsPage() {
 
   useEffect(() => {
     const fetchAll = async () => {
+    if (!organizerEmail) return;
       const [brandRes, taskRes, deadlineRes] = await Promise.all([
         supabase.from("brands").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
         supabase.from("brand_tasks").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
