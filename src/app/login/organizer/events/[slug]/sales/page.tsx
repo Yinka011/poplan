@@ -47,20 +47,17 @@ export default function SalesPage() {
   const [startDate, setStartDate] = useState("2026-09-11");
   const [endDate, setEndDate] = useState("2026-09-14");
 
-  useEffect(() => {
-  }, []);
-
   useEffect(() => { fetchData(); }, [slug]);
 
   const fetchData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const organizerEmail = user?.email || "";
     if (!organizerEmail) return;
-    const reportsRes = await supabase.from("brand_payout_reports").select("*").eq("event", event);
+    const reportsRes = await supabase.from("brand_payout_reports").select("*").eq("event", event).eq("organizer_email", organizerEmail);
     if (reportsRes.data) setReports(reportsRes.data);
     const [payoutsRes, salesRes] = await Promise.all([
-      supabase.from("event_payouts").select("*").eq("event", event).order("brand_name"),
-      supabase.from("brand_sales").select("*").eq("event", event).order("sale_date"),
+      supabase.from("event_payouts").select("*").eq("event", event).eq("organizer_email", organizerEmail).order("brand_name"),
+      supabase.from("brand_sales").select("*").eq("event", event).eq("organizer_email", organizerEmail).order("sale_date"),
     ]);
     if (payoutsRes.data) setPayouts(payoutsRes.data);
     if (salesRes.data) setSales(salesRes.data);
