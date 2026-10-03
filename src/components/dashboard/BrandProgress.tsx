@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -7,6 +8,7 @@ type Task = { brand_email: string; completed: boolean; };
 type Deadline = { id: number; task: string; };
 
 export default function BrandProgress({ event }: { event: string }) {
+  const { organizerEmail } = useOrganizer();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
@@ -17,9 +19,9 @@ export default function BrandProgress({ event }: { event: string }) {
   useEffect(() => {
     const fetchAll = async () => {
       const [brandRes, taskRes, deadlineRes] = await Promise.all([
-        supabase.from("brands").select("id, name, email").eq("event", event),
-        supabase.from("brand_tasks").select("brand_email, completed").eq("event", event),
-        supabase.from("event_deadlines").select("id, task").eq("event", event),
+        supabase.from("brands").select("id, name, email").eq("event", event).eq("organizer_email", organizerEmail),
+        supabase.from("brand_tasks").select("brand_email, completed").eq("event", event).eq("organizer_email", organizerEmail),
+        supabase.from("event_deadlines").select("id, task").eq("event", event).eq("organizer_email", organizerEmail),
       ]);
       if (brandRes.data) setBrands(brandRes.data);
       if (taskRes.data) setTasks(taskRes.data);

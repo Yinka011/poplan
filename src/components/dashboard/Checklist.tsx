@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useOrganizer } from "@/context/OrganizerContext";
 
 type ChecklistItem = {
   id: number;
@@ -31,6 +32,7 @@ const Avatar = ({ name }: { name: string }) => {
 };
 
 export default function Checklist({ event }: { event: string }) {
+  const { organizerEmail } = useOrganizer();
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [newTask, setNewTask] = useState("");
   const [newOwner, setNewOwner] = useState("");
@@ -55,7 +57,7 @@ export default function Checklist({ event }: { event: string }) {
   }, []);
 
   const fetchItems = async () => {
-    const { data } = await supabase.from("checklist").select("*").eq("event", event).order("id");
+    const { data } = await supabase.from("checklist").select("*").eq("event", event).eq("organizer_email", organizerEmail).order("id");
     if (data) setItems(data);
   };
 
@@ -66,7 +68,7 @@ export default function Checklist({ event }: { event: string }) {
 
   const addItem = async () => {
     if (!newTask.trim()) return;
-    const { data } = await supabase.from("checklist").insert({
+    const { data } = await supabase.from("checklist").insert({ organizer_email: organizerEmail,
       task: newTask, owner: newOwner, due_date: newDate,
       completed: false, event: event, category: newCategory
     }).select().single();

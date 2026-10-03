@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -45,6 +46,7 @@ function calcHours(start: string, end: string): number {
 }
 
 export default function PlanningHub() {
+  const { organizerEmail } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
   const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -70,12 +72,12 @@ export default function PlanningHub() {
 
   const fetchAll = async () => {
     const [d, r, s, sh, hours, es] = await Promise.all([
-      supabase.from("planning_decor").select("*").eq("event", eventName).order("category"),
-      supabase.from("planning_refreshments").select("*").eq("event", eventName),
-      supabase.from("planning_staff").select("*").eq("event", eventName),
-      supabase.from("planning_staff_shifts").select("*").eq("event", eventName),
-      supabase.from("staff_hours").select("*").eq("event", eventName).order("work_date", { ascending: false }),
-      supabase.from("event_staff").select("*").eq("event", eventName),
+      supabase.from("planning_decor").select("*").eq("event", eventName).eq("organizer_email", organizerEmail).order("category"),
+      supabase.from("planning_refreshments").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
+      supabase.from("planning_staff").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
+      supabase.from("planning_staff_shifts").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
+      supabase.from("staff_hours").select("*").eq("event", eventName).eq("organizer_email", organizerEmail).order("work_date", { ascending: false }),
+      supabase.from("event_staff").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
     ]);
     if (d.data) setDecor(d.data);
     if (r.data) setRefresh(r.data);
@@ -95,7 +97,7 @@ export default function PlanningHub() {
     const qty = parseFloat(newDecor.quantity) || 0;
     const unitCost = parseFloat(newDecor.cost) || 0;
     const totalCost = qty > 0 ? qty * unitCost : unitCost;
-    const { data } = await supabase.from("planning_decor").insert({
+    const { data } = await supabase.from("planning_decor").insert({ organizer_email: organizerEmail,
       ...newDecor, cost: totalCost, quantity: qty, event: eventName
     }).select().single();
     if (data) setDecor(prev => [...prev, data]);
@@ -108,7 +110,7 @@ export default function PlanningHub() {
     const qty = parseFloat(newRefresh.quantity_num) || 0;
     const unitCost = parseFloat(newRefresh.cost) || 0;
     const totalCost = qty > 0 ? qty * unitCost : unitCost;
-    const { data } = await supabase.from("planning_refreshments").insert({
+    const { data } = await supabase.from("planning_refreshments").insert({ organizer_email: organizerEmail,
       item: newRefresh.item,
       vendor: newRefresh.vendor,
       quantity: newRefresh.quantity,
@@ -135,8 +137,8 @@ export default function PlanningHub() {
     // Delete existing record if any, then insert fresh
     await supabase.from("event_staff").delete().eq("staff_email", staffEmail).eq("event", eventName);
     const { error } = await supabase.from("event_staff").insert({
+      organizer_email: organizerEmail,
       event: eventName,
-      organizer_email: user?.email || "",
       staff_email: staffEmail,
       name: staffName || "",
       role: staffRole,
@@ -165,7 +167,7 @@ export default function PlanningHub() {
 
   const addStaff = async () => {
     if (!newStaff.name.trim()) return;
-    const { data } = await supabase.from("planning_staff").insert({
+    const { data } = await supabase.from("planning_staff").insert({ organizer_email: organizerEmail,
       name: newStaff.name,
       role: newStaff.role,
       pay_rate: parseFloat(newStaff.pay_rate) || 0,
@@ -183,7 +185,7 @@ export default function PlanningHub() {
   const addShift = async (staffId: number) => {
     if (!newShift.start_time || !newShift.end_time) return;
     const hours = calcHours(newShift.start_time, newShift.end_time);
-    const { data } = await supabase.from("planning_staff_shifts").insert({
+    const { data } = await supabase.from("planning_staff_shifts").insert({ organizer_email: organizerEmail,
       staff_id: staffId,
       event: eventName,
       shift_date: newShift.shift_date,

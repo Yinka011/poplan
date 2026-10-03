@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -30,6 +31,7 @@ const TrashIcon = () => (
 );
 
 export default function PaymentTracker({ event }: { event: string }) {
+  const { organizerEmail } = useOrganizer();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [newAmount, setNewAmount] = useState("");
@@ -53,7 +55,7 @@ export default function PaymentTracker({ event }: { event: string }) {
   }, []);
 
   const fetchBrands = async () => {
-    const { data } = await supabase.from("brands").select("*").eq("event", event);
+    const { data } = await supabase.from("brands").select("*").eq("event", event).eq("organizer_email", organizerEmail);
     if (data) setBrands(data);
   };
 
@@ -75,7 +77,7 @@ export default function PaymentTracker({ event }: { event: string }) {
     const paid = parseFloat(newBrand.amount_paid);
     const balance = fee - paid;
     const status = balance <= 0 ? "Paid" : paid > 0 ? "Partial" : "Unpaid";
-    const { data } = await supabase.from("brands").insert({
+    const { data } = await supabase.from("brands").insert({ organizer_email: organizerEmail,
       name: newBrand.name,
       email: newBrand.email,
       fee_owed: fee,

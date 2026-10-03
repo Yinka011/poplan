@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -26,6 +27,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function ExpensesPage({ params }: { params: any }) {
+  const { organizerEmail } = useOrganizer();
   const slug = params?.slug || "";
   const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -47,10 +49,10 @@ export default function ExpensesPage({ params }: { params: any }) {
 
   const fetchAll = async () => {
     const [expRes, decorRes, refreshRes, staffRes] = await Promise.all([
-      supabase.from("expenses").select("*").eq("event", eventName).order("category"),
-      supabase.from("planning_decor").select("cost").eq("event", eventName),
-      supabase.from("planning_refreshments").select("cost").eq("event", eventName),
-      supabase.from("planning_staff").select("pay_rate").eq("event", eventName),
+      supabase.from("expenses").select("*").eq("event", eventName).eq("organizer_email", organizerEmail).order("category"),
+      supabase.from("planning_decor").select("cost").eq("event", eventName).eq("organizer_email", organizerEmail),
+      supabase.from("planning_refreshments").select("cost").eq("event", eventName).eq("organizer_email", organizerEmail),
+      supabase.from("planning_staff").select("pay_rate").eq("event", eventName).eq("organizer_email", organizerEmail),
     ]);
     if (expRes.data) setExpenses(expRes.data);
     if (decorRes.data) setDecorTotal(decorRes.data.reduce((s, x) => s + Number(x.cost), 0));
@@ -62,7 +64,7 @@ export default function ExpensesPage({ params }: { params: any }) {
     if (!newExpense.item.trim()) return;
     const cost = parseFloat(newExpense.cost) || 0;
     const deposit = parseFloat(newExpense.deposit) || 0;
-    const { data } = await supabase.from("expenses").insert({
+    const { data } = await supabase.from("expenses").insert({ organizer_email: organizerEmail,
       category: newExpense.category,
       item: newExpense.item,
       cost,

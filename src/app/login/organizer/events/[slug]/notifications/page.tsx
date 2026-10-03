@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
@@ -40,6 +41,7 @@ const typeLabel: Record<string, string> = {
 };
 
 export default function NotificationsPage() {
+  const { organizerEmail } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
   const event = slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -50,19 +52,21 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     fetchNotifications();
-  }, [slug]);
+  }, [slug, organizerEmail]);
 
   const fetchNotifications = async () => {
+    if (!organizerEmail) return;
     const { data } = await supabase
       .from("organizer_notifications")
       .select("*")
       .eq("event", event)
+      .eq("organizer_email", organizerEmail)
       .order("created_at", { ascending: false });
     if (data) setNotifications(data);
     setLoading(false);
 
     // Mark all as read
-    await supabase.from("organizer_notifications").update({ read: true }).eq("event", event).eq("read", false);
+    await supabase.from("organizer_notifications").update({ read: true }).eq("event", event).eq("organizer_email", organizerEmail).eq("read", false);
   };
 
   const formatTime = (ts: string) => {

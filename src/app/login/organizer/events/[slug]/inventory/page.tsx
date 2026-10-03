@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
@@ -29,6 +30,7 @@ type Product = {
 };
 
 export default function InventoryPage() {
+  const { organizerEmail } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
   const event = slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -95,6 +97,7 @@ export default function InventoryPage() {
       .from("brand_products")
       .select("*")
       .eq("event", event)
+      .eq("organizer_email", organizerEmail)
       .order("brand_name");
 
     if (!productsData) { setLoading(false); return; }

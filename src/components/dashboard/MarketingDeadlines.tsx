@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -18,6 +19,7 @@ const PLATFORMS = ["Instagram", "TikTok", "Meta Ads", "Email", "Twitter/X", "Pin
 type Props = { event: string; };
 
 export default function MarketingPlans({ event }: Props) {
+  const { organizerEmail } = useOrganizer();
   const [items, setItems] = useState<MarketingItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,14 +35,14 @@ export default function MarketingPlans({ event }: Props) {
   useEffect(() => { fetchItems(); }, [event]);
 
   const fetchItems = async () => {
-    const { data } = await supabase.from("marketing_deadlines").select("*").eq("event", event).order("due_date");
+    const { data } = await supabase.from("marketing_deadlines").select("*").eq("event", event).eq("organizer_email", organizerEmail).order("due_date");
     if (data) setItems(data);
     setLoading(false);
   };
 
   const addItem = async () => {
     if (!newItem.task.trim() || !newItem.due_date) return;
-    const { data } = await supabase.from("marketing_deadlines").insert({
+    const { data } = await supabase.from("marketing_deadlines").insert({ organizer_email: organizerEmail,
       event, task: newItem.task, due_date: newItem.due_date,
       channel: newItem.channel, assigned_to: newItem.assigned_to || null,
       notes: newItem.notes || null, completed: false,

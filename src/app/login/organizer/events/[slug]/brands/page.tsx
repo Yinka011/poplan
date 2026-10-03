@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -15,6 +16,7 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 };
 
 export default function BrandsPage() {
+  const { organizerEmail } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
   const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -31,9 +33,9 @@ export default function BrandsPage() {
   useEffect(() => {
     const fetchAll = async () => {
       const [brandRes, taskRes, deadlineRes] = await Promise.all([
-        supabase.from("brands").select("*").eq("event", eventName),
-        supabase.from("brand_tasks").select("*").eq("event", eventName),
-        supabase.from("event_deadlines").select("*").eq("event", eventName).order("id"),
+        supabase.from("brands").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
+        supabase.from("brand_tasks").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
+        supabase.from("event_deadlines").select("*").eq("event", eventName).eq("organizer_email", organizerEmail).order("id"),
       ]);
       if (brandRes.data) setBrands(brandRes.data);
       if (taskRes.data) setTasks(taskRes.data);

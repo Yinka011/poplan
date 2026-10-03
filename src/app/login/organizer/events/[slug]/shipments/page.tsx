@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
@@ -17,6 +18,7 @@ type Shipment = {
 };
 
 export default function ShipmentsPage() {
+  const { organizerEmail } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -36,8 +38,8 @@ export default function ShipmentsPage() {
     const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
     const [shipmentsRes, brandsRes, invoicesRes] = await Promise.all([
       supabase.from("shipments").select("*").eq("event_slug", slug).order("created_at"),
-      supabase.from("brands").select("email, name, shipped, shipped_at, courier, tracking_number, shipping_invoice").eq("event", eventName),
-      supabase.from("brand_shipment_invoices").select("*").eq("event", eventName).order("created_at", { ascending: false }),
+      supabase.from("brands").select("email, name, shipped, shipped_at, courier, tracking_number, shipping_invoice").eq("event", eventName).eq("organizer_email", organizerEmail),
+      supabase.from("brand_shipment_invoices").select("*").eq("event", eventName).eq("organizer_email", organizerEmail).order("created_at", { ascending: false }),
     ]);
     if (shipmentsRes.data) setShipments(shipmentsRes.data);
     if (brandsRes.data) setBrands(brandsRes.data);

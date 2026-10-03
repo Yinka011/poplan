@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { sendNotification } from "@/lib/notifications";
@@ -39,6 +40,7 @@ const TrashIcon = () => (
 );
 
 export default function TasksPage() {
+  const { organizerEmail } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
   const city = slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -61,13 +63,14 @@ export default function TasksPage() {
       .from("event_deadlines")
       .select("*")
       .eq("event", city)
+      .eq("organizer_email", organizerEmail)
       .order("id");
     if (data) setDeadlines(data);
   };
 
   const addDeadline = async () => {
     if (!newItem.task.trim()) return;
-    const { data } = await supabase.from("event_deadlines").insert({
+    const { data } = await supabase.from("event_deadlines").insert({ organizer_email: organizerEmail,
       event: city,
       task: newItem.task,
       due_date: newItem.due_date,

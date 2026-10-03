@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -25,6 +26,7 @@ const typeIcon: Record<string, string> = {
 };
 
 export default function OrganizerBell({ event, slug }: { event: string; slug: string }) {
+  const { organizerEmail } = useOrganizer();
   const [notifications, setNotifications] = useState<OrgNotification[]>([]);
   const [open, setOpen] = useState(false);
   const unread = notifications.filter(n => !n.read).length;
@@ -45,13 +47,14 @@ export default function OrganizerBell({ event, slug }: { event: string; slug: st
       .from("organizer_notifications")
       .select("*")
       .eq("event", event)
+      .eq("organizer_email", organizerEmail)
       .order("created_at", { ascending: false })
       .limit(50);
     if (data) setNotifications(data);
   };
 
   const markAllRead = async () => {
-    await supabase.from("organizer_notifications").update({ read: true }).eq("event", event).eq("read", false);
+    await supabase.from("organizer_notifications").update({ read: true }).eq("event", event).eq("organizer_email", organizerEmail).eq("read", false);
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 

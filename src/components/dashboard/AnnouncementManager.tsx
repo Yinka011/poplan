@@ -1,4 +1,5 @@
 "use client";
+import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { sendNotification } from "@/lib/notifications";
@@ -13,6 +14,7 @@ type Announcement = {
 };
 
 export default function AnnouncementManager({ event }: { event: string }) {
+  const { organizerEmail } = useOrganizer();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [pinned, setPinned] = useState(false);
@@ -33,6 +35,7 @@ export default function AnnouncementManager({ event }: { event: string }) {
       .from("announcements")
       .select("*")
       .eq("event", event)
+      .eq("organizer_email", organizerEmail)
       .order("pinned", { ascending: false })
       .order("created_at", { ascending: false });
     if (data) setAnnouncements(data);
@@ -43,14 +46,15 @@ export default function AnnouncementManager({ event }: { event: string }) {
     setSaving(true);
     const { data, error } = await supabase.from("announcements").insert({
       event,
+      organizer_email: organizerEmail,
       message: newMessage,
-      author: "AO Curates",
+      author: organizerEmail,
       pinned,
     }).select().single();
     if (data) {
       setAnnouncements(prev => [data, ...prev]);
       // Notify all brands in this event
-      const { data: brands, error: brandsError } = await supabase.from("brands").select("email").eq("event", event).not("email", "is", null);
+      const { data: brands, error: brandsError } = await supabase.from("brands").select("email").eq("event", event).eq("organizer_email", organizerEmail).not("email", "is", null);
       if (brands) {
         // Send individual notifications
         await Promise.all(brands.map(brand => sendNotification({
