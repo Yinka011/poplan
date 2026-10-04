@@ -25,9 +25,9 @@ export function EventDashboard({ event }: EventDashboardProps) {
   const { organizerEmail } = useOrganizer();
   const [brandsCount, setBrandsCount] = useState(0);
   const [outstandingTasks, setOutstandingTasks] = useState(0);
-  const [spotsToFill, setSpotsToFill] = useState(10);
+  const [spotsToFill, setSpotsToFill] = useState(0);
   const [editingSpots, setEditingSpots] = useState(false);
-  const [newSpots, setNewSpots] = useState("10");
+  const [newSpots, setNewSpots] = useState("0");
   const [venueAddress, setVenueAddress] = useState("");
   const [editingAddress, setEditingAddress] = useState(false);
   const [newAddress, setNewAddress] = useState("");
@@ -63,7 +63,6 @@ export function EventDashboard({ event }: EventDashboardProps) {
   const fetchData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const orgEmail = user?.email || "";
-    console.log("EventDashboard fetchData orgEmail:", orgEmail, "city:", event.city);
     if (!orgEmail) return;
     const [brandsRes, checklistRes, settingsRes] = await Promise.all([
       supabase.from("brands").select("id").eq("event", event.city).eq("organizer_email", orgEmail),
