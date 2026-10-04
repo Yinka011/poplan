@@ -37,7 +37,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
   const daysToEvent = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }) => { // keep for other uses
     });
   }, []);
 
@@ -61,10 +61,13 @@ export function EventDashboard({ event }: EventDashboardProps) {
   }, []);
 
   const fetchData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const orgEmail = user?.email || "";
+    if (!orgEmail) return;
     const [brandsRes, checklistRes, settingsRes] = await Promise.all([
-      supabase.from("brands").select("id").eq("event", event.city).eq("organizer_email", organizerEmail),
-      supabase.from("checklist").select("completed").eq("event", event.city).eq("organizer_email", organizerEmail),
-      supabase.from("event_settings").select("spots_to_fill, venue_address").eq("event", event.city).eq("organizer_email", organizerEmail).maybeSingle(),
+      supabase.from("brands").select("id").eq("event", event.city).eq("organizer_email", orgEmail),
+      supabase.from("checklist").select("completed").eq("event", event.city).eq("organizer_email", orgEmail),
+      supabase.from("event_settings").select("spots_to_fill, venue_address").eq("event", event.city).eq("organizer_email", orgEmail).maybeSingle(),
     ]);
 
     if (brandsRes.data) setBrandsCount(brandsRes.data.length);
