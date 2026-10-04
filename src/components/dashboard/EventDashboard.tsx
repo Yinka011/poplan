@@ -63,6 +63,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
   const fetchData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const orgEmail = user?.email || "";
+    console.log("EventDashboard fetchData orgEmail:", orgEmail, "city:", event.city);
     if (!orgEmail) return;
     const [brandsRes, checklistRes, settingsRes] = await Promise.all([
       supabase.from("brands").select("id").eq("event", event.city).eq("organizer_email", orgEmail),
