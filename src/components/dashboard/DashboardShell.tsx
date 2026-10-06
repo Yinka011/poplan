@@ -34,6 +34,7 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
 
   const navItems = [
     { label: "Overview", href: `/login/organizer/events/${slug}` },
+    ...(isEnabled("brands") ? [{ label: "Brands", href: `/login/organizer/events/${slug}/brands` }] : []),
     ...(isEnabled("brands") ? [{ label: "Brand Tasks", href: `/login/organizer/events/${slug}/tasks` }] : []),
     { label: "Expenses", href: `/login/organizer/events/${slug}/expenses` },
     ...(isEnabled("planning") ? [{ label: "Planning Hub", href: `/login/organizer/events/${slug}/planning` }] : []),
@@ -82,7 +83,7 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
           ))}
         </nav>
         <div style={{ padding: "1rem 1.25rem", borderTop: "1px solid #2a4d3e" }}>
-          <div style={{ fontSize: "0.75rem", color: "#d4c87a", marginBottom: "8px" }}>AO Curates</div>
+          <div style={{ fontSize: "0.75rem", color: "#d4c87a", marginBottom: "8px" }}>{organizerName || organizerEmail}</div>
           <Link href="/login/organizer/events" style={{ fontSize: "0.8rem", color: "#d4c87a", textDecoration: "none", display: "block", marginBottom: "6px" }} onClick={() => setOpen(false)}>All events</Link>
           <Link href="/" style={{ fontSize: "0.8rem", color: "#d4c87a66", textDecoration: "none" }} onClick={() => setOpen(false)}>Sign out</Link>
         </div>
