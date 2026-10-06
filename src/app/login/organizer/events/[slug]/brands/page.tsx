@@ -20,6 +20,8 @@ export default function BrandsPage() {
   const params = useParams();
   const slug = params.slug as string;
   const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const [eventDisplayName, setEventDisplayName] = useState("");
+  const [paymentTrackerEnabled, setPaymentTrackerEnabled] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [resendingAll, setResendingAll] = useState(false);
   const [resendCount, setResendCount] = useState(0);
@@ -36,6 +38,10 @@ export default function BrandsPage() {
   useEffect(() => {
     const fetchAll = async () => {
       if (!organizerEmail) return;
+      const { data: eventData } = await supabase.from("events").select("name").eq("slug", slug).maybeSingle();
+      if (eventData?.name) setEventDisplayName(eventData.name);
+      const { data: featuresData } = await supabase.from("organizer_features").select("features").eq("organizer_email", organizerEmail).eq("event_slug", slug).maybeSingle();
+      if (featuresData?.features) setPaymentTrackerEnabled(featuresData.features.payment_tracker !== false);
       const [brandRes, taskRes, deadlineRes] = await Promise.all([
         supabase.from("brands").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
         supabase.from("brand_tasks").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
@@ -114,16 +120,16 @@ export default function BrandsPage() {
         <div style={{ marginBottom: "1.5rem" }}>
           <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to {eventName}</Link>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
-            <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", margin: 0 }}>Brand Activity</h1>
+            <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", margin: 0 }}>{eventDisplayName || "Brands"}</h1>
             <button onClick={() => setAdding(!adding)} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add brand</button>
           </div>
-          <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>Track task completion across all {eventName} brands</p>
+
 
           {adding && (
             <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6", marginTop: "1rem", display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "8px", alignItems: "center" }}>
               <input placeholder="Brand name" value={newBrand.name} onChange={e => setNewBrand({...newBrand, name: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", outline: "none" }} />
               <input placeholder="Brand email" value={newBrand.email} onChange={e => setNewBrand({...newBrand, email: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", outline: "none" }} />
-              <input placeholder="Participation fee (optional)" value={newBrand.fee_owed} onChange={e => setNewBrand({...newBrand, fee_owed: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", outline: "none" }} />
+{paymentTrackerEnabled && <input placeholder="Participation fee (optional)" value={newBrand.fee_owed} onChange={e => setNewBrand({...newBrand, fee_owed: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", outline: "none" }} />}
               <div style={{ display: "flex", gap: "6px" }}>
                 <button onClick={addBrand} disabled={saving || !newBrand.name.trim() || !newBrand.email.trim()} style={{ padding: "8px 14px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{saving ? "..." : "Save"}</button>
                 <button onClick={() => setAdding(false)} style={{ padding: "8px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>✕</button>
