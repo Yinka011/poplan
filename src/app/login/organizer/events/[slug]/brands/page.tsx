@@ -170,7 +170,7 @@ export default function BrandsPage() {
                       <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginTop: "2px" }}>{brand.email || "No portal access"}</div>
                     </div>
                     <div style={{ display: "flex", gap: "6px" }}>
-                      <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "20px", ...payStatus }}>{brand.status}</span>
+{paymentTrackerEnabled && <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "20px", ...payStatus }}>{brand.status}</span>}
                       <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "20px", background: progress.bg, color: progress.color }}>{progress.label}</span>
                     </div>
                   </div>
@@ -182,8 +182,8 @@ export default function BrandsPage() {
                     <div style={{ height: "100%", width: `${percent}%`, background: progress.color, borderRadius: "3px", transition: "width 0.3s" }} />
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px", fontSize: "0.8rem" }}>
-                    <span style={{ color: "#4a5a52" }}>Balance: <strong style={{ color: Number(brand.balance) > 0 ? "#c0392b" : "#4a7c59" }}>${Number(brand.balance).toFixed(2)}</strong></span>
-                    <span style={{ color: "#E8C97A" }}>Click to view tasks →</span>
+                    {paymentTrackerEnabled && <span style={{ color: "#4a5a52" }}>Balance: <strong style={{ color: Number(brand.balance) > 0 ? "#c0392b" : "#4a7c59" }}>${Number(brand.balance).toFixed(2)}</strong></span>}
+                    <span style={{ color: "#E8C97A", marginLeft: "auto" }}>Click to view tasks →</span>
                   </div>
                 </div>
               );
