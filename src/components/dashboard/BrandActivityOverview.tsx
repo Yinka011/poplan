@@ -80,6 +80,14 @@ export default function BrandActivityOverview({ eventCity, eventSlug }: { eventC
           <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.75rem", color: "#E8C97A", background: "transparent", border: "1px solid #E8C97A44", borderRadius: "6px", padding: "3px 10px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add brand</button>
         </div>
       </div>
+      {adding && (
+        <div style={{ padding: "12px 0", borderBottom: "1px solid #e4ebe6", display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" as const, marginBottom: "8px" }}>
+          <input placeholder="Brand name" value={newBrand.name} onChange={e => setNewBrand({...newBrand, name: e.target.value})} style={{ flex: 1, minWidth: "140px", padding: "6px 10px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif", outline: "none" }} />
+          <input placeholder="Brand email" value={newBrand.email} onChange={e => setNewBrand({...newBrand, email: e.target.value})} style={{ flex: 1, minWidth: "180px", padding: "6px 10px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif", outline: "none" }} />
+          <button onClick={addBrand} disabled={saving || !newBrand.name.trim() || !newBrand.email.trim()} style={{ padding: "6px 14px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{saving ? "..." : "Add"}</button>
+          <button onClick={() => setAdding(false)} style={{ padding: "6px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer" }}>✕</button>
+        </div>
+      )}
       <div style={{ overflowX: "auto" as const }}>
         <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: "0.82rem" }}>
           <thead>
