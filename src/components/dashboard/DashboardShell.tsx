@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useOrganizer } from "@/context/OrganizerContext";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ type DashboardShellProps = {
 
 export function DashboardShell({ children, event }: DashboardShellProps) {
   const pathname = usePathname();
+  const { organizerEmail, organizerName } = useOrganizer();
   const slug = event?.slug || pathname.split("/")[5] || "";
   const [open, setOpen] = useState(false);
 
