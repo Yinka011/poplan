@@ -19,6 +19,9 @@ type BrandActivity = {
 };
 
 export default function BrandActivityOverview({ eventCity, eventSlug }: { eventCity: string; eventSlug: string }) {
+  const [adding, setAdding] = useState(false);
+  const [newBrand, setNewBrand] = useState({ name: "", email: "" });
+  const [saving, setSaving] = useState(false);
   const { organizerEmail } = useOrganizer();
   const [brands, setBrands] = useState<BrandActivity[]>([]);
 
@@ -47,13 +50,35 @@ export default function BrandActivityOverview({ eventCity, eventSlug }: { eventC
     fetch();
   }, [eventCity]);
 
-  if (brands.length === 0) return null;
+  const addBrand = async () => {
+    if (!newBrand.name.trim() || !newBrand.email.trim()) return;
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const orgEmail = user?.email || "";
+    const { data } = await supabase.from("brands").insert({
+      organizer_email: orgEmail,
+      event: eventCity,
+      name: newBrand.name.trim(),
+      email: newBrand.email.trim(),
+      fee_owed: 0,
+      amount_paid: 0,
+      balance: 0,
+      status: "Unpaid",
+    }).select().single();
+    if (data) setBrands((prev: any[]) => [...prev, data]);
+    setNewBrand({ name: "", email: "" });
+    setAdding(false);
+    setSaving(false);
+  };
 
   return (
     <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
         <div style={{ fontSize: "0.75rem", color: "#4a5a52", letterSpacing: "0.1em" }}>BRAND ACTIVITY</div>
-        <Link href={`/login/organizer/events/${eventSlug}/payments`} style={{ fontSize: "0.75rem", color: "#E8C97A", textDecoration: "none" }}>View payments →</Link>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <Link href={`/login/organizer/events/${eventSlug}/payments`} style={{ fontSize: "0.75rem", color: "#E8C97A", textDecoration: "none" }}>View payments →</Link>
+          <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.75rem", color: "#E8C97A", background: "transparent", border: "1px solid #E8C97A44", borderRadius: "6px", padding: "3px 10px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add brand</button>
+        </div>
       </div>
       <div style={{ overflowX: "auto" as const }}>
         <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: "0.82rem" }}>
