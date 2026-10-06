@@ -26,13 +26,16 @@ export default function BrandsPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [selected, setSelected] = useState<Brand | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [newBrand, setNewBrand] = useState({ name: "", email: "", fee_owed: "" });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
   }, []);
 
   useEffect(() => {
     const fetchAll = async () => {
-    if (!organizerEmail) return;
+      if (!organizerEmail) return;
       const [brandRes, taskRes, deadlineRes] = await Promise.all([
         supabase.from("brands").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
         supabase.from("brand_tasks").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
@@ -43,7 +46,28 @@ export default function BrandsPage() {
       if (deadlineRes.data) setDeadlines(deadlineRes.data);
     };
     fetchAll();
-  }, []);
+  }, [organizerEmail]);
+
+  const addBrand = async () => {
+    if (!newBrand.name.trim() || !newBrand.email.trim()) return;
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const orgEmail = user?.email || "";
+    const { data } = await supabase.from("brands").insert({
+      organizer_email: orgEmail,
+      event: eventName,
+      name: newBrand.name.trim(),
+      email: newBrand.email.trim(),
+      fee_owed: parseFloat(newBrand.fee_owed) || 0,
+      amount_paid: 0,
+      balance: parseFloat(newBrand.fee_owed) || 0,
+      status: "Unpaid",
+    }).select().single();
+    if (data) setBrands(prev => [...prev, data]);
+    setNewBrand({ name: "", email: "", fee_owed: "" });
+    setAdding(false);
+    setSaving(false);
+  };
 
   const getProgress = (email: string) => {
     if (!email) return { completed: 0, total: deadlines.length, percent: 0 };
@@ -89,8 +113,23 @@ export default function BrandsPage() {
 
         <div style={{ marginBottom: "1.5rem" }}>
           <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to {eventName}</Link>
-          <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", marginTop: "0.5rem" }}>Brand Activity</h1>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
+            <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", margin: 0 }}>Brand Activity</h1>
+            <button onClick={() => setAdding(!adding)} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add brand</button>
+          </div>
           <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>Track task completion across all {eventName} brands</p>
+
+          {adding && (
+            <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6", marginTop: "1rem", display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "8px", alignItems: "center" }}>
+              <input placeholder="Brand name" value={newBrand.name} onChange={e => setNewBrand({...newBrand, name: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", outline: "none" }} />
+              <input placeholder="Brand email" value={newBrand.email} onChange={e => setNewBrand({...newBrand, email: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", outline: "none" }} />
+              <input placeholder="Participation fee (optional)" value={newBrand.fee_owed} onChange={e => setNewBrand({...newBrand, fee_owed: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", outline: "none" }} />
+              <div style={{ display: "flex", gap: "6px" }}>
+                <button onClick={addBrand} disabled={saving || !newBrand.name.trim() || !newBrand.email.trim()} style={{ padding: "8px 14px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{saving ? "..." : "Save"}</button>
+                <button onClick={() => setAdding(false)} style={{ padding: "8px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>✕</button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: selected ? "1fr 1fr" : "1fr", gap: "1rem" }}>
