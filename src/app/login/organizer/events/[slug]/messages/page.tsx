@@ -14,10 +14,13 @@ type Message = {
   read_by_organizer: boolean;
 };
 
+type BrandRecord = { email: string; name: string; };
+
 export default function MessagesPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [messages, setMessages] = useState<Message[]>([]);
+  const [allBrands, setAllBrands] = useState<BrandRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState<Record<string, string>>({});
   const [sending, setSending] = useState<string | null>(null);
@@ -38,15 +41,31 @@ export default function MessagesPage() {
     setEventCity(city);
     if (eventData?.name) setEventDisplayName(eventData.name);
     if (!city) { setLoading(false); return; }
-    const { data } = await supabase.from("brand_messages")
-      .select("*")
-      .eq("event", city)
-      .eq("organizer_email", email)
-      .order("created_at", { ascending: true });
-    if (data) {
-      setMessages(data);
-      if (!selectedBrand && data.length > 0) setSelectedBrand(data[0].brand_email);
+
+    const [msgRes, brandRes] = await Promise.all([
+      supabase.from("brand_messages")
+        .select("*")
+        .eq("event", city)
+        .eq("organizer_email", email)
+        .order("created_at", { ascending: true }),
+      supabase.from("brands")
+        .select("email, name")
+        .eq("event", city)
+        .eq("organizer_email", email),
+    ]);
+
+    if (msgRes.data) {
+      setMessages(msgRes.data);
+      if (!selectedBrand && msgRes.data.length > 0) setSelectedBrand(msgRes.data[0].brand_email);
     }
+    if (brandRes.data) {
+      setAllBrands(brandRes.data);
+      // Auto-select first brand if no messages yet
+      if (!selectedBrand && brandRes.data.length > 0 && (!msgRes.data || msgRes.data.length === 0)) {
+        setSelectedBrand(brandRes.data[0].email);
+      }
+    }
+
     await supabase.from("brand_messages").update({ read_by_organizer: true })
       .eq("event", city)
       .eq("organizer_email", email)
@@ -72,18 +91,24 @@ export default function MessagesPage() {
     setSending(null);
   };
 
-  const brands = [...new Set(messages.map(m => m.brand_email))];
-  const grouped = brands.reduce((acc, brand) => {
+  // Merge: all brands + any brand that has messaged (even if not in brands table)
+  const brandsWithMessages = [...new Set(messages.map(m => m.brand_email))];
+  const allBrandEmails = [...new Set([...allBrands.map(b => b.email), ...brandsWithMessages])];
+
+  const grouped = allBrandEmails.reduce((acc, brand) => {
     acc[brand] = messages.filter(m => m.brand_email === brand);
     return acc;
   }, {} as Record<string, Message[]>);
 
   const getBrandName = (email: string) => {
+    const fromBrands = allBrands.find(b => b.email === email)?.name;
+    if (fromBrands) return fromBrands;
     const msgs = grouped[email];
     return msgs?.find(m => m.sender_email === email)?.sender_name || email;
   };
 
   const getUnread = (email: string) => grouped[email]?.filter(m => !m.read_by_organizer && m.sender_email === email).length || 0;
+  const hasMessages = (email: string) => (grouped[email] || []).length > 0;
 
   if (loading) return <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>;
 
@@ -92,29 +117,32 @@ export default function MessagesPage() {
       <div style={{ background: "#1B3A2D", padding: "1rem 2rem", display: "flex", alignItems: "center", gap: "1rem" }}>
         <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.8rem", color: "#E8C97A", textDecoration: "none" }}>← Back</Link>
         <div style={{ fontSize: "1rem", color: "#fff" }}>Messages — {eventDisplayName}</div>
-        <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "#ffffff66" }}>{brands.length} conversations</div>
+        <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "#ffffff66" }}>{allBrandEmails.length} brands</div>
       </div>
 
       <div style={{ maxWidth: "960px", margin: "0 auto", padding: "2rem 1.5rem" }}>
-        {brands.length === 0 ? (
+        {allBrandEmails.length === 0 ? (
           <div style={{ background: "#fff", borderRadius: "14px", padding: "3rem", border: "1px solid #e4ebe6", textAlign: "center" as const, color: "#4a5a52", fontSize: "0.88rem" }}>
-            No messages yet. Brands will message you from their portal.
+            No brands added to this event yet. Add brands first from the Brands tab.
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "0", border: "1px solid #e4ebe6", borderRadius: "14px", overflow: "hidden", minHeight: "520px" }}>
             {/* Brand list */}
             <div style={{ borderRight: "1px solid #e4ebe6", background: "#f8faf8" }}>
-              <div style={{ padding: "12px 14px", borderBottom: "1px solid #e4ebe6", fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.1em" }}>CONVERSATIONS</div>
-              {brands.map(brand => {
+              <div style={{ padding: "12px 14px", borderBottom: "1px solid #e4ebe6", fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.1em" }}>BRANDS</div>
+              {allBrandEmails.map(brand => {
                 const unread = getUnread(brand);
                 const lastMsg = [...(grouped[brand] || [])].reverse()[0];
+                const noThread = !hasMessages(brand);
                 return (
                   <div key={brand} onClick={() => setSelectedBrand(brand)} style={{ padding: "10px 14px", cursor: "pointer", background: selectedBrand === brand ? "#1B3A2D" : "#fff", borderBottom: "1px solid #e4ebe6" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2px" }}>
                       <div style={{ fontSize: "0.85rem", color: selectedBrand === brand ? "#fff" : "#1B3A2D" }}>{getBrandName(brand)}</div>
                       {unread > 0 && <span style={{ background: "#c0392b", color: "#fff", fontSize: "0.65rem", padding: "2px 6px", borderRadius: "10px" }}>{unread}</span>}
                     </div>
-                    <div style={{ fontSize: "0.72rem", color: selectedBrand === brand ? "#ffffff66" : "#4a5a52", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{lastMsg?.message}</div>
+                    <div style={{ fontSize: "0.72rem", color: selectedBrand === brand ? "#ffffff66" : "#4a5a52", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                      {noThread ? "No messages yet — start the conversation" : lastMsg?.message}
+                    </div>
                   </div>
                 );
               })}
@@ -123,24 +151,33 @@ export default function MessagesPage() {
             {/* Thread */}
             <div style={{ display: "flex", flexDirection: "column" as const, background: "#fff" }}>
               {!selectedBrand ? (
-                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#4a5a52", fontSize: "0.85rem" }}>Select a conversation</div>
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#4a5a52", fontSize: "0.85rem" }}>Select a brand to message</div>
               ) : (
                 <>
-                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #e4ebe6", fontSize: "0.88rem", color: "#1B3A2D" }}>{getBrandName(selectedBrand)}</div>
+                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #e4ebe6", fontSize: "0.88rem", color: "#1B3A2D" }}>
+                    {getBrandName(selectedBrand)}
+                    <span style={{ fontSize: "0.72rem", color: "#4a5a52", marginLeft: "8px" }}>{selectedBrand}</span>
+                  </div>
                   <div style={{ flex: 1, padding: "16px", display: "flex", flexDirection: "column" as const, gap: "10px", overflowY: "auto" as const, maxHeight: "400px" }}>
-                    {(grouped[selectedBrand] || []).map(msg => {
-                      const isOrganizer = msg.sender_email === organizerEmail;
-                      return (
-                        <div key={msg.id} style={{ display: "flex", flexDirection: "column" as const, alignItems: isOrganizer ? "flex-end" : "flex-start" }}>
-                          <div style={{ maxWidth: "72%", padding: "8px 12px", borderRadius: "10px", background: isOrganizer ? "#1B3A2D" : "#f0f4f1", color: isOrganizer ? "#fff" : "#1B3A2D", fontSize: "0.85rem", lineHeight: 1.5 }}>
-                            {msg.message}
+                    {(grouped[selectedBrand] || []).length === 0 ? (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#4a5a52", fontSize: "0.85rem", fontStyle: "italic" }}>
+                        No messages yet. Send the first one below.
+                      </div>
+                    ) : (
+                      (grouped[selectedBrand] || []).map(msg => {
+                        const isOrganizer = msg.sender_email === organizerEmail;
+                        return (
+                          <div key={msg.id} style={{ display: "flex", flexDirection: "column" as const, alignItems: isOrganizer ? "flex-end" : "flex-start" }}>
+                            <div style={{ maxWidth: "72%", padding: "8px 12px", borderRadius: "10px", background: isOrganizer ? "#1B3A2D" : "#f0f4f1", color: isOrganizer ? "#fff" : "#1B3A2D", fontSize: "0.85rem", lineHeight: 1.5 }}>
+                              {msg.message}
+                            </div>
+                            <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginTop: "3px" }}>
+                              {new Date(msg.created_at).toLocaleDateString()} · {isOrganizer ? "You" : msg.sender_name}
+                            </div>
                           </div>
-                          <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginTop: "3px" }}>
-                            {new Date(msg.created_at).toLocaleDateString()} · {isOrganizer ? "You" : msg.sender_name}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                   <div style={{ padding: "12px 16px", borderTop: "1px solid #e4ebe6", display: "flex", gap: "8px" }}>
                     <input
