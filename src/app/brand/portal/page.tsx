@@ -127,9 +127,9 @@ export default function BrandPortal() {
       const [deadlineRes, taskRes, settingsRes, messagesRes, eventRes, faqRes, profileRes] = await Promise.all([
         supabase.from("event_deadlines").select("*").eq("event", resolvedEvent).eq("organizer_email", brandOrgEmail).order("id"),
         supabase.from("brand_tasks").select("*").eq("brand_email", resolvedBrandEmail).eq("event", resolvedEvent),
-        supabase.from("event_settings").select("venue_address").eq("event", resolvedEvent).single(),
+        supabase.from("event_settings").select("venue_address").eq("event", resolvedEvent).eq("organizer_email", brandOrgEmail).maybeSingle(),
         supabase.from("brand_messages").select("*").eq("event", resolvedEvent).eq("brand_email", resolvedBrandEmail).order("created_at"),
-        supabase.from("events").select("name, dates_label, organizer_email").eq("city", resolvedEvent).maybeSingle(),
+        supabase.from("events").select("name, dates_label, organizer_email").eq("city", resolvedEvent).eq("organizer_email", brandOrgEmail).maybeSingle(),
         supabase.from("event_faqs").select("question, answer").eq("event", resolvedEvent).eq("organizer_email", brandOrgEmail).order("id"),
         supabase.from("profiles").select("name").eq("email", brandOrgEmail).maybeSingle(),
       ]);
@@ -379,10 +379,10 @@ export default function BrandPortal() {
                 Welcome, <span style={{ fontFamily: "Didot, 'Playfair Display', 'Times New Roman', serif", fontStyle: "italic" }}>{brand.name}</span> 🖤
               </h1>
               <p style={{ color: "#4a5a52", marginTop: "1rem", fontSize: "0.95rem", lineHeight: 1.7 }}>
-                We are so excited to have you as part of this experience. Your brand brings something truly special to our curated space and we cannot wait to showcase what you have created. This portal is your home base — everything you need to prepare for {eventName} is right here.
+                This is your brand portal — everything you need to prepare for {eventName} is right here. Work through your to-do list, upload your inventory, track your shipment and reach out if you have any questions.
               </p>
               <p style={{ color: "#4a5a52", marginTop: "0.75rem", fontSize: "0.95rem", lineHeight: 1.7 }}>
-                Thank you for trusting {organizerName} with your brand. Let us make this unforgettable. 🌟
+                Looking forward to having you at the event. 🌟
               </p>
             </div>
 
