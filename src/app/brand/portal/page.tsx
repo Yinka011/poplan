@@ -50,16 +50,7 @@ const FILE_CATEGORIES = [
   { key: "other", label: "Other", desc: "Any other files you would like to share with us" },
 ];
 
-const faqs = [
-  { q: "Do I need to attend the pop-up in person?", a: "No — AO Curates will fully staff the store with trained sales associates. You do not need to send a representative." },
-  { q: "When will I receive my payout?", a: "Payouts will be issued by October 5th, 2026." },
-  { q: "What is the commission structure?", a: "AO Curates applies a 20% commission on all sales made during the pop-up." },
-  { q: "What happens to unsold items?", a: "Unsold items must either be picked up by October 31st, 2026 or shipped back at the brand's expense." },
-  { q: "What shipping options are available?", a: "AO Curates has secured a discounted rate through Amgray Logistics at ₦17,500 per kg. Products must arrive in Atlanta between August 3rd and August 28th, 2026." },
-  { q: "What are the event hours?", a: "Friday September 11th is a Private Shopping Event from 5PM to 7PM. Saturday September 12th is open 10AM to 6PM. Sunday September 13th is open 12PM to 5PM." },
-  { q: "What labelling is required on my products?", a: "Every single item must be tagged with your brand name, product name and selling price before shipping." },
-  { q: "Who do I contact if I have questions?", a: "You will be added to a private WhatsApp group where you can reach the AO Curates team directly." },
-];
+// FAQs are loaded from DB per organizer
 
 export default function BrandPortal() {
   const [brand, setBrand] = useState<Brand | null>(null);
@@ -85,6 +76,7 @@ export default function BrandPortal() {
   const [editingShipping, setEditingShipping] = useState(false);
   const [shippingDetails, setShippingDetails] = useState({ courier: "", tracking_number: "", shipping_invoice: "" });
   const [showTutorial, setShowTutorial] = useState(false);
+  const [faqs, setFaqs] = useState<{q: string; a: string}[]>([]);
   const [activeTab, setActiveTab] = useState<"home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "shipments" | "profile" | "faq">("home");
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({ instagram: "", website: "", bio: "" });
@@ -92,7 +84,8 @@ export default function BrandPortal() {
   const [eventName, setEventName] = useState("Atlanta Pop-Up");
   const [resolvedEvent, setResolvedEvent] = useState("");
   const [eventDates, setEventDates] = useState("Sep 11–13, 2026");
-  const [organizerName] = useState("AO Curates");
+  const [organizerName, setOrganizerName] = useState("");
+  const [brandOrgEmail, setBrandOrgEmail] = useState("");
 
   const today = new Date();
 
@@ -127,12 +120,18 @@ export default function BrandPortal() {
 
       setBrandEmail(resolvedBrandEmail);
 
-      const [deadlineRes, taskRes, settingsRes, messagesRes, eventRes] = await Promise.all([
-        supabase.from("event_deadlines").select("*").eq("event", resolvedEvent).order("id"),
+      // Get organizer email from brand record
+      const brandOrgEmail = brandRes.data?.organizer_email || "";
+      setBrandOrgEmail(brandOrgEmail);
+
+      const [deadlineRes, taskRes, settingsRes, messagesRes, eventRes, faqRes, profileRes] = await Promise.all([
+        supabase.from("event_deadlines").select("*").eq("event", resolvedEvent).eq("organizer_email", brandOrgEmail).order("id"),
         supabase.from("brand_tasks").select("*").eq("brand_email", resolvedBrandEmail).eq("event", resolvedEvent),
         supabase.from("event_settings").select("venue_address").eq("event", resolvedEvent).single(),
         supabase.from("brand_messages").select("*").eq("event", resolvedEvent).eq("brand_email", resolvedBrandEmail).order("created_at"),
         supabase.from("events").select("name, dates_label, organizer_email").eq("city", resolvedEvent).maybeSingle(),
+        supabase.from("event_faqs").select("question, answer").eq("event", resolvedEvent).eq("organizer_email", brandOrgEmail).order("id"),
+        supabase.from("profiles").select("name").eq("email", brandOrgEmail).maybeSingle(),
       ]);
 
       if (deadlineRes.data) setDeadlines(deadlineRes.data);
@@ -143,6 +142,11 @@ export default function BrandPortal() {
         if (eventRes.data.name) setEventName(eventRes.data.name);
         if (eventRes.data.dates_label) setEventDates(eventRes.data.dates_label);
       }
+      if (faqRes.data && faqRes.data.length > 0) {
+        setFaqs(faqRes.data.map((f: any) => ({ q: f.question, a: f.answer })));
+      }
+      if (profileRes.data?.name) setOrganizerName(profileRes.data.name);
+      else if (eventRes.data?.organizer_email) setOrganizerName(eventRes.data.organizer_email.split("@")[0]);
 
       const invRes = await supabase.from("brand_shipment_invoices").select("*").eq("brand_email", resolvedBrandEmail).order("created_at", { ascending: false });
       const shipRes = await supabase.from("brand_shipments").select("*").eq("brand_email", resolvedBrandEmail).order("created_at", { ascending: false });
@@ -406,7 +410,7 @@ export default function BrandPortal() {
             </div>
 
             {/* Announcements */}
-            <Announcements event={brand.event || "Atlanta"} brandEmail={brandEmail} />
+            <Announcements event={brand.event || "Atlanta"} brandEmail={brandEmail} organizerEmail={brandOrgEmail} />
 
             {/* Shipment + Tasks side by side */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1.5rem" }}>
@@ -546,7 +550,7 @@ export default function BrandPortal() {
             <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
               <div style={{ fontSize: "1rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>Upload your brand files</div>
               <p style={{ fontSize: "0.85rem", color: "#4a5a52", lineHeight: 1.7, marginBottom: "1.5rem" }}>
-                Please upload the files below so we can best represent your brand at the pop-up. All files are securely stored and only accessible to the AO Curates team.
+                Please upload the files below so we can best represent your brand at the pop-up. All files are securely stored and only accessible to the organizer.
               </p>
               <div style={{ display: "grid", gap: "1rem", marginBottom: "1.5rem" }}>
                 {FILE_CATEGORIES.map(cat => (
@@ -657,7 +661,9 @@ export default function BrandPortal() {
         {activeTab === "faq" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
             <div style={{ fontSize: "1rem", color: "#1B3A2D", marginBottom: "1rem" }}>Frequently asked questions</div>
-            {faqs.map((faq, i) => (
+            {faqs.length === 0 ? (
+              <div style={{ fontSize: "0.85rem", color: "#4a5a52", padding: "1rem 0" }}>No FAQs added yet. Contact your organizer directly with any questions.</div>
+            ) : faqs.map((faq, i) => (
               <div key={i} style={{ borderBottom: i < faqs.length - 1 ? "1px solid #f0f4f1" : "none" }}>
                 <div onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.85rem 0", cursor: "pointer" }}>
                   <div style={{ fontSize: "0.9rem", color: "#1B3A2D", paddingRight: "1rem" }}>{faq.q}</div>
@@ -666,6 +672,7 @@ export default function BrandPortal() {
                 {openFaq === i && <div style={{ fontSize: "0.85rem", color: "#4a5a52", lineHeight: 1.7, paddingBottom: "0.85rem" }}>{faq.a}</div>}
               </div>
             ))}
+            </>
           </div>
         )}
 

@@ -10,7 +10,7 @@ type Announcement = {
   pinned: boolean;
 };
 
-export default function Announcements({ event, brandEmail }: { event: string; brandEmail?: string }) {
+export default function Announcements({ event, brandEmail, organizerEmail }: { event: string; brandEmail?: string; organizerEmail?: string }) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [dismissed, setDismissed] = useState<number[]>([]);
 
@@ -35,6 +35,7 @@ export default function Announcements({ event, brandEmail }: { event: string; br
       .from("announcements")
       .select("*")
       .eq("event", event)
+      .eq("organizer_email", organizerEmail || "")
       .order("pinned", { ascending: false })
       .order("created_at", { ascending: false });
     if (data) setAnnouncements(data);
