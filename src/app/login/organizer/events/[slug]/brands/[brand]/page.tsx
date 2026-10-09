@@ -142,7 +142,7 @@ export default function OrganizerBrandPage() {
     setBrand(brandData);
 
     const [deadlineRes, taskRes, memberRes, noteRes, approvalRes, messagesRes] = await Promise.all([
-      supabase.from("event_deadlines").select("*").eq("event", eventCity).order("id"),
+      supabase.from("event_deadlines").select("*").eq("event", eventCity).eq("organizer_email", orgEmail).order("id"),
       supabase.from("brand_tasks").select("*").eq("brand_email", brandData.email).eq("event", eventCity),
       supabase.from("brand_members").select("*").eq("brand_email", brandData.email).eq("event", eventCity),
       supabase.from("brand_notes").select("*").eq("brand_email", brandData.email).eq("event", eventCity).order("created_at", { ascending: false }),
