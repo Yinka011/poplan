@@ -118,23 +118,36 @@ export default function OrganizerBrandPage() {
   const fetchAll = async () => {
     setLoading(true);
 
+    const { data: { user } } = await supabase.auth.getUser();
+    const orgEmail = user?.email || "";
+    if (orgEmail) setUserEmail(orgEmail);
+
+    // Resolve event city from DB (slug may include a timestamp suffix)
+    const { data: eventRow } = await supabase
+      .from("events")
+      .select("city")
+      .eq("slug", slug)
+      .maybeSingle();
+    const eventCity = eventRow?.city || eventName;
+
     const { data: brandData } = await supabase
       .from("brands")
       .select("*")
-      .eq("event", eventName)
+      .eq("event", eventCity)
+      .eq("organizer_email", orgEmail)
       .ilike("name", brandSlug)
-      .single();
+      .maybeSingle();
 
     if (!brandData) { setLoading(false); return; }
     setBrand(brandData);
 
     const [deadlineRes, taskRes, memberRes, noteRes, approvalRes, messagesRes] = await Promise.all([
-      supabase.from("event_deadlines").select("*").eq("event", eventName).order("id"),
-      supabase.from("brand_tasks").select("*").eq("brand_email", brandData.email).eq("event", eventName),
-      supabase.from("brand_members").select("*").eq("brand_email", brandData.email).eq("event", eventName),
-      supabase.from("brand_notes").select("*").eq("brand_email", brandData.email).eq("event", eventName).order("created_at", { ascending: false }),
-      supabase.from("file_approvals").select("*").eq("brand_email", brandData.email).eq("event", eventName),
-      supabase.from("brand_messages").select("*").eq("brand_email", brandData.email).eq("event", eventName).order("created_at"),
+      supabase.from("event_deadlines").select("*").eq("event", eventCity).order("id"),
+      supabase.from("brand_tasks").select("*").eq("brand_email", brandData.email).eq("event", eventCity),
+      supabase.from("brand_members").select("*").eq("brand_email", brandData.email).eq("event", eventCity),
+      supabase.from("brand_notes").select("*").eq("brand_email", brandData.email).eq("event", eventCity).order("created_at", { ascending: false }),
+      supabase.from("file_approvals").select("*").eq("brand_email", brandData.email).eq("event", eventCity),
+      supabase.from("brand_messages").select("*").eq("brand_email", brandData.email).eq("event", eventCity).order("created_at"),
     ]);
 
     if (deadlineRes.data) setDeadlines(deadlineRes.data);
