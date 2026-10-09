@@ -70,7 +70,7 @@ export default function AnnouncementManager({ event }: { event: string }) {
         if (emails.length > 0) {
           await sendEmail({
             to: emails,
-            subject: `New announcement from AO Curates`,
+            subject: `New announcement`,
             html: emailTemplate({
               title: "New announcement",
               message: newMessage,

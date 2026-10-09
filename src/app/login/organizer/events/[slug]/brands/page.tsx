@@ -21,6 +21,7 @@ export default function BrandsPage() {
   const slug = params.slug as string;
   const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
   const [eventDisplayName, setEventDisplayName] = useState("");
+  const [eventCity, setEventCity] = useState("");
   const [paymentTrackerEnabled, setPaymentTrackerEnabled] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [resendingAll, setResendingAll] = useState(false);
@@ -38,14 +39,17 @@ export default function BrandsPage() {
   useEffect(() => {
     const fetchAll = async () => {
       if (!organizerEmail) return;
-      const { data: eventData } = await supabase.from("events").select("name").eq("slug", slug).maybeSingle();
+      const { data: eventData } = await supabase.from("events").select("name, city").eq("slug", slug).maybeSingle();
+      const resolvedCity = eventData?.city || "";
+      setEventCity(resolvedCity);
       if (eventData?.name) setEventDisplayName(eventData.name);
       const { data: featuresData } = await supabase.from("organizer_features").select("features").eq("organizer_email", organizerEmail).eq("event_slug", slug).maybeSingle();
       if (featuresData?.features) setPaymentTrackerEnabled(featuresData.features.payment_tracker !== false);
+      if (!resolvedCity) return;
       const [brandRes, taskRes, deadlineRes] = await Promise.all([
-        supabase.from("brands").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
-        supabase.from("brand_tasks").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
-        supabase.from("event_deadlines").select("*").eq("event", eventName).eq("organizer_email", organizerEmail).order("id"),
+        supabase.from("brands").select("*").eq("event", resolvedCity).eq("organizer_email", organizerEmail),
+        supabase.from("brand_tasks").select("*").eq("event", resolvedCity).eq("organizer_email", organizerEmail),
+        supabase.from("event_deadlines").select("*").eq("event", resolvedCity).eq("organizer_email", organizerEmail).order("id"),
       ]);
       if (brandRes.data) setBrands(brandRes.data);
       if (taskRes.data) setTasks(taskRes.data);
@@ -61,7 +65,7 @@ export default function BrandsPage() {
     const orgEmail = user?.email || "";
     const { data } = await supabase.from("brands").insert({
       organizer_email: orgEmail,
-      event: eventName,
+      event: eventCity,
       name: newBrand.name.trim(),
       email: newBrand.email.trim(),
       fee_owed: parseFloat(newBrand.fee_owed) || 0,

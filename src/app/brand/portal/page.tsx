@@ -81,9 +81,10 @@ export default function BrandPortal() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({ instagram: "", website: "", bio: "" });
   const [savingProfile, setSavingProfile] = useState(false);
-  const [eventName, setEventName] = useState("Atlanta Pop-Up");
+  const [eventName, setEventName] = useState("");
   const [resolvedEvent, setResolvedEvent] = useState("");
-  const [eventDates, setEventDates] = useState("Sep 11–13, 2026");
+  const [eventDates, setEventDates] = useState("");
+  const [eventStartDate, setEventStartDate] = useState<string | null>(null);
   const [organizerName, setOrganizerName] = useState("");
   const [brandOrgEmail, setBrandOrgEmail] = useState("");
 
@@ -129,7 +130,7 @@ export default function BrandPortal() {
         supabase.from("brand_tasks").select("*").eq("brand_email", resolvedBrandEmail).eq("event", resolvedEvent),
         supabase.from("event_settings").select("venue_address").eq("event", resolvedEvent).eq("organizer_email", brandOrgEmail).maybeSingle(),
         supabase.from("brand_messages").select("*").eq("event", resolvedEvent).eq("brand_email", resolvedBrandEmail).order("created_at"),
-        supabase.from("events").select("name, dates_label, organizer_email").eq("city", resolvedEvent).eq("organizer_email", brandOrgEmail).maybeSingle(),
+        supabase.from("events").select("name, dates_label, start_date, organizer_email").eq("city", resolvedEvent).eq("organizer_email", brandOrgEmail).maybeSingle(),
         supabase.from("event_faqs").select("question, answer").eq("event", resolvedEvent).eq("organizer_email", brandOrgEmail).order("id"),
         supabase.from("profiles").select("name").eq("email", brandOrgEmail).maybeSingle(),
       ]);
@@ -141,6 +142,7 @@ export default function BrandPortal() {
       if (eventRes.data) {
         if (eventRes.data.name) setEventName(eventRes.data.name);
         if (eventRes.data.dates_label) setEventDates(eventRes.data.dates_label);
+        if (eventRes.data.start_date) setEventStartDate(eventRes.data.start_date);
       }
       if (faqRes.data && faqRes.data.length > 0) {
         setFaqs(faqRes.data.map((f: any) => ({ q: f.question, a: f.answer })));
@@ -175,8 +177,7 @@ export default function BrandPortal() {
     fetchAll();
   }, []);
 
-  const eventDate = new Date("2026-09-12");
-  const daysToEvent = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const daysToEvent = eventStartDate ? Math.ceil((new Date(eventStartDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
 
   const addShipmentPackage = async () => {
     if (!newShipment.courier || !brandEmail) return;
@@ -373,7 +374,7 @@ export default function BrandPortal() {
             {/* Welcome card */}
             <div style={{ background: "#fff", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
               <div style={{ fontSize: "0.75rem", letterSpacing: "0.15em", color: "#E8C97A", marginBottom: "4px" }}>{organizerName.toUpperCase()}</div>
-              <div style={{ fontSize: "1rem", color: "#1B3A2D", marginBottom: "2px" }}>{eventName} · {eventDates}</div>
+              <div style={{ fontSize: "1rem", color: "#1B3A2D", marginBottom: "2px" }}>{eventName}{eventDates ? ` · ${eventDates}` : ""}</div>
               {venueAddress && <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginBottom: "1.25rem" }}>{venueAddress}</div>}
               <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", margin: 0, lineHeight: 1.3 }}>
                 Welcome, <span style={{ fontFamily: "Didot, 'Playfair Display', 'Times New Roman', serif", fontStyle: "italic" }}>{brand.name}</span> 🖤
@@ -403,7 +404,7 @@ export default function BrandPortal() {
                   {Number(brand.balance) > 0 && <div style={{ fontSize: "0.68rem", color: "#e8c97a", marginTop: "4px" }}>Payment outstanding</div>}
                 </div>
                 <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem", textAlign: "center" as const }}>
-                  <div style={{ fontSize: "2.5rem", color: "#1B3A2D", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent}</div>
+                  <div style={{ fontSize: "2.5rem", color: "#1B3A2D", lineHeight: 1, fontWeight: "normal" }}>{daysToEvent !== null ? daysToEvent : "—"}</div>
                   <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginTop: "6px", letterSpacing: "0.1em" }}>DAYS TO EVENT</div>
                 </div>
               </div>

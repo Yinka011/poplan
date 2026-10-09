@@ -13,30 +13,37 @@ type UploadedFile = {
   brand: string;
 };
 
-const BRANDS = [
-  { name: "Ara Lagos", email: "b.ademowo@gmail.com" },
-  { name: "Lola Signatures", email: "lolasignatures@gmail.com" },
-  { name: "Yinka MB", email: "yinkabonky@gmail.com" },
-];
+type BrandRecord = { name: string; email: string };
 
 export default function UploadsPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState("All");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [brandList, setBrandList] = useState<BrandRecord[]>([]);
+  const [eventDisplayName, setEventDisplayName] = useState("");
 
   useEffect(() => {
-    fetchAllFiles();
+    fetchBrandsAndFiles();
   }, []);
 
-  const fetchAllFiles = async () => {
+  const fetchBrandsAndFiles = async () => {
     setLoading(true);
-    const allFiles: UploadedFile[] = [];
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
 
-    for (const brand of BRANDS) {
+    const { data: eventData } = await supabase.from("events").select("city, name").eq("slug", slug).maybeSingle();
+    const eventCity = eventData?.city || "";
+    if (eventData?.name) setEventDisplayName(eventData.name);
+
+    const { data: brandsData } = await supabase.from("brands").select("name, email").eq("event", eventCity).eq("organizer_email", user.email);
+    const brands: BrandRecord[] = brandsData || [];
+    setBrandList(brands);
+
+    const allFiles: UploadedFile[] = [];
+    for (const brand of brands) {
       const { data } = await supabase.storage
         .from("brand-uploads")
         .list(`${brand.email}/`, { sortBy: { column: "created_at", order: "desc" } });
@@ -81,7 +88,7 @@ export default function UploadsPage() {
     return "📎";
   };
 
-  const brands = ["All", ...BRANDS.map(b => b.name)];
+  const brandNames = ["All", ...brandList.map(b => b.name)];
   const categories = ["All", "Brand logo", "Product photos", "Digital brand book", "Inventory sheet", "Marketing assets", "Other"];
 
   const filtered = files.filter(f => {
@@ -95,7 +102,7 @@ export default function UploadsPage() {
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to {eventName}</Link>
+          <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.85rem", color: "#4a5a52", textDecoration: "none" }}>← Back to {eventDisplayName}</Link>
           <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", marginTop: "0.5rem" }}>Brand Uploads</h1>
           <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>All files uploaded by your brands</p>
         </div>
@@ -111,7 +118,7 @@ export default function UploadsPage() {
           </div>
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", border: "1px solid #e4ebe6" }}>
             <div style={{ fontSize: "0.7rem", color: "#4a5a52", marginBottom: "4px" }}>BRANDS PENDING</div>
-            <div style={{ fontSize: "1.8rem", color: "#c0392b" }}>{BRANDS.length - new Set(files.map(f => f.brand)).size}</div>
+            <div style={{ fontSize: "1.8rem", color: "#c0392b" }}>{brandList.length - new Set(files.map(f => f.brand)).size}</div>
           </div>
         </div>
 
@@ -119,7 +126,7 @@ export default function UploadsPage() {
           <div>
             <label style={{ fontSize: "0.75rem", color: "#4a5a52", display: "block", marginBottom: "4px" }}>BRAND</label>
             <select value={selectedBrand} onChange={e => setSelectedBrand(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", color: "#1B3A2D", background: "#fff" }}>
-              {brands.map(b => <option key={b}>{b}</option>)}
+              {brandNames.map(b => <option key={b}>{b}</option>)}
             </select>
           </div>
           <div>
@@ -129,7 +136,7 @@ export default function UploadsPage() {
             </select>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "flex-end" }}>
-            <button onClick={fetchAllFiles} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>↻ Refresh</button>
+            <button onClick={fetchBrandsAndFiles} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>↻ Refresh</button>
           </div>
         </div>
 

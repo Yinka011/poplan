@@ -31,10 +31,10 @@ export function EventDashboard({ event }: EventDashboardProps) {
   const [venueAddress, setVenueAddress] = useState("");
   const [editingAddress, setEditingAddress] = useState(false);
   const [newAddress, setNewAddress] = useState("");
+  const [datesLabel, setDatesLabel] = useState("");
+  const [daysToEvent, setDaysToEvent] = useState<number | null>(null);
 
-  const eventDate = new Date("2026-09-12");
   const today = new Date();
-  const daysToEvent = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => { // keep for other uses
@@ -70,6 +70,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
       supabase.from("event_settings").select("spots_to_fill, venue_address").eq("event", event.city).eq("organizer_email", orgEmail).maybeSingle(),
     ]);
 
+    const eventRes = await supabase.from("events").select("dates_label, start_date").eq("slug", event.slug).maybeSingle();
     if (brandsRes.data) setBrandsCount(brandsRes.data.length);
     if (checklistRes.data) setOutstandingTasks(checklistRes.data.filter(i => !i.completed).length);
     if (settingsRes.data) {
@@ -77,6 +78,14 @@ export function EventDashboard({ event }: EventDashboardProps) {
       setNewSpots(String(settingsRes.data.spots_to_fill));
       setVenueAddress(settingsRes.data.venue_address || "");
       setNewAddress(settingsRes.data.venue_address || "");
+    }
+    if (eventRes.data) {
+      if (eventRes.data.dates_label) setDatesLabel(eventRes.data.dates_label);
+      if (eventRes.data.start_date) {
+        const startDate = new Date(eventRes.data.start_date);
+        const days = Math.ceil((startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        setDaysToEvent(days);
+      }
     }
   };
 
@@ -108,7 +117,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-medium text-brown-800 sm:text-4xl">
           {event.name}
         </h1>
-        <p className="mt-1 text-sm text-brown-600/70">Sep 11–13, 2026</p>
+        {datesLabel && <p className="mt-1 text-sm text-brown-600/70">{datesLabel}</p>}
       </div>
 
       {/* Dark brown stats box */}
@@ -153,9 +162,9 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
           {/* Countdown */}
           <div style={{ background: "#fff", borderRadius: "10px", padding: "1rem", textAlign: "center" }}>
-            <div style={{ fontSize: "2.5rem", color: "#1B3A2D", fontFamily: "Georgia, serif", fontWeight: "normal", lineHeight: 1 }}>{daysToEvent}</div>
+            <div style={{ fontSize: "2.5rem", color: "#1B3A2D", fontFamily: "Georgia, serif", fontWeight: "normal", lineHeight: 1 }}>{daysToEvent !== null ? daysToEvent : "—"}</div>
             <div style={{ fontSize: "0.7rem", color: "#4a5a52", marginTop: "6px", letterSpacing: "0.05em" }}>DAYS TO EVENT</div>
-            <div style={{ fontSize: "0.7rem", color: "#E8C97A", marginTop: "2px" }}>Sep 11–13, 2026</div>
+            {datesLabel && <div style={{ fontSize: "0.7rem", color: "#E8C97A", marginTop: "2px" }}>{datesLabel}</div>}
           </div>
 
         </div>

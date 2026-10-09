@@ -17,13 +17,14 @@ type Message = {
 export default function MessagesPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState<Record<string, string>>({});
   const [sending, setSending] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [organizerEmail, setOrganizerEmail] = useState("");
+  const [eventCity, setEventCity] = useState("");
+  const [eventDisplayName, setEventDisplayName] = useState("");
 
   useEffect(() => { fetchMessages(); }, [slug]);
 
@@ -32,9 +33,14 @@ export default function MessagesPage() {
     const email = user?.email || "";
     if (!email) return;
     setOrganizerEmail(email);
+    const { data: eventData } = await supabase.from("events").select("city, name").eq("slug", slug).maybeSingle();
+    const city = eventData?.city || "";
+    setEventCity(city);
+    if (eventData?.name) setEventDisplayName(eventData.name);
+    if (!city) { setLoading(false); return; }
     const { data } = await supabase.from("brand_messages")
       .select("*")
-      .eq("event", eventName)
+      .eq("event", city)
       .eq("organizer_email", email)
       .order("created_at", { ascending: true });
     if (data) {
@@ -42,7 +48,7 @@ export default function MessagesPage() {
       if (!selectedBrand && data.length > 0) setSelectedBrand(data[0].brand_email);
     }
     await supabase.from("brand_messages").update({ read_by_organizer: true })
-      .eq("event", eventName)
+      .eq("event", city)
       .eq("organizer_email", email)
       .eq("read_by_organizer", false);
     setLoading(false);
@@ -53,7 +59,7 @@ export default function MessagesPage() {
     if (!msg) return;
     setSending(brandEmail);
     await supabase.from("brand_messages").insert({
-      event: eventName,
+      event: eventCity,
       organizer_email: organizerEmail,
       brand_email: brandEmail,
       sender_name: "Organizer",
@@ -85,7 +91,7 @@ export default function MessagesPage() {
     <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif" }}>
       <div style={{ background: "#1B3A2D", padding: "1rem 2rem", display: "flex", alignItems: "center", gap: "1rem" }}>
         <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.8rem", color: "#E8C97A", textDecoration: "none" }}>← Back</Link>
-        <div style={{ fontSize: "1rem", color: "#fff" }}>Messages — {eventName}</div>
+        <div style={{ fontSize: "1rem", color: "#fff" }}>Messages — {eventDisplayName}</div>
         <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "#ffffff66" }}>{brands.length} conversations</div>
       </div>
 

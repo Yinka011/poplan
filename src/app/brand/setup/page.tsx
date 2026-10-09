@@ -60,7 +60,7 @@ function BrandSetupInner() {
               <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>🔗</div>
               <h2 style={{ fontSize: "1.2rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "0.75rem" }}>Your invite link has expired</h2>
               <p style={{ fontSize: "0.85rem", color: "#4a5a52", lineHeight: 1.7, marginBottom: "1.5rem" }}>
-                Invite links expire after 24 hours for security. Please contact AO Curates on WhatsApp to request a new invite link.
+                Invite links expire after 24 hours for security. Please contact the event organiser to request a new invite link.
               </p>
               <div style={{ background: "#f8faf8", borderRadius: "10px", padding: "1rem", border: "1px solid #f0f4f1", fontSize: "0.85rem", color: "#4a5a52" }}>
                 Already have a password? <Link href="/" style={{ color: "#E8C97A", textDecoration: "none" }}>Sign in here →</Link>

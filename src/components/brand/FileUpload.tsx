@@ -174,7 +174,7 @@ export default function FileUpload({ brandName, brandEmail, event }: { brandName
   return (
     <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
       <div style={{ fontSize: "1rem", color: "#1B3A2D", fontFamily: "Georgia, serif", marginBottom: "0.5rem" }}>Upload documents</div>
-      <p style={{ fontSize: "0.85rem", color: "#4a5a52", marginBottom: "1.25rem" }}>Upload your brand assets directly here. AO Curates will be notified and can access everything from their dashboard.</p>
+      <p style={{ fontSize: "0.85rem", color: "#4a5a52", marginBottom: "1.25rem" }}>Upload your brand assets directly here. The organiser will be notified and can access everything from their dashboard.</p>
 
       <div style={{ background: "#f8faf8", borderRadius: "10px", padding: "1rem", border: "1px solid #f0f4f1", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>

@@ -10,27 +10,27 @@ const steps = [
   {
     number: "02",
     title: "Shipment status",
-    description: "Once you have sent your products to the venue, click Mark as Shipped so AO Curates knows they are on the way. Products must arrive between August 3rd and August 28th.",
+    description: "Once you have sent your products to the venue, click Mark as Shipped so the organiser knows they are on the way. Check your portal for the exact shipment deadline.",
   },
   {
     number: "03",
     title: "Announcements",
-    description: "Important updates from AO Curates appear here. You can dismiss each one once you have read it. Pinned announcements will always stay visible.",
+    description: "Important updates from the organiser appear here. You can dismiss each one once you have read it. Pinned announcements will always stay visible.",
   },
   {
     number: "04",
     title: "Your to-do list",
-    description: "Work through each task and check them off as you complete them. AO Curates can see your progress in real time. Some tasks check themselves off automatically when you upload files.",
+    description: "Work through each task and check them off as you complete them. The organiser can see your progress in real time. Some tasks check themselves off automatically when you upload files.",
   },
   {
     number: "05",
     title: "Upload your documents",
-    description: "Select a category first — brand logo, product photos, inventory sheet etc — then drag and drop your file or click to browse. AO Curates will review each file and mark it as approved or request a revision.",
+    description: "Select a category first — brand logo, product photos, inventory sheet etc — then drag and drop your file or click to browse. The organiser will review each file and mark it as approved or request a revision.",
   },
   {
     number: "06",
     title: "FAQs",
-    description: "At the bottom of your portal you will find answers to the most common questions about Atlanta. If you have a question that is not covered, reach out to AO Curates directly on WhatsApp.",
+    description: "At the bottom of your portal you will find answers to the most common questions. If you have a question that is not covered, reach out to the organiser directly.",
   },
 ];
 

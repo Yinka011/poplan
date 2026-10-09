@@ -14,7 +14,6 @@ type StaffShift = { id: number; staff_id: number; shift_date: string; start_time
 const DECOR_CATEGORIES = ["Theme", "Furniture", "Florals", "Lighting", "Signage", "Props"];
 const STAFF_ROLES = ["Cashier", "Stylist", "Runner", "Check-in", "Security", "Inventory", "Brand liaison", "Photographer"];
 const STATUSES = ["Pending", "In Progress", "Confirmed", "Cancelled"];
-const EVENT_DAYS = ["Fri Sep 11", "Sat Sep 12", "Sun Sep 13"];
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   Confirmed: { bg: "#4a7c5922", color: "#4a7c59" },
@@ -60,7 +59,9 @@ export default function PlanningHub() {
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>({});
   const [addingShift, setAddingShift] = useState<number | null>(null);
-  const [newShift, setNewShift] = useState({ shift_date: "Fri Sep 11", start_time: "", end_time: "" });
+  const [newShift, setNewShift] = useState({ shift_date: "", start_time: "", end_time: "" });
+  const [eventDays, setEventDays] = useState<string[]>([]);
+  const [eventCity, setEventCity] = useState("");
   const [newDecor, setNewDecor] = useState({ category: "Theme", item: "", decision: "", vendor: "", cost: "", quantity: "", status: "Pending", notes: "" });
   const [newRefresh, setNewRefresh] = useState({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
   const [newStaff, setNewStaff] = useState({ name: "", role: "Cashier", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
@@ -72,13 +73,21 @@ export default function PlanningHub() {
 
   const fetchAll = async () => {
     if (!organizerEmail) return;
+    const { data: eventData } = await supabase.from("events").select("city, event_days").eq("slug", slug).maybeSingle();
+    const resolvedCity = eventData?.city || "";
+    setEventCity(resolvedCity);
+    if (eventData?.event_days && Array.isArray(eventData.event_days) && eventData.event_days.length > 0) {
+      setEventDays(eventData.event_days);
+      setNewShift(prev => ({ ...prev, shift_date: eventData.event_days[0] }));
+    }
+    if (!resolvedCity) return;
     const [d, r, s, sh, hours, es] = await Promise.all([
-      supabase.from("planning_decor").select("*").eq("event", eventName).eq("organizer_email", organizerEmail).order("category"),
-      supabase.from("planning_refreshments").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
-      supabase.from("planning_staff").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
-      supabase.from("planning_staff_shifts").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
-      supabase.from("staff_hours").select("*").eq("event", eventName).eq("organizer_email", organizerEmail).order("work_date", { ascending: false }),
-      supabase.from("event_staff").select("*").eq("event", eventName).eq("organizer_email", organizerEmail),
+      supabase.from("planning_decor").select("*").eq("event", resolvedCity).eq("organizer_email", organizerEmail).order("category"),
+      supabase.from("planning_refreshments").select("*").eq("event", resolvedCity).eq("organizer_email", organizerEmail),
+      supabase.from("planning_staff").select("*").eq("event", resolvedCity).eq("organizer_email", organizerEmail),
+      supabase.from("planning_staff_shifts").select("*").eq("event", resolvedCity).eq("organizer_email", organizerEmail),
+      supabase.from("staff_hours").select("*").eq("event", resolvedCity).eq("organizer_email", organizerEmail).order("work_date", { ascending: false }),
+      supabase.from("event_staff").select("*").eq("event", resolvedCity).eq("organizer_email", organizerEmail),
     ]);
     if (d.data) setDecor(d.data);
     if (r.data) setRefresh(r.data);
@@ -99,7 +108,7 @@ export default function PlanningHub() {
     const unitCost = parseFloat(newDecor.cost) || 0;
     const totalCost = qty > 0 ? qty * unitCost : unitCost;
     const { data } = await supabase.from("planning_decor").insert({ organizer_email: organizerEmail,
-      ...newDecor, cost: totalCost, quantity: qty, event: eventName
+      ...newDecor, cost: totalCost, quantity: qty, event: eventCity
     }).select().single();
     if (data) setDecor(prev => [...prev, data]);
     setNewDecor({ category: "Theme", item: "", decision: "", vendor: "", cost: "", quantity: "", status: "Pending", notes: "" });
@@ -118,7 +127,7 @@ export default function PlanningHub() {
       quantity_num: qty,
       cost: totalCost,
       notes: newRefresh.notes,
-      event: eventName
+      event: eventCity
     }).select().single();
     if (data) setRefresh(prev => [...prev, data]);
     setNewRefresh({ item: "", vendor: "", quantity: "", quantity_num: "", cost: "", notes: "" });
@@ -133,13 +142,12 @@ export default function PlanningHub() {
   const inviteStaff = async (staffEmail: string, staffRole: string, staffName: string) => {
     if (!staffEmail) return;
     const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
-    const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
     const { data: { user } } = await supabase.auth.getUser();
     // Delete existing record if any, then insert fresh
-    await supabase.from("event_staff").delete().eq("staff_email", staffEmail).eq("event", eventName);
+    await supabase.from("event_staff").delete().eq("staff_email", staffEmail).eq("event", eventCity);
     const { error } = await supabase.from("event_staff").insert({
       organizer_email: organizerEmail,
-      event: eventName,
+      event: eventCity,
       staff_email: staffEmail,
       name: staffName || "",
       role: staffRole,
@@ -153,10 +161,10 @@ export default function PlanningHub() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         to: staffEmail,
-        subject: `You have been invited to join the ${eventName} event staff`,
+        subject: `You have been invited to join the ${eventCity} event staff`,
         html: `<div style="font-family:Georgia,serif;max-width:500px;margin:0 auto;padding:2rem">
           <h2 style="color:#1B3A2D">You are on the team!</h2>
-          <p style="color:#4a5a52">You have been invited as <strong>${staffRole}</strong> for the <strong>${eventName}</strong> pop-up event.</p>
+          <p style="color:#4a5a52">You have been invited as <strong>${staffRole}</strong> for the <strong>${eventCity}</strong> pop-up event.</p>
           <p style="color:#4a5a52">Click below to set up your staff profile and start logging your hours.</p>
           <a href="https://nalpop.com/staff?token=${token}" style="display:inline-block;padding:12px 24px;background:#1B3A2D;color:#fff;text-decoration:none;border-radius:8px;margin:1rem 0">Set up my profile</a>
           <p style="color:#4a5a52;font-size:0.85rem">If the button does not work, copy this link: https://nalpop.com/staff?token=${token}</p>
@@ -176,7 +184,7 @@ export default function PlanningHub() {
       email: newStaff.email,
       instagram: newStaff.instagram,
       notes: newStaff.notes,
-      event: eventName
+      event: eventCity
     }).select().single();
     if (data) setStaff(prev => [...prev, { ...data, shifts: [] }]);
     setNewStaff({ name: "", role: "Cashier", pay_rate: "", phone: "", email: "", instagram: "", notes: "" });
@@ -188,7 +196,7 @@ export default function PlanningHub() {
     const hours = calcHours(newShift.start_time, newShift.end_time);
     const { data } = await supabase.from("planning_staff_shifts").insert({ organizer_email: organizerEmail,
       staff_id: staffId,
-      event: eventName,
+      event: eventCity,
       shift_date: newShift.shift_date,
       start_time: newShift.start_time,
       end_time: newShift.end_time,
@@ -197,7 +205,7 @@ export default function PlanningHub() {
     if (data) {
       setStaff(prev => prev.map(m => m.id === staffId ? { ...m, shifts: [...(m.shifts || []), data] } : m));
     }
-    setNewShift({ shift_date: "Fri Sep 11", start_time: "", end_time: "" });
+    setNewShift({ shift_date: eventDays[0] || "", start_time: "", end_time: "" });
     setAddingShift(null);
   };
 
@@ -545,9 +553,13 @@ export default function PlanningHub() {
 
                           {addingShift === member.id ? (
                             <div style={{ marginTop: "8px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
-                              <select value={newShift.shift_date} onChange={e => setNewShift({...newShift, shift_date: e.target.value})} style={editInp({ width: "100%" })}>
-                                {EVENT_DAYS.map(d => <option key={d}>{d}</option>)}
-                              </select>
+                              {eventDays.length > 0 ? (
+                                <select value={newShift.shift_date} onChange={e => setNewShift({...newShift, shift_date: e.target.value})} style={editInp({ width: "100%" })}>
+                                  {eventDays.map(d => <option key={d}>{d}</option>)}
+                                </select>
+                              ) : (
+                                <input placeholder="e.g. Sat Oct 11" value={newShift.shift_date} onChange={e => setNewShift({...newShift, shift_date: e.target.value})} style={editInp({ width: "100%" })} />
+                              )}
                               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                                 <input placeholder="Start e.g. 10am" value={newShift.start_time} onChange={e => setNewShift({...newShift, start_time: e.target.value})} style={editInp()} />
                                 <input placeholder="End e.g. 6pm" value={newShift.end_time} onChange={e => setNewShift({...newShift, end_time: e.target.value})} style={editInp()} />
@@ -561,7 +573,7 @@ export default function PlanningHub() {
                               </div>
                             </div>
                           ) : (
-                            <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: "Fri Sep 11", start_time: "", end_time: "" }); }} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>+ Add shift</button>
+                            <button onClick={() => { setAddingShift(member.id); setNewShift({ shift_date: eventDays[0] || "", start_time: "", end_time: "" }); }} style={{ marginTop: "6px", fontSize: "11px", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>+ Add shift</button>
                           )}
                         </div>
 

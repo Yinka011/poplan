@@ -5,22 +5,22 @@ const steps = [
   {
     number: "01",
     title: "Complete your to-do list",
-    description: "Scroll down to your to-do list and check off each task as you complete it. This helps AO Curates track your progress and know you are ready for Atlanta.",
+    description: "Scroll down to your to-do list and check off each task as you complete it. This helps the organiser track your progress and know you are ready for the event.",
   },
   {
     number: "02",
     title: "Upload your documents",
-    description: "Upload your brand logo, product photos, inventory sheet and any other required files. You will see the status of each file once AO Curates reviews them.",
+    description: "Upload your brand logo, product photos, inventory sheet and any other required files. You will see the status of each file once the organiser reviews them.",
   },
   {
     number: "03",
     title: "Track your payment",
-    description: "Your participation fee, amount paid and outstanding balance are shown at the top of your portal. Contact AO Curates directly if you have any payment questions.",
+    description: "Your participation fee, amount paid and outstanding balance are shown at the top of your portal. Contact the organiser directly if you have any payment questions.",
   },
   {
     number: "04",
     title: "Ship your products",
-    description: "Once you have shipped your products to the venue, click the Mark as Shipped button on your portal. Products must arrive between August 3rd and August 28th, 2026.",
+    description: "Once you have shipped your products to the venue, click the Mark as Shipped button on your portal. Check your portal for the exact deadline to get products to the venue.",
   },
 ];
 

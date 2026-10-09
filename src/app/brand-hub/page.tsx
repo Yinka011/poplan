@@ -103,7 +103,7 @@ export default function BrandHub() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
                         <div>
                           <div style={{ fontSize: "1rem", color: "#1B3A2D" }}>{brand.event} Pop-Up</div>
-                          <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginTop: "2px" }}>AO Curates</div>
+                          <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginTop: "2px" }}>Nalpop</div>
                         </div>
                         <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: statusStyle.bg, color: statusStyle.color }}>{brand.status}</span>
                       </div>

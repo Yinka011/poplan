@@ -35,7 +35,7 @@ export default function AttendeesPage() {
 
   const fetchShoppers = async () => {
     if (!organizerEmail) return;
-    const { data } = await supabase.from("shopper_registrations").select("*").eq("event_slug", slug).order("created_at", { ascending: false });
+    const { data } = await supabase.from("shopper_registrations").select("*").eq("event_slug", slug).eq("organizer_email", organizerEmail).order("created_at", { ascending: false });
     if (data) setShoppers(data);
     setLoading(false);
   };
