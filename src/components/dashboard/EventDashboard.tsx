@@ -81,13 +81,13 @@ export function EventDashboard({ event }: EventDashboardProps) {
   };
 
   const saveSpots = async () => {
-    await supabase.from("event_settings").update({ spots_to_fill: parseInt(newSpots) }).eq("event", event.city).eq("organizer_email", organizerEmail);
+    await supabase.from("event_settings").upsert({ event: event.city, organizer_email: organizerEmail, spots_to_fill: parseInt(newSpots) }, { onConflict: "event,organizer_email" });
     setSpotsToFill(parseInt(newSpots));
     setEditingSpots(false);
   };
 
   const saveAddress = async () => {
-    await supabase.from("event_settings").update({ venue_address: newAddress }).eq("event", event.city).eq("organizer_email", organizerEmail);
+    await supabase.from("event_settings").upsert({ event: event.city, organizer_email: organizerEmail, venue_address: newAddress }, { onConflict: "event,organizer_email" });
     setVenueAddress(newAddress);
     setEditingAddress(false);
   };
