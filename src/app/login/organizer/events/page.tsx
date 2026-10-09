@@ -133,7 +133,17 @@ export default function EventsPage() {
       organizer_email: userEmail,
       mode: "multi_brand",
     }).select().single();
-    if (data) setMyEvents(prev => [...prev, { ...data, brandsCount: 0, feesCollected: 0, outstandingBalance: 0 }]);
+    if (data) {
+      setMyEvents(prev => [...prev, { ...data, brandsCount: 0, feesCollected: 0, outstandingBalance: 0 }]);
+      // Auto-create event_settings row so brand portal has a venue address to fill in
+      await supabase.from("event_settings").insert({
+        event: newEvent.city,
+        organizer_email: userEmail,
+        spots_to_fill: 0,
+        venue_address: "",
+        budget: 0,
+      }).select().maybeSingle();
+    }
     setNewEvent({ name: "", city: "", dates_label: "", status: "Planning", start_date: "", end_date: "" });
     setAdding(false);
   };
