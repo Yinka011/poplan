@@ -672,7 +672,6 @@ export default function BrandPortal() {
                 {openFaq === i && <div style={{ fontSize: "0.85rem", color: "#4a5a52", lineHeight: 1.7, paddingBottom: "0.85rem" }}>{faq.a}</div>}
               </div>
             ))}
-            </>
           </div>
         )}
 
