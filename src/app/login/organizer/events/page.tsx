@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import GettingStarted from "@/components/dashboard/GettingStarted";
 
 type Event = {
   id: number;
@@ -305,6 +306,9 @@ export default function EventsPage() {
             </div>
           </div>
         )}
+
+        {/* Getting Started checklist — auto-hides once dismissed */}
+        <GettingStarted myEventsCount={myEvents.length} onDismiss={() => {}} />
 
         {/* My Events */}
         <div style={{ marginBottom: "2.5rem" }}>
