@@ -59,18 +59,23 @@ export default function TasksPage() {
   }, []);
 
   const fetchDeadlines = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const orgEmail = user?.email || "";
+    if (!orgEmail) return;
     const { data } = await supabase
       .from("event_deadlines")
       .select("*")
       .eq("event", city)
-      .eq("organizer_email", organizerEmail)
+      .eq("organizer_email", orgEmail)
       .order("id");
     if (data) setDeadlines(data);
   };
 
   const addDeadline = async () => {
     if (!newItem.task.trim()) return;
-    const { data } = await supabase.from("event_deadlines").insert({ organizer_email: organizerEmail,
+    const { data: { user } } = await supabase.auth.getUser();
+    const orgEmail = user?.email || "";
+    const { data } = await supabase.from("event_deadlines").insert({ organizer_email: orgEmail,
       event: city,
       task: newItem.task,
       due_date: newItem.due_date,
