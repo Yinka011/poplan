@@ -7,6 +7,7 @@ import Checklist from "@/components/dashboard/Checklist";
 import BrandActivityOverview from "@/components/dashboard/BrandActivityOverview";
 import MarketingDeadlines from "@/components/dashboard/MarketingDeadlines";
 import AnnouncementManager from "@/components/dashboard/AnnouncementManager";
+import FeatureTour from "@/components/dashboard/FeatureTour";
 import { type EventSummary } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 
@@ -103,6 +104,8 @@ export function EventDashboard({ event }: EventDashboardProps) {
 
   return (
     <div className="space-y-8">
+
+      <FeatureTour slug={event.slug} />
 
       {/* Header */}
       <div>

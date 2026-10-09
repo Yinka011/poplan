@@ -16,14 +16,20 @@ const INVITE_HTML = (inviteUrl: string) => `
 
     <!-- Body -->
     <div style="padding:2rem 2.5rem">
-      <h2 style="color:#1B3A2D;font-weight:normal;font-size:1.4rem;margin:0 0 0.5rem">You have been invited to Nalpop</h2>
-      <p style="color:#4a5a52;font-size:0.9rem;line-height:1.8;margin:0 0 1.5rem">
-        Nalpop is the platform built for pop-up organisers. It gives you and your brands one place to manage everything — from payments and inventory to messaging and payouts.
+      <h2 style="color:#1B3A2D;font-weight:normal;font-size:1.4rem;margin:0 0 0.5rem">Welcome to Nalpop</h2>
+      <p style="color:#4a5a52;font-size:0.9rem;line-height:1.8;margin:0 0 0.75rem">
+        You've just been invited to Nalpop — the platform built for pop-up organisers. Check your inbox for a separate email with a link to set your password and get in.
       </p>
+      <div style="background:#f0f7f2;border-left:3px solid #1B3A2D;padding:10px 14px;border-radius:4px;font-size:0.82rem;color:#1B3A2D;margin-bottom:1.5rem;line-height:1.6">
+        Look out for an email from <strong>noreply@mail.app.supabase.io</strong> — that's the one with your invite link to set your password.
+      </div>
 
-      <a href="${inviteUrl}" style="display:inline-block;padding:13px 28px;background:#1B3A2D;color:#fff;text-decoration:none;border-radius:10px;font-size:0.95rem;margin-bottom:2rem">
-        Accept your invite →
-      </a>
+      <div style="margin-bottom:1.5rem">
+        <div style="font-size:0.75rem;color:#4a5a52;letter-spacing:0.08em;margin-bottom:8px">BEFORE YOU DIVE IN</div>
+        <a href="https://nalpop.com/tour" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:#f8faf8;border:1px solid #e4ebe6;border-radius:8px;font-size:0.85rem;color:#1B3A2D;text-decoration:none">
+          <span style="font-size:1rem">✦</span> See what Nalpop can do →
+        </a>
+      </div>
 
       <div style="border-top:1px solid #e4ebe6;padding-top:1.5rem;margin-top:0.5rem">
         <div style="font-size:0.7rem;color:#4a5a52;letter-spacing:0.1em;margin-bottom:1rem">WHAT TO DO ONCE YOU'RE IN</div>
@@ -54,7 +60,7 @@ const INVITE_HTML = (inviteUrl: string) => `
 
     <!-- Footer -->
     <div style="background:#f8faf8;padding:1.25rem 2.5rem;border-top:1px solid #e4ebe6">
-      <div style="font-size:0.75rem;color:#4a5a52">Questions? Reply to this email or message us at <a href="mailto:hello@nalpop.com" style="color:#1B3A2D">hello@nalpop.com</a></div>
+      <div style="font-size:0.75rem;color:#4a5a52">Questions? Reply to this email and we'll get back to you.</div>
     </div>
 
   </div>
@@ -73,24 +79,27 @@ export async function POST(request: Request) {
 
   const redirectTo = "https://nalpop.com/onboarding";
 
+  // Step 1: Supabase sends the magic link / set-password email
   const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
     redirectTo,
     data: { invited_as: "organizer" },
   });
 
   if (error) {
-    // Fallback: send manual invite email
-    await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        to: email,
-        subject: "You have been invited to Nalpop",
-        html: INVITE_HTML(redirectTo),
-      }),
-    }).catch(() => {});
-    return NextResponse.json({ success: true, fallback: true });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Step 2: Send our branded welcome email from hellonalpop@gmail.com
+  await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: email,
+      from: "Nalpop <hellonalpop@gmail.com>",
+      subject: "Welcome to Nalpop — here's what to expect",
+      html: INVITE_HTML(redirectTo),
+    }),
+  }).catch(() => {});
 
   return NextResponse.json({ success: true });
 }
