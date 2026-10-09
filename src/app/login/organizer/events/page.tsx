@@ -143,6 +143,15 @@ export default function EventsPage() {
         venue_address: "",
         budget: 0,
       }).select().maybeSingle();
+      // Apply organizer's default features (chosen during onboarding) to this event
+      const { data: profile } = await supabase.from("profiles").select("default_features").eq("email", userEmail).maybeSingle();
+      if (profile?.default_features) {
+        const featPayload: any = { organizer_email: userEmail, event_slug: slug };
+        for (const [k, v] of Object.entries(profile.default_features as Record<string, unknown>)) {
+          featPayload[k] = v;
+        }
+        await supabase.from("organizer_features").upsert(featPayload, { onConflict: "organizer_email,event_slug" });
+      }
     }
     setNewEvent({ name: "", city: "", dates_label: "", status: "Planning", start_date: "", end_date: "" });
     setAdding(false);
@@ -301,8 +310,30 @@ export default function EventsPage() {
         <div style={{ marginBottom: "2.5rem" }}>
           <div style={{ fontSize: "0.75rem", color: "#4a5a52", letterSpacing: "0.1em", marginBottom: "1rem" }}>MY EVENTS</div>
           {myEvents.length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: "12px", padding: "2rem", textAlign: "center", border: "1px solid #e4ebe6" }}>
-              <p style={{ color: "#4a5a52", fontSize: "0.85rem" }}>No events yet. Click + My event to add one.</p>
+            <div style={{ background: "#1B3A2D", borderRadius: "16px", padding: "2rem", border: "none", position: "relative" as const, overflow: "hidden" }}>
+              <div style={{ fontSize: "0.7rem", color: "#E8C97A", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>GETTING STARTED</div>
+              <h2 style={{ fontSize: "1.4rem", color: "#fff", fontWeight: "normal", marginBottom: "0.5rem", margin: 0 }}>
+                Create your first event
+              </h2>
+              <p style={{ fontSize: "0.85rem", color: "#ffffff88", margin: "0.5rem 0 1.75rem", lineHeight: 1.7 }}>
+                Everything starts with an event. Once you create one, you can add brands, set up their portal, track payments and plan every detail.
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "2rem" }}>
+                {[
+                  { step: "1", title: "Create an event", desc: "Add your event name, city and dates to get your dashboard." },
+                  { step: "2", title: "Add your brands", desc: "Invite brands and send them a link to their portal." },
+                  { step: "3", title: "Customise settings", desc: "Enable only the features you need and add your FAQs." },
+                ].map(s => (
+                  <div key={s.step} style={{ background: "#ffffff11", borderRadius: "12px", padding: "1.25rem", border: "1px solid #ffffff22" }}>
+                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#E8C97A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", color: "#1B3A2D", fontWeight: "bold", marginBottom: "0.75rem" }}>{s.step}</div>
+                    <div style={{ fontSize: "0.88rem", color: "#fff", marginBottom: "4px" }}>{s.title}</div>
+                    <div style={{ fontSize: "0.75rem", color: "#ffffff66", lineHeight: 1.5 }}>{s.desc}</div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setAdding(true)} style={{ padding: "12px 28px", background: "#E8C97A", color: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "0.9rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+                + Create your first event
+              </button>
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
