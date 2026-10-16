@@ -20,22 +20,39 @@ export function OrganizerProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email) {
-        setOrganizerEmail(user.email);
-        const { data: profile } = await supabase.from("profiles").select("name").eq("email", user.email).maybeSingle();
-        if (profile?.name) setOrganizerName(profile.name);
-      }
-      setLoading(false);
-    };
-    fetchUser();
+    let isMounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setOrganizerEmail(session?.user?.email || "");
+    const fetchProfile = async (email: string) => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("email", email)
+        .maybeSingle();
+      if (isMounted && profile?.name) setOrganizerName(profile.name);
+    };
+
+    // getSession() reads from localStorage — more reliable than getUser() in App Router
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      const email = session?.user?.email || "";
+      setOrganizerEmail(email);
+      if (email) fetchProfile(email);
+      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // onAuthStateChange keeps it live
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+      const email = session?.user?.email || "";
+      setOrganizerEmail(email);
+      if (email) fetchProfile(email);
+      setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
