@@ -152,6 +152,26 @@ export default function SalesPage() {
     setPayouts(prev => prev.map(p => p.brand_email === brandEmail ? { ...p, commission_rate: rate, commission_amount: Math.round(commission * 100) / 100, payout_amount: Math.round(payoutAmount * 100) / 100 } : p));
   };
 
+  const [adjustments, setAdjustments] = useState<Record<string, string>>({});
+
+  const applyAdjustment = async (brandEmail: string) => {
+    const payout = payouts.find(p => p.brand_email === brandEmail);
+    if (!payout) return;
+    const extra = parseFloat(adjustments[brandEmail] || "0") || 0;
+    if (extra === 0) return;
+    const newRevenue = Math.round((Number(payout.total_revenue) + extra) * 100) / 100;
+    const processingFee = newRevenue * 0.0271;
+    const commission = (newRevenue - processingFee) * (Number(payout.commission_rate) / 100);
+    const payoutAmount = newRevenue - processingFee - commission;
+    await supabase.from("event_payouts").update({
+      total_revenue: newRevenue,
+      commission_amount: Math.round(commission * 100) / 100,
+      payout_amount: Math.round(payoutAmount * 100) / 100,
+    }).eq("event", event).eq("brand_email", brandEmail);
+    setPayouts(prev => prev.map(p => p.brand_email === brandEmail ? { ...p, total_revenue: newRevenue, commission_amount: Math.round(commission * 100) / 100, payout_amount: Math.round(payoutAmount * 100) / 100 } : p));
+    setAdjustments(prev => ({ ...prev, [brandEmail]: "" }));
+  };
+
   const totalRevenue = payouts.reduce((s, p) => s + Number(p.total_revenue), 0);
   const totalCommission = payouts.reduce((s, p) => s + Number(p.commission_amount), 0);
   const totalPayout = payouts.reduce((s, p) => s + Number(p.payout_amount), 0);
@@ -261,8 +281,23 @@ export default function SalesPage() {
                   <div style={{ padding: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <div style={{ fontSize: "1rem", color: "#1c1714", marginBottom: "4px" }}>{payout.brand_name}</div>
-                      <div style={{ display: "flex", gap: "16px" }}>
-                        <div><div style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.1em" }}>REVENUE</div><div style={{ fontSize: "1rem", color: "#1c1714" }}>{formatCurrency(payout.total_revenue)}</div></div>
+                      <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" as const }}>
+                        <div>
+                          <div style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.1em" }}>REVENUE</div>
+                          <div style={{ fontSize: "1rem", color: "#1c1714" }}>{formatCurrency(payout.total_revenue)}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                            <span style={{ fontSize: "0.65rem", color: "#4a5a52" }}>+ adjust</span>
+                            <input
+                              type="number"
+                              placeholder="0.00"
+                              value={adjustments[payout.brand_email] || ""}
+                              onChange={e => setAdjustments(prev => ({ ...prev, [payout.brand_email]: e.target.value }))}
+                              onKeyDown={e => e.key === "Enter" && applyAdjustment(payout.brand_email)}
+                              style={{ width: "70px", padding: "2px 6px", border: "1px solid #e4ebe6", borderRadius: "4px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }}
+                            />
+                            <button onClick={() => applyAdjustment(payout.brand_email)} style={{ padding: "2px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", fontSize: "0.72rem", cursor: "pointer" }}>✓</button>
+                          </div>
+                        </div>
                         <div>
                           <div style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.1em" }}>COMMISSION</div>
                           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
