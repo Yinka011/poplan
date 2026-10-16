@@ -52,7 +52,10 @@ export default function SalesPage() {
   const fetchData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const organizerEmail = user?.email || "";
-    // organizer email optional for reads
+    if (!organizerEmail) {
+      setTimeout(fetchData, 500);
+      return;
+    }
     const reportsRes = await supabase.from("brand_payout_reports").select("*").eq("event", event).eq("organizer_email", organizerEmail);
     if (reportsRes.data) setReports(reportsRes.data);
     const [payoutsRes, salesRes] = await Promise.all([
