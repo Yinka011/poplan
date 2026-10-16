@@ -36,7 +36,8 @@ export default function SalesPage() {
   const slug = params.slug as string;
   const event = slug.charAt(0).toUpperCase() + slug.slice(1);
 
-  const { organizerEmail, loading: orgLoading } = useOrganizer();
+  const { organizerEmail: ctxEmail } = useOrganizer();
+  const [organizerEmail, setOrganizerEmail] = useState("");
   const [payouts, setPayouts] = useState<BrandPayout[]>([]);
   const [sales, setSales] = useState<BrandSale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +50,20 @@ export default function SalesPage() {
   const [startDate, setStartDate] = useState("2026-09-11");
   const [endDate, setEndDate] = useState("2026-09-14");
 
-  useEffect(() => { if (!orgLoading && organizerEmail) fetchData(); }, [slug, organizerEmail, orgLoading]);
+  useEffect(() => {
+    const init = async () => {
+      let email = ctxEmail;
+      if (!email) {
+        const { data: { session } } = await supabase.auth.getSession();
+        email = session?.user?.email || "";
+      }
+      if (email) { setOrganizerEmail(email); }
+      else setLoading(false);
+    };
+    init();
+  }, [ctxEmail]);
+
+  useEffect(() => { if (organizerEmail) fetchData(); }, [organizerEmail, slug]);
 
   const fetchData = async () => {
     if (!organizerEmail) return;
