@@ -49,7 +49,7 @@ export default function SalesPage() {
   const [startDate, setStartDate] = useState("2026-09-11");
   const [endDate, setEndDate] = useState("2026-09-14");
 
-  useEffect(() => { fetchData(); }, [slug]);
+  useEffect(() => { if (organizerEmail) fetchData(); }, [slug, organizerEmail]);
 
   const fetchData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
