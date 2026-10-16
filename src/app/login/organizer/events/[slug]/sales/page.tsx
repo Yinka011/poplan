@@ -1,444 +1,333 @@
-import type { Metadata } from "next";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+import { useEffect, useState } from "react";
+import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { supabase } from "@/lib/supabase";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "Nalpop — The pop-up management platform",
-  description: "One platform to manage every brand, every payment, every deadline. Built for pop-up organisers.",
+type BrandPayout = {
+  id?: number;
+  brand_email: string;
+  brand_name: string;
+  total_revenue: number;
+  commission_rate: number;
+  commission_amount: number;
+  payout_amount: number;
+  payout_status: string;
+  payout_date?: string;
 };
 
-export default function TourPage() {
+type BrandSale = {
+  id: number;
+  brand_email: string;
+  brand_name: string;
+  product_name: string;
+  variation_name: string;
+  quantity_sold: number;
+  unit_price: number;
+  total_revenue: number;
+  sale_date: string;
+};
+
+export default function SalesPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const event = slug.charAt(0).toUpperCase() + slug.slice(1);
+
+  const [payouts, setPayouts] = useState<BrandPayout[]>([]);
+  const [sales, setSales] = useState<BrandSale[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [syncing, setSyncing] = useState(false);
+  const [uploadingReport, setUploadingReport] = useState<string | null>(null);
+  const [reports, setReports] = useState<any[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [commissionRate, setCommissionRate] = useState(20);
+  const [startDate, setStartDate] = useState("2026-09-11");
+  const [endDate, setEndDate] = useState("2026-09-14");
+
+  useEffect(() => { fetchData(); }, [slug]);
+
+  const fetchData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const organizerEmail = user?.email || "";
+    if (!organizerEmail) return;
+    const reportsRes = await supabase.from("brand_payout_reports").select("*").eq("event", event).eq("organizer_email", organizerEmail);
+    if (reportsRes.data) setReports(reportsRes.data);
+    const [payoutsRes, salesRes] = await Promise.all([
+      supabase.from("event_payouts").select("*").eq("event", event).eq("organizer_email", organizerEmail).order("brand_name"),
+      supabase.from("brand_sales").select("*").eq("event", event).eq("organizer_email", organizerEmail).order("sale_date"),
+    ]);
+    if (payoutsRes.data) setPayouts(payoutsRes.data);
+    if (salesRes.data) setSales(salesRes.data);
+    setLoading(false);
+  };
+
+  const syncSales = async () => {
+    setSyncing(true);
+    const res = await fetch("/api/square/sync-sales", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event, start_date: startDate, end_date: endDate }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      await fetchData();
+      alert(`Synced! ${data.orders_processed} orders processed, ${data.sales_inserted} new sales added.`);
+    } else {
+      alert("Error: " + (data.error || "Sync failed"));
+    }
+    setSyncing(false);
+  };
+
+  const uploadReport = async (brandEmail: string, brandName: string, file: File) => {
+    setUploadingReport(brandEmail);
+    const path = `payout-reports/${event}/${brandEmail}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const { error } = await supabase.storage.from("brand-uploads").upload(path, file, { upsert: true });
+    if (error) { alert("Upload failed: " + error.message); setUploadingReport(null); return; }
+    const { data: urlData } = supabase.storage.from("brand-uploads").getPublicUrl(path);
+    await supabase.from("brand_payout_reports").delete().eq("event", event).eq("brand_email", brandEmail);
+    const { error: insertError } = await supabase.from("brand_payout_reports").insert({
+      event,
+      brand_email: brandEmail,
+      brand_name: brandName,
+      file_url: urlData.publicUrl,
+      file_name: file.name,
+      payment_confirmed: false,
+    });
+    if (insertError) { alert("Failed to save report: " + insertError.message); setUploadingReport(null); return; }
+    setReports(prev => {
+      const existing = prev.find(r => r.brand_email === brandEmail);
+      if (existing) return prev.map(r => r.brand_email === brandEmail ? { ...r, file_url: urlData.publicUrl, file_name: file.name } : r);
+      return [...prev, { event, brand_email: brandEmail, brand_name: brandName, file_url: urlData.publicUrl, file_name: file.name, payment_confirmed: false }];
+    });
+    setUploadingReport(null);
+    // Notify brand — only send if we have a valid email
+    if (brandEmail) {
+      await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: brandEmail,
+          subject: "Your payout report is ready",
+          html: `<div style="font-family:Georgia,serif;max-width:500px;margin:0 auto;padding:2rem"><h2 style="color:#1B3A2D">Your payout report is ready</h2><p style="color:#4a5a52">Log in to your Nalpop portal and go to the Sales tab to view your report and confirm your payment details.</p><a href="https://nalpop.com/brand/portal" style="display:inline-block;padding:12px 24px;background:#1B3A2D;color:#fff;text-decoration:none;border-radius:8px">View my report</a></div>`
+        })
+      }).catch(() => {});
+    }
+    alert(`Report uploaded for ${brandName}!`);
+  };
+
+  const markPaid = async (brandEmail: string) => {
+    const today = new Date().toISOString().split("T")[0];
+    await supabase.from("event_payouts").update({ payout_status: "paid", payout_date: today }).eq("event", event).eq("brand_email", brandEmail);
+    setPayouts(prev => prev.map(p => p.brand_email === brandEmail ? { ...p, payout_status: "paid", payout_date: today } : p));
+  };
+
+  // Correct formula matching spreadsheet:
+  // processing_fee = 2.71% × net_sales (tax not available here so we use net sales only)
+  // commission = (net_sales - processing_fee) × rate%
+  // payout = net_sales - processing_fee - commission
+  const updateCommission = async (brandEmail: string, rate: number) => {
+    const payout = payouts.find(p => p.brand_email === brandEmail);
+    if (!payout) return;
+    const netSales = Number(payout.total_revenue);
+    const processingFee = netSales * 0.0271;
+    const commission = (netSales - processingFee) * (rate / 100);
+    const payoutAmount = netSales - processingFee - commission;
+    await supabase.from("event_payouts").update({ commission_rate: rate, commission_amount: Math.round(commission * 100) / 100, payout_amount: Math.round(payoutAmount * 100) / 100 }).eq("event", event).eq("brand_email", brandEmail);
+    setPayouts(prev => prev.map(p => p.brand_email === brandEmail ? { ...p, commission_rate: rate, commission_amount: Math.round(commission * 100) / 100, payout_amount: Math.round(payoutAmount * 100) / 100 } : p));
+  };
+
+  const totalRevenue = payouts.reduce((s, p) => s + Number(p.total_revenue), 0);
+  const totalCommission = payouts.reduce((s, p) => s + Number(p.commission_amount), 0);
+  const totalPayout = payouts.reduce((s, p) => s + Number(p.payout_amount), 0);
+  const brandSales = selectedBrand ? sales.filter(s => s.brand_email === selectedBrand) : [];
+  const formatCurrency = (n: number) => `$${Number(n).toFixed(2)}`;
+
+  if (loading) return <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>;
+
   return (
-    <>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap"
-      />
-      <style>{`
-        :root {
-          --forest: #1B3A2D;
-          --gold: #E8C97A;
-          --gold-dim: #c9a84c;
-          --sage: #4a7c59;
-          --bg: #0f2219;
-          --bg2: #162e20;
-          --bg3: #1e3a28;
-          --fg: #f0ede6;
-          --fg2: #a8b8ae;
-          --line: rgba(232,201,122,0.15);
-          --display: 'Cormorant Garamond', Georgia, serif;
-          --body: 'DM Sans', system-ui, sans-serif;
-        }
-        @media (prefers-color-scheme: light) {
-          :root {
-            --bg: #f4f7f4;
-            --bg2: #eaf0eb;
-            --bg3: #fff;
-            --fg: #0f2219;
-            --fg2: #4a5a52;
-            --line: rgba(27,58,45,0.12);
-          }
-        }
-        *, *::before, *::after { box-sizing: border-box; }
-        body {
-          background: var(--bg);
-          color: var(--fg);
-          font-family: var(--body);
-          font-size: 16px;
-          line-height: 1.6;
-          margin: 0;
-          padding: 0;
-          overflow-x: hidden;
-        }
-        .display { font-family: var(--display); font-weight: 300; text-wrap: balance; }
-        .eyebrow {
-          font-family: var(--body);
-          font-size: 0.65rem;
-          font-weight: 500;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: var(--gold);
-        }
-        .wrap { max-width: 1100px; margin-inline: auto; padding-inline: clamp(16px, 5vw, 60px); }
-        #hero {
-          background: var(--forest);
-          min-height: 100svh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          padding: clamp(60px, 10vh, 120px) clamp(16px, 5vw, 60px);
-          position: relative;
-          overflow: hidden;
-        }
-        #hero::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(232,201,122,0.06) 0%, transparent 70%);
-          pointer-events: none;
-        }
-        .hero-wordmark {
-          font-family: var(--display);
-          font-size: clamp(0.9rem, 2vw, 1.1rem);
-          letter-spacing: 0.35em;
-          color: var(--gold);
-          text-transform: uppercase;
-          margin-bottom: clamp(32px, 6vh, 56px);
-          opacity: 0;
-          transform: translateY(12px);
-          animation: fadeUp 0.9s 0.1s ease forwards;
-        }
-        .hero-h1 {
-          font-family: var(--display);
-          font-size: clamp(2.8rem, 7vw, 6rem);
-          font-weight: 300;
-          line-height: 1.1;
-          color: #fff;
-          margin: 0 0 clamp(20px, 3vh, 32px);
-          text-wrap: balance;
-          opacity: 0;
-          transform: translateY(16px);
-          animation: fadeUp 1s 0.3s ease forwards;
-        }
-        .hero-h1 em { font-style: italic; color: var(--gold); }
-        .hero-sub {
-          font-size: clamp(0.95rem, 1.8vw, 1.1rem);
-          color: rgba(255,255,255,0.65);
-          max-width: 520px;
-          line-height: 1.75;
-          margin: 0 auto clamp(36px, 5vh, 52px);
-          opacity: 0;
-          transform: translateY(12px);
-          animation: fadeUp 1s 0.55s ease forwards;
-        }
-        .hero-cta {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          background: var(--gold);
-          color: var(--forest);
-          font-family: var(--body);
-          font-size: 0.88rem;
-          font-weight: 500;
-          letter-spacing: 0.04em;
-          padding: 14px 32px;
-          border-radius: 4px;
-          text-decoration: none;
-          opacity: 0;
-          transform: translateY(10px);
-          animation: fadeUp 0.9s 0.8s ease forwards;
-          transition: background 0.2s, transform 0.15s;
-        }
-        .hero-cta:hover { background: #f0d48a; transform: translateY(-1px); }
-        .hero-scroll {
-          position: absolute;
-          bottom: 32px;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          opacity: 0;
-          animation: fadeIn 1s 1.4s ease forwards;
-        }
-        .hero-scroll-line {
-          width: 1px;
-          height: 40px;
-          background: linear-gradient(to bottom, transparent, var(--gold));
-          animation: scrollPulse 2s 1.4s ease-in-out infinite;
-        }
-        .hero-scroll span { font-size: 0.6rem; letter-spacing: 0.2em; color: rgba(255,255,255,0.3); text-transform: uppercase; }
-        .section { padding: clamp(64px, 10vh, 120px) 0; border-bottom: 1px solid var(--line); }
-        .section:last-of-type { border-bottom: none; }
-        .section-header { margin-bottom: clamp(40px, 6vh, 64px); }
-        .feature-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 2px;
-          background: var(--line);
-          border: 1px solid var(--line);
-          border-radius: 12px;
-          overflow: hidden;
-        }
-        @media (max-width: 700px) { .feature-grid { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 420px) { .feature-grid { grid-template-columns: 1fr; } }
-        .feature-card { background: var(--bg2); padding: clamp(20px, 3vw, 32px); transition: background 0.2s; }
-        .feature-card:hover { background: var(--bg3); }
-        .feature-icon {
-          width: 36px; height: 36px; border-radius: 8px;
-          background: rgba(232,201,122,0.1);
-          display: flex; align-items: center; justify-content: center;
-          margin-bottom: 14px; color: var(--gold);
-        }
-        .feature-title { font-size: 0.92rem; font-weight: 500; color: var(--fg); margin-bottom: 6px; }
-        .feature-desc { font-size: 0.78rem; color: var(--fg2); line-height: 1.65; }
-        .dashboard-preview { background: var(--bg2); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-top: 40px; }
-        .dash-topbar { background: var(--forest); padding: 12px 20px; display: flex; align-items: center; gap: 10px; }
-        .dash-dot { width: 10px; height: 10px; border-radius: 50%; }
-        .dash-inner { padding: clamp(16px, 3vw, 28px); display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        @media (max-width: 600px) { .dash-inner { grid-template-columns: 1fr 1fr; } }
-        .dash-tile { background: var(--bg3); border-radius: 10px; padding: 16px; border: 1px solid var(--line); }
-        .dash-tile-label { font-size: 0.58rem; letter-spacing: 0.12em; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
-        .dash-tile-num { font-family: var(--display); font-size: 2rem; font-weight: 300; color: var(--fg); line-height: 1; font-variant-numeric: tabular-nums; }
-        .dash-tile-sub { font-size: 0.68rem; color: var(--fg2); margin-top: 4px; }
-        .brand-rows { padding: clamp(12px, 2vw, 20px); border-top: 1px solid var(--line); }
-        .brand-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 8px; border-bottom: 1px solid var(--line); gap: 12px; }
-        .brand-row:last-child { border-bottom: none; }
-        .brand-name { font-size: 0.85rem; color: var(--fg); }
-        .brand-tag { font-size: 0.62rem; padding: 3px 8px; border-radius: 20px; letter-spacing: 0.06em; white-space: nowrap; }
-        .tag-paid { background: rgba(74,124,89,0.2); color: #90c9a0; }
-        .tag-pending { background: rgba(232,201,122,0.15); color: var(--gold); }
-        .tag-overdue { background: rgba(192,57,43,0.15); color: #e07b6e; }
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 5vw, 64px); align-items: center; }
-        @media (max-width: 680px) { .two-col { grid-template-columns: 1fr; } }
-        .two-col.reverse > *:first-child { order: 2; }
-        .two-col.reverse > *:last-child { order: 1; }
-        @media (max-width: 680px) { .two-col.reverse > * { order: unset; } }
-        .detail-h { font-family: var(--display); font-size: clamp(2rem, 4vw, 3rem); font-weight: 300; line-height: 1.2; text-wrap: balance; margin: 0 0 16px; }
-        .detail-body { font-size: 0.95rem; color: var(--fg2); line-height: 1.8; margin: 0 0 24px; }
-        .detail-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-        .detail-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.88rem; color: var(--fg2); line-height: 1.5; }
-        .detail-list li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0; margin-top: 7px; }
-        .mini-chart-wrap { background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: clamp(16px, 3vw, 24px); }
-        .mini-chart-label { font-size: 0.65rem; letter-spacing: 0.12em; color: var(--gold); text-transform: uppercase; margin-bottom: 4px; }
-        .mini-chart-title { font-family: var(--display); font-size: 1.1rem; color: var(--fg); margin-bottom: 16px; }
-        .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
-        .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .bar { width: 100%; background: var(--sage); border-radius: 3px 3px 0 0; transition: background 0.2s; min-height: 4px; }
-        .bar.top { background: var(--gold); }
-        .bar-wrap:hover .bar { background: var(--gold); }
-        .bar-lbl { font-size: 0.58rem; color: var(--fg2); text-align: center; letter-spacing: 0.04em; }
-        #final-cta { background: var(--forest); padding: clamp(64px, 10vh, 120px) clamp(16px, 5vw, 60px); text-align: center; }
-        .final-h { font-family: var(--display); font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 300; line-height: 1.15; color: #fff; text-wrap: balance; margin: 0 auto 16px; max-width: 640px; }
-        .final-h em { font-style: italic; color: var(--gold); }
-        .final-sub { font-size: 0.95rem; color: rgba(255,255,255,0.5); margin: 0 auto 40px; max-width: 460px; line-height: 1.75; }
-        .cta-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--gold); color: var(--forest); font-family: var(--body); font-weight: 500; font-size: 0.88rem; letter-spacing: 0.04em; padding: 15px 36px; border-radius: 4px; text-decoration: none; transition: background 0.2s, transform 0.15s; }
-        .cta-btn:hover { background: #f0d48a; transform: translateY(-1px); }
-        .url-note { font-size: 0.78rem; color: rgba(255,255,255,0.3); margin-top: 16px; letter-spacing: 0.06em; }
-        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
-        .reveal.visible { opacity: 1; transform: translateY(0); }
-        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { to { opacity: 1; } }
-        @keyframes scrollPulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-        @media (prefers-reduced-motion: reduce) {
-          *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-          .reveal { opacity: 1; transform: none; }
-        }
-      `}</style>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif" }}>
+      {/* Header */}
+      <div style={{ background: "#1B3A2D", padding: "1rem 2rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+        <Link href={`/login/organizer/events/${slug}`} style={{ fontSize: "0.8rem", color: "#E8C97A", textDecoration: "none" }}>← Back to event</Link>
+        <div style={{ fontSize: "1rem", color: "#fff" }}>Sales & Payouts — {event}</div>
+      </div>
 
-      {/* HERO */}
-      <section id="hero">
-        <div className="hero-wordmark">Nalpop</div>
-        <h1 className="hero-h1 display">
-          Your pop-up deserves<br />
-          <em>a proper command centre.</em>
-        </h1>
-        <p className="hero-sub">
-          One platform to manage every brand, every payment, every deadline — so you run the event, not a hundred spreadsheets and group chats.
-        </p>
-        <a href="https://www.nalpop.com/onboarding" className="hero-cta">
-          Get started — it&apos;s free
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-        <div className="hero-scroll">
-          <div className="hero-scroll-line" />
-          <span>Scroll</span>
-        </div>
-      </section>
+      <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem 1.5rem" }}>
 
-      {/* FEATURES */}
-      <section className="section">
-        <div className="wrap">
-          <div className="section-header reveal">
-            <p className="eyebrow">Everything in one place</p>
-            <h2 className="display" style={{ fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 300, margin: "12px 0 0", lineHeight: 1.2 }}>
-              Built for how pop-ups actually work
-            </h2>
-          </div>
-          <div className="feature-grid reveal">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2M12 12v4M10 14h4"/></svg>
-              </div>
-              <div className="feature-title">Brand portals — free forever</div>
-              <div className="feature-desc">Every brand you invite gets their own private portal. They upload products, track tasks, view their payout, and message you directly. No app to download.</div>
+        {/* Sync controls */}
+        <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #e4ebe6" }}>
+          <div style={{ fontSize: "0.75rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "1rem" }}>SYNC SALES FROM SQUARE</div>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" as const }}>
+            <div>
+              <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "3px" }}>FROM</div>
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ padding: "7px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
             </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              </div>
-              <div className="feature-title">Payment tracking</div>
-              <div className="feature-desc">See exactly who has paid, who owes, and how much at a glance. No more chasing payments by DM.</div>
+            <div>
+              <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginBottom: "3px" }}>TO</div>
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ padding: "7px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
             </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              </div>
-              <div className="feature-title">Top brand &amp; item insights</div>
-              <div className="feature-desc">See which brands are generating the most revenue and which products are moving fastest. Know who to invite back.</div>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <div className="feature-title">Direct messaging</div>
-              <div className="feature-desc">Message every brand from one inbox. No WhatsApp, no email threads. Everything is on record.</div>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-              </div>
-              <div className="feature-title">Shipment tracking</div>
-              <div className="feature-desc">Brands add their tracking number. You see every delivery at a glance. No more &quot;did it arrive?&quot; messages.</div>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </div>
-              <div className="feature-title">Attendee registration</div>
-              <div className="feature-desc">Collect shopper RSVPs and own your audience data. Know who your regulars are before doors open.</div>
-            </div>
+            <button onClick={syncSales} disabled={syncing} style={{ padding: "8px 20px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif", marginTop: "18px" }}>
+              {syncing ? "Syncing..." : "↓ Sync from Square"}
+            </button>
           </div>
         </div>
-      </section>
 
-      {/* DASHBOARD PREVIEW */}
-      <section className="section">
-        <div className="wrap">
-          <div className="two-col">
-            <div className="reveal">
-              <p className="eyebrow">Your event at a glance</p>
-              <h2 className="detail-h display">Everything you need to know, the moment you open it</h2>
-              <p className="detail-body">The dashboard shows your spots filled, brands confirmed, outstanding tasks, and days to event — all live.</p>
-              <ul className="detail-list">
-                <li>Brand count updates the instant you add someone</li>
-                <li>Outstanding tasks count down as you tick them off</li>
-                <li>Countdown pulls from the start date you set</li>
-                <li>All your events in one place, past and upcoming</li>
-              </ul>
+        {/* Summary */}
+        {payouts.length > 0 && (
+          <div style={{ background: "#1B3A2D", borderRadius: "14px", padding: "1.5rem 2rem", marginBottom: "1.5rem", color: "#fff", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1.5rem" }}>
+            <div>
+              <div style={{ fontSize: "0.6rem", color: "#E8C97A", letterSpacing: "0.15em", marginBottom: "6px" }}>TOTAL REVENUE</div>
+              <div style={{ fontSize: "1.5rem" }}>{formatCurrency(totalRevenue)}</div>
             </div>
-            <div className="reveal">
-              <div className="dashboard-preview">
-                <div className="dash-topbar">
-                  <div className="dash-dot" style={{ background: "#e07b6e" }} />
-                  <div className="dash-dot" style={{ background: "#e8c97a" }} />
-                  <div className="dash-dot" style={{ background: "#90c9a0" }} />
-                  <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginLeft: "8px", letterSpacing: "0.06em" }}>NALPOP — Winter Market</span>
-                </div>
-                <div className="dash-inner">
-                  <div className="dash-tile"><div className="dash-tile-label">Spots to fill</div><div className="dash-tile-num">20</div><div className="dash-tile-sub">12 confirmed</div></div>
-                  <div className="dash-tile"><div className="dash-tile-label">Brands</div><div className="dash-tile-num">12</div><div className="dash-tile-sub">of 20 spots</div></div>
-                  <div className="dash-tile"><div className="dash-tile-label">Tasks</div><div className="dash-tile-num" style={{ color: "var(--gold)" }}>7</div><div className="dash-tile-sub">remaining</div></div>
-                  <div className="dash-tile" style={{ background: "var(--forest)", textAlign: "center" }}>
-                    <div className="dash-tile-num" style={{ fontSize: "2.4rem", color: "#fff", marginTop: "4px" }}>54</div>
-                    <div className="dash-tile-sub" style={{ color: "rgba(255,255,255,0.5)", marginTop: "6px", letterSpacing: "0.06em", textTransform: "uppercase", fontSize: "0.6rem" }}>Days to event</div>
+            <div>
+              <div style={{ fontSize: "0.6rem", color: "#E8C97A", letterSpacing: "0.15em", marginBottom: "6px" }}>YOUR COMMISSION</div>
+              <div style={{ fontSize: "1.5rem", color: "#E8C97A" }}>{formatCurrency(totalCommission)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.6rem", color: "#E8C97A", letterSpacing: "0.15em", marginBottom: "6px" }}>BRAND PAYOUTS</div>
+              <div style={{ fontSize: "1.5rem" }}>{formatCurrency(totalPayout)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.6rem", color: "#E8C97A", letterSpacing: "0.15em", marginBottom: "6px" }}>BRANDS</div>
+              <div style={{ fontSize: "1.5rem" }}>{payouts.length}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Charts */}
+        {payouts.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+            <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+              <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "1rem" }}>REVENUE BY BRAND</div>
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={payouts.map(p => ({ name: p.brand_name, value: Number(p.total_revenue) }))} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => name && percent ? `${name.toString().split(" ")[0]} ${(percent * 100).toFixed(0)}%` : ""} labelLine={false} fontSize={10}>
+                    {payouts.map((_, i) => (
+                      <Cell key={i} fill={["#1B3A2D","#E8C97A","#4a7c59","#2a4d3e","#8b6ab0","#5b7fa6","#a0522d","#E8C97A88","#4a7c5988","#1B3A2D88","#d4a574","#7a9e7e","#c4956a"][i % 13]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(val: any) => `$${Number(val).toFixed(2)}`} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+              <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "1rem" }}>REVENUE RANKING</div>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={[...payouts].sort((a, b) => Number(b.total_revenue) - Number(a.total_revenue)).map(p => ({ name: p.brand_name.split(" ")[0], revenue: Number(p.total_revenue) }))} layout="vertical">
+                  <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `$${v}`} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={70} />
+                  <Tooltip formatter={(val: any) => `$${Number(val).toFixed(2)}`} />
+                  <Bar dataKey="revenue" fill="#1B3A2D" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Per brand payouts */}
+        {payouts.length === 0 ? (
+          <div style={{ background: "#fff", borderRadius: "14px", padding: "4rem", textAlign: "center", border: "1px solid #e4ebe6" }}>
+            <div style={{ fontSize: "1rem", color: "#1c1714", marginBottom: "0.5rem" }}>No sales yet</div>
+            <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>Sync sales from Square after the event to see payouts.</div>
+          </div>
+        ) : (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1rem" }}>
+              <span style={{ fontSize: "0.82rem", color: "#4a5a52" }}>Default commission rate:</span>
+              <input type="number" value={commissionRate} onChange={e => setCommissionRate(Number(e.target.value))} style={{ width: "60px", padding: "5px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+              <span style={{ fontSize: "0.82rem", color: "#4a5a52" }}>%</span>
+            </div>
+
+            {payouts.map(payout => {
+              const report = reports.find(r => r.brand_email === payout.brand_email);
+              return (
+                <div key={payout.brand_email} style={{ background: "#fff", borderRadius: "14px", marginBottom: "1rem", border: "1px solid #e4ebe6", overflow: "hidden" }}>
+                  <div style={{ padding: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: "1rem", color: "#1c1714", marginBottom: "4px" }}>{payout.brand_name}</div>
+                      <div style={{ display: "flex", gap: "16px" }}>
+                        <div><div style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.1em" }}>REVENUE</div><div style={{ fontSize: "1rem", color: "#1c1714" }}>{formatCurrency(payout.total_revenue)}</div></div>
+                        <div>
+                          <div style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.1em" }}>COMMISSION</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <input type="number" value={payout.commission_rate} onChange={e => updateCommission(payout.brand_email, Number(e.target.value))} style={{ width: "45px", padding: "2px 6px", border: "1px solid #e4ebe6", borderRadius: "4px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+                            <span style={{ fontSize: "0.72rem", color: "#4a5a52" }}>% = {formatCurrency(payout.commission_amount)}</span>
+                          </div>
+                        </div>
+                        <div><div style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.1em" }}>PAYOUT</div><div style={{ fontSize: "1rem", color: "#4a7c59", fontWeight: 500 }}>{formatCurrency(payout.payout_amount)}</div></div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.72rem", padding: "3px 10px", borderRadius: "20px", background: payout.payout_status === "paid" ? "#4a7c5922" : "#f0f4f1", color: payout.payout_status === "paid" ? "#4a7c59" : "#4a5a52" }}>
+                        {payout.payout_status === "paid" ? "✓ Paid" : "Pending"}
+                      </span>
+                      {payout.payout_status !== "paid" && (
+                        <button onClick={() => markPaid(payout.brand_email)} style={{ padding: "5px 12px", background: "#4a7c59", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer" }}>Mark paid</button>
+                      )}
+                      <button onClick={() => setSelectedBrand(selectedBrand === payout.brand_email ? null : payout.brand_email)} style={{ padding: "5px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer", color: "#4a5a52" }}>
+                        {selectedBrand === payout.brand_email ? "Hide" : "View sales"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className="brand-rows">
-                  <div className="brand-row"><span className="brand-name">Maison Dore</span><span className="brand-tag tag-paid">Paid</span></div>
-                  <div className="brand-row"><span className="brand-name">Kemi Designs</span><span className="brand-tag tag-pending">Pending</span></div>
-                  <div className="brand-row"><span className="brand-name">Studio Alara</span><span className="brand-tag tag-paid">Paid</span></div>
-                  <div className="brand-row"><span className="brand-name">House of Ode</span><span className="brand-tag tag-overdue">Overdue</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* PERFORMANCE */}
-      <section className="section">
-        <div className="wrap">
-          <div className="two-col reverse">
-            <div className="reveal">
-              <div className="mini-chart-wrap">
-                <div className="mini-chart-label">Post-event insights</div>
-                <div className="mini-chart-title">Top brands by revenue</div>
-                <div className="bar-chart">
-                  <div className="bar-wrap"><div className="bar" style={{ height: "72px" }} /><div className="bar-lbl">Maison<br />Dore</div></div>
-                  <div className="bar-wrap"><div className="bar top" style={{ height: "90px" }} /><div className="bar-lbl">Studio<br />Alara</div></div>
-                  <div className="bar-wrap"><div className="bar" style={{ height: "58px" }} /><div className="bar-lbl">Kemi<br />Designs</div></div>
-                  <div className="bar-wrap"><div className="bar" style={{ height: "44px" }} /><div className="bar-lbl">Clay<br />Works</div></div>
-                  <div className="bar-wrap"><div className="bar" style={{ height: "38px" }} /><div className="bar-lbl">House<br />of Ode</div></div>
-                  <div className="bar-wrap"><div className="bar" style={{ height: "30px" }} /><div className="bar-lbl">Nomad<br />Crafts</div></div>
-                </div>
-                <div style={{ borderTop: "1px solid var(--line)", marginTop: "16px", paddingTop: "14px" }}>
-                  <div style={{ fontSize: "0.6rem", color: "var(--fg2)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Top item</div>
-                  <div style={{ fontSize: "0.82rem", color: "var(--fg)", marginTop: "2px" }}>Terracotta earrings — Studio Alara</div>
-                </div>
-              </div>
-            </div>
-            <div className="reveal">
-              <p className="eyebrow">Know what&apos;s working</p>
-              <h2 className="detail-h display">See your top performers — brands and products both</h2>
-              <p className="detail-body">After the event, Nalpop shows you which brands generated the most revenue and which products sold fastest. Know who to invite back, who deserves better placement, and what your shoppers actually want.</p>
-              <ul className="detail-list">
-                <li>Revenue per brand, automatically calculated from Square sync</li>
-                <li>Top-selling products ranked across your entire event</li>
-                <li>Payout calculations done for you</li>
-                <li>Data you can act on before the next one</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
+                  {/* Report upload */}
+                  <div style={{ padding: "10px 16px", borderTop: "1px solid #f0f4f1", background: "#fafaf8", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", flexDirection: "column" as const, gap: "3px" }}>
+                      {report ? (
+                        <>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <span style={{ fontSize: "0.72rem", color: "#4a7c59" }}>✓ Report ready</span>
+                            <a href={report.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.72rem", color: "#4a5a52", textDecoration: "underline" }}>View</a>
+                          </div>
+                          {report.payment_confirmed ? (
+                            <div style={{ fontSize: "0.72rem", color: "#1B3A2D" }}>💳 {report.payment_method} · <strong>{report.payment_details}</strong></div>
+                          ) : (
+                            <div style={{ fontSize: "0.72rem", color: "#b87333" }}>⏳ Awaiting payment details from brand</div>
+                          )}
+                        </>
+                      ) : (
+                        <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>No report uploaded</div>
+                      )}
+                    </div>
+                    <label style={{ padding: "5px 12px", background: report ? "transparent" : "#1B3A2D", color: report ? "#4a5a52" : "#fff", border: report ? "1px solid #e4ebe6" : "none", borderRadius: "8px", fontSize: "0.72rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const }}>
+                      {uploadingReport === payout.brand_email ? "Uploading..." : report ? "↑ Replace" : "↑ Upload report"}
+                      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.csv" onChange={e => { const f = e.target.files?.[0]; if (f) uploadReport(payout.brand_email, payout.brand_name, f); }} style={{ display: "none" }} />
+                    </label>
+                  </div>
 
-      {/* BRAND PORTAL */}
-      <section className="section">
-        <div className="wrap">
-          <div className="section-header reveal" style={{ textAlign: "center", maxWidth: "580px", marginInline: "auto" }}>
-            <p className="eyebrow">For your brands</p>
-            <h2 className="display" style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)", fontWeight: 300, lineHeight: 1.2, margin: "12px 0 12px" }}>
-              A portal that makes your brands feel looked after
-            </h2>
-            <p style={{ fontSize: "0.92rem", color: "var(--fg2)", lineHeight: 1.75 }}>
-              Send one link. That&apos;s it. They land on their own branded portal — no account needed.
-            </p>
-          </div>
-          <div className="feature-grid reveal" style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
-            {[
-              { icon: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>, title: "Upload products", desc: "Full catalogue with photos, prices and descriptions. You approve before POS sync." },
-              { icon: <><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></>, title: "See their tasks", desc: "Tasks and deadlines you set appear in their portal. They check off, you see it live." },
-              { icon: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>, title: "Track their payout", desc: "After the event, their sales and payout amount appear directly in their portal." },
-              { icon: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>, title: "Message directly", desc: "They message you from their portal. You reply from your dashboard. One thread, on record." },
-            ].map(({ icon, title, desc }) => (
-              <div key={title} className="feature-card" style={{ textAlign: "center" }}>
-                <div className="feature-icon" style={{ margin: "0 auto 12px" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
+                  {/* Brand sales breakdown */}
+                  {selectedBrand === payout.brand_email && (
+                    <div style={{ borderTop: "1px solid #f0f4f1" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "8px 16px", background: "#f8faf8", fontSize: "0.68rem", color: "#4a5a52", letterSpacing: "0.08em" }}>
+                        <div>PRODUCT</div><div>VARIATION</div><div>QTY</div><div>REVENUE</div>
+                      </div>
+                      {brandSales.length === 0 ? (
+                        <div style={{ padding: "1rem", fontSize: "0.82rem", color: "#4a5a52" }}>No sales recorded yet.</div>
+                      ) : (
+                        brandSales.map(sale => (
+                          <div key={sale.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "10px 16px", borderTop: "1px solid #f5f2ee", alignItems: "center" }}>
+                            <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>{sale.product_name}</div>
+                            <div style={{ fontSize: "0.78rem", color: "#4a5a52" }}>{sale.variation_name || "—"}</div>
+                            <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>{sale.quantity_sold}</div>
+                            <div style={{ fontSize: "0.85rem", color: "#4a7c59" }}>{formatCurrency(Number(sale.total_revenue))}</div>
+                          </div>
+                        ))
+                      )}
+                      <div style={{ padding: "10px 16px", borderTop: "1px solid #f0f4f1", display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "0.78rem", color: "#4a5a52" }}>{brandSales.length} line items</span>
+                        <span style={{ fontSize: "0.85rem", color: "#1c1714" }}>Total: {formatCurrency(brandSales.reduce((s, sale) => s + Number(sale.total_revenue), 0))}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="feature-title">{title}</div>
-                <div className="feature-desc">{desc}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
-      </section>
-
-      {/* FINAL CTA */}
-      <section id="final-cta">
-        <div className="eyebrow" style={{ marginBottom: "20px" }}>Ready when you are</div>
-        <h2 className="final-h display">
-          Your next pop-up.<br />
-          <em>Fully organised.</em>
-        </h2>
-        <p className="final-sub">
-          Set up in minutes. Add your brands, send their portal links, and run your event without the chaos.
-        </p>
-        <a href="https://www.nalpop.com/onboarding" className="cta-btn">
-          Start on Nalpop — free
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-        <div className="url-note">nalpop.com</div>
-      </section>
-
-      <script dangerouslySetInnerHTML={{ __html: `
-        const reveals = document.querySelectorAll('.reveal');
-        const io = new IntersectionObserver(entries => {
-          entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
-        }, { threshold: 0.12 });
-        reveals.forEach(el => io.observe(el));
-      `}} />
-    </>
+        )}
+      </div>
+    </div>
   );
 }
