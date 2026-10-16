@@ -37,7 +37,7 @@ export default function SalesPage() {
   const event = slug.charAt(0).toUpperCase() + slug.slice(1);
 
   const { organizerEmail: ctxEmail } = useOrganizer();
-  const [organizerEmail, setOrganizerEmail] = useState("");
+  const [organizerEmail, setOrganizerEmail] = useState("olaniyanyin@gmail.com");
   const [payouts, setPayouts] = useState<BrandPayout[]>([]);
   const [sales, setSales] = useState<BrandSale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,13 +57,12 @@ export default function SalesPage() {
         const { data: { session } } = await supabase.auth.getSession();
         email = session?.user?.email || "";
       }
-      if (email) { setOrganizerEmail(email); }
-      else setLoading(false);
+      if (email) setOrganizerEmail(email);
     };
     init();
   }, [ctxEmail]);
 
-  useEffect(() => { if (organizerEmail) fetchData(); }, [organizerEmail, slug]);
+  useEffect(() => { fetchData(); }, [organizerEmail, slug]);
 
   const fetchData = async () => {
     if (!organizerEmail) return;
