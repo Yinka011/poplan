@@ -24,9 +24,9 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
 
   useEffect(() => {
     const fetchFeatures = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase.from("organizer_features").select("features").eq("organizer_email", user.email).eq("event_slug", slug).maybeSingle();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.email) return;
+      const { data } = await supabase.from("organizer_features").select("features").eq("organizer_email", session.user.email).eq("event_slug", slug).maybeSingle();
       if (data?.features) setFeatures(data.features);
     };
     fetchFeatures();
@@ -79,9 +79,9 @@ export function DashboardShell({ children, event }: DashboardShellProps) {
         )}
         <nav style={{ flex: 1, padding: "1rem 0" }}>
           {navItems.map(item => (
-            <a key={item.label} href={item.href} onClick={() => setOpen(false)} style={{ display: "block", padding: "10px 1.25rem", fontSize: "0.85rem", color: pathname === item.href ? "#fff" : "#d4c87a", background: pathname === item.href ? "#2a4d3e" : "transparent", textDecoration: "none", borderLeft: pathname === item.href ? "2px solid #E8C97A" : "2px solid transparent" }}>
+            <Link key={item.label} href={item.href} onClick={() => setOpen(false)} style={{ display: "block", padding: "10px 1.25rem", fontSize: "0.85rem", color: pathname === item.href ? "#fff" : "#d4c87a", background: pathname === item.href ? "#2a4d3e" : "transparent", textDecoration: "none", borderLeft: pathname === item.href ? "2px solid #E8C97A" : "2px solid transparent" }}>
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
         <div style={{ padding: "1rem 1.25rem", borderTop: "1px solid #2a4d3e" }}>
