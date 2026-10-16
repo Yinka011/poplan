@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
+import { useOrganizer } from "@/context/OrganizerContext";
 import Link from "next/link";
 
 type BrandPayout = {
@@ -35,6 +36,7 @@ export default function SalesPage() {
   const slug = params.slug as string;
   const event = slug.charAt(0).toUpperCase() + slug.slice(1);
 
+  const { organizerEmail } = useOrganizer();
   const [payouts, setPayouts] = useState<BrandPayout[]>([]);
   const [sales, setSales] = useState<BrandSale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,10 +54,7 @@ export default function SalesPage() {
   const fetchData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const organizerEmail = user?.email || "";
-    if (!organizerEmail) {
-      setTimeout(fetchData, 500);
-      return;
-    }
+    if (!organizerEmail) return;
     const reportsRes = await supabase.from("brand_payout_reports").select("*").eq("event", event).eq("organizer_email", organizerEmail);
     if (reportsRes.data) setReports(reportsRes.data);
     const [payoutsRes, salesRes] = await Promise.all([
@@ -69,12 +68,10 @@ export default function SalesPage() {
 
   const syncSales = async () => {
     setSyncing(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    const organizerEmail = user?.email || "";
     const res = await fetch("/api/square/sync-sales", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event, start_date: startDate, end_date: endDate, organizer_email: organizerEmail }),
+      body: JSON.stringify({ event, start_date: startDate, end_date: endDate }),
     });
     const data = await res.json();
     if (data.success) {
