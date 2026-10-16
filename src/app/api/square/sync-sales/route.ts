@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function POST(request: Request) {
-  const { event, start_date, end_date } = await request.json();
+  const { event, start_date, end_date, organizer_email } = await request.json();
 
   const accessToken = process.env.SQUARE_ACCESS_TOKEN;
   const locationId = process.env.SQUARE_LOCATION_ID;
@@ -139,6 +139,7 @@ export async function POST(request: Request) {
         total_revenue: totalRevenue,
         sale_date: orderDate,
         square_order_id: order.id,
+        organizer_email,
       });
 
       salesInserted++;
@@ -176,6 +177,7 @@ export async function POST(request: Request) {
         commission_amount: Math.round(commissionAmount * 100) / 100,
         payout_amount: Math.round(payoutAmount * 100) / 100,
         payout_status: "pending",
+        organizer_email,
       });
     }
   }

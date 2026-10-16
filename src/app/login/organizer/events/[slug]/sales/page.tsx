@@ -66,10 +66,12 @@ export default function SalesPage() {
 
   const syncSales = async () => {
     setSyncing(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const organizerEmail = user?.email || "";
     const res = await fetch("/api/square/sync-sales", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event, start_date: startDate, end_date: endDate }),
+      body: JSON.stringify({ event, start_date: startDate, end_date: endDate, organizer_email: organizerEmail }),
     });
     const data = await res.json();
     if (data.success) {
