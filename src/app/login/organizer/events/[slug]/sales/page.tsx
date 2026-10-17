@@ -51,15 +51,7 @@ export default function SalesPage() {
   const [endDate, setEndDate] = useState("2026-09-14");
 
   useEffect(() => {
-    const init = async () => {
-      let email = ctxEmail;
-      if (!email) {
-        const { data: { session } } = await supabase.auth.getSession();
-        email = session?.user?.email || "";
-      }
-      if (email) setOrganizerEmail(email);
-    };
-    init();
+    if (ctxEmail) setOrganizerEmail(ctxEmail);
   }, [ctxEmail]);
 
   useEffect(() => { fetchData(); }, [organizerEmail, slug]);
