@@ -82,7 +82,7 @@ export default function EventsPage() {
 
   const fetchAll = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) { window.location.href = "/"; return; }
     setUserEmail(user.email || "");
 
     const { data: profile } = await supabase.from("profiles").select("name").eq("email", user.email).single();
