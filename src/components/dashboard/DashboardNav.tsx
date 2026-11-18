@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const NAV_ITEMS = [{ href: "/login/organizer/events", label: "Events" }];
+const NAV_ITEMS = [{ href: "/organizer/events", label: "Events" }];
 
 export function DashboardNav() {
   const pathname = usePathname();

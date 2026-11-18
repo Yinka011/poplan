@@ -11,15 +11,27 @@ export default function ResetPassword() {
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirm) { setError("Passwords do not match"); return; }
-    if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
+    if (password !== confirm) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
     setLoading(true);
     setError("");
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) { setError(error.message); setLoading(false); return; }
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
     setDone(true);
     setLoading(false);
-    setTimeout(() => { window.location.href = "/"; }, 2000);
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 2000);
   };
 
   const inp = {
@@ -28,7 +40,6 @@ export default function ResetPassword() {
     border: "1px solid #e4ebe6",
     borderRadius: "8px",
     fontSize: "0.95rem",
-    fontFamily: "Georgia, serif",
     background: "#f8faf8",
     outline: "none",
     boxSizing: "border-box" as const,
@@ -36,27 +47,125 @@ export default function ResetPassword() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f8faf8",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <div style={{ width: "100%", maxWidth: "420px", padding: "0 1.5rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#1B3A2D" }}>NALPOP</div>
-          <div style={{ width: "2rem", height: "1px", background: "#E8C97A", margin: "0.5rem auto" }}></div>
+          <div
+            style={{
+              fontSize: "2rem",
+              letterSpacing: "0.15em",
+              color: "#1B3A2D",
+            }}
+          >
+            NALPOP
+          </div>
+          <div
+            style={{
+              width: "2rem",
+              height: "1px",
+              background: "#E8C97A",
+              margin: "0.5rem auto",
+            }}
+          ></div>
         </div>
-        <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e4ebe6" }}>
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: "16px",
+            padding: "2rem",
+            border: "1px solid #e4ebe6",
+          }}
+        >
           {done ? (
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>✅</div>
-              <h2 style={{ fontSize: "1.3rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "0.5rem" }}>Password updated!</h2>
-              <p style={{ fontSize: "0.85rem", color: "#4a5a52" }}>Redirecting you to sign in...</p>
+              <h2
+                style={{
+                  fontSize: "1.3rem",
+                  color: "#1B3A2D",
+                  fontWeight: "normal",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Password updated!
+              </h2>
+              <p style={{ fontSize: "0.85rem", color: "#4a5a52" }}>
+                Redirecting you to sign in...
+              </p>
             </div>
           ) : (
             <form onSubmit={handleReset}>
-              <h2 style={{ fontSize: "1.3rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" }}>Set new password</h2>
-              <p style={{ fontSize: "0.85rem", color: "#4a5a52", textAlign: "center", marginBottom: "1.5rem" }}>Choose a strong password for your account</p>
-              <input type="password" placeholder="New password" value={password} onChange={e => setPassword(e.target.value)} required style={inp} />
-              <input type="password" placeholder="Confirm password" value={confirm} onChange={e => setConfirm(e.target.value)} required style={inp} />
-              {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
-              <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.85rem", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer" }}>
+              <h2
+                style={{
+                  fontSize: "1.3rem",
+                  color: "#1B3A2D",
+                  fontWeight: "normal",
+                  marginBottom: "0.5rem",
+                  textAlign: "center",
+                }}
+              >
+                Set new password
+              </h2>
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "#4a5a52",
+                  textAlign: "center",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                Choose a strong password for your account
+              </p>
+              <input
+                type="password"
+                placeholder="New password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={inp}
+              />
+              <input
+                type="password"
+                placeholder="Confirm password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+                style={inp}
+              />
+              {error && (
+                <p
+                  style={{
+                    color: "#c0392b",
+                    fontSize: "0.85rem",
+                    marginBottom: "1rem",
+                    textAlign: "center",
+                  }}
+                >
+                  {error}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  padding: "0.85rem",
+                  background: "#1B3A2D",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "0.95rem",
+                  cursor: "pointer",
+                }}
+              >
                 {loading ? "Updating..." : "Update password"}
               </button>
             </form>

@@ -1,7 +1,10 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/events";
+import LoadingView from "@/components/LoadingView";
+import PageSkeleton from "@/components/shared/PageSkeleton";
 
 type AttendingEvent = {
   id: number;
@@ -37,41 +40,68 @@ export default function BrandHub() {
   const [attending, setAttending] = useState<AttendingEvent[]>([]);
   const [ownEvents, setOwnEvents] = useState<OwnEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [retry, setRetry] = useState(0);
+  const [signingOut, setSigningOut] = useState(false);
+  const signingOutRef = useRef(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
+    let active = true;
     const fetchAll = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.href = "/"; return; }
-      setUserEmail(user.email || "");
+      setLoading(true);
+      setLoadError("");
+      try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError && authError.name !== "AuthSessionMissingError") throw authError;
+      if (!user) { window.location.href = "/login"; return; }
 
-      const { data: profile } = await supabase.from("profiles").select("name").eq("email", user.email).single();
-      if (profile) setUserName(profile.name);
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("name").eq("email", user.email).maybeSingle();
+      if (profileError) throw profileError;
 
       const [brandRes, ownEventsRes] = await Promise.all([
         supabase.from("brands").select("*").eq("email", user.email),
         supabase.from("events").select("*").eq("organizer_email", user.email).order("created_at"),
       ]);
 
-      if (brandRes.data) setAttending(brandRes.data);
-      if (ownEventsRes.data) setOwnEvents(ownEventsRes.data);
-      setLoading(false);
+      if (brandRes.error || ownEventsRes.error) throw brandRes.error || ownEventsRes.error;
+      if (!active) return;
+      setUserEmail(user.email || "");
+      setUserName(profile?.name || "");
+      setAttending(brandRes.data ?? []);
+      setOwnEvents(ownEventsRes.data ?? []);
+      } catch (error) {
+        console.error("Could not load brand hub:", error);
+        if (active) setLoadError("Could not load your events. Please try again.");
+      } finally {
+        if (active) setLoading(false);
+      }
     };
-    fetchAll();
-  }, []);
+    void fetchAll();
+    return () => { active = false; };
+  }, [retry]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/";
+    if (signingOutRef.current) return;
+    signingOutRef.current = true;
+    setSigningOut(true);
+    try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    window.location.href = "/login";
+    } catch (error) {
+      console.error("Could not sign out:", error);
+      alert("Could not sign out. Please try again.");
+      signingOutRef.current = false;
+      setSigningOut(false);
+    }
   };
 
-  if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>
-  );
+  if (loading || loadError) return <LoadingView loading={loading} error={loadError} onRetry={() => setRetry(value => value + 1)} customLoader={<PageSkeleton label="Loading your events" />} page />;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8" }}>
 
       <div style={{ background: "#1B3A2D", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
@@ -80,7 +110,7 @@ export default function BrandHub() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <span style={{ fontSize: "0.85rem", color: "#d4c87a" }}>{userName || userEmail}</span>
-          <button onClick={handleLogout} style={{ fontSize: "0.8rem", padding: "5px 12px", background: "transparent", border: "1px solid #d4c87a44", borderRadius: "8px", cursor: "pointer", color: "#d4c87a", fontFamily: "Georgia, serif" }}>Sign out</button>
+          <button onClick={handleLogout} disabled={signingOut} style={{ fontSize: "0.8rem", padding: "5px 12px", background: "transparent", border: "1px solid #d4c87a44", borderRadius: "8px", cursor: "pointer", color: "#d4c87a" }}>{signingOut ? "Signing out..." : "Sign out"}</button>
         </div>
       </div>
 
@@ -110,15 +140,15 @@ export default function BrandHub() {
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", borderTop: "1px solid #f0f4f1", paddingTop: "1rem" }}>
                         <div>
                           <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "2px" }}>FEE</div>
-                          <div style={{ fontSize: "0.95rem", color: "#1B3A2D" }}>${Number(brand.fee_owed).toFixed(0)}</div>
+                          <div style={{ fontSize: "0.95rem", color: "#1B3A2D" }}>{formatCurrency(Number(brand.fee_owed))}</div>
                         </div>
                         <div>
                           <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "2px" }}>PAID</div>
-                          <div style={{ fontSize: "0.95rem", color: "#4a7c59" }}>${Number(brand.amount_paid).toFixed(0)}</div>
+                          <div style={{ fontSize: "0.95rem", color: "#4a7c59" }}>{formatCurrency(Number(brand.amount_paid))}</div>
                         </div>
                         <div>
                           <div style={{ fontSize: "0.65rem", color: "#4a5a52", marginBottom: "2px" }}>BALANCE</div>
-                          <div style={{ fontSize: "0.95rem", color: Number(brand.balance) > 0 ? "#c0392b" : "#4a7c59" }}>${Number(brand.balance).toFixed(0)}</div>
+                          <div style={{ fontSize: "0.95rem", color: Number(brand.balance) > 0 ? "#c0392b" : "#4a7c59" }}>{formatCurrency(Number(brand.balance))}</div>
                         </div>
                       </div>
                       <div style={{ marginTop: "0.75rem", fontSize: "0.78rem", color: "#E8C97A" }}>

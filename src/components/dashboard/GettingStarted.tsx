@@ -1,6 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import LoadingView from "@/components/LoadingView";
+import GettingStartedSkeleton from "@/components/dashboard/GettingStartedSkeleton";
 
 type Step = {
   key: string;
@@ -48,150 +50,308 @@ export default function GettingStarted({
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
   const [dismissed, setDismissed] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [retry, setRetry] = useState(0);
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
 
   useEffect(() => {
-    loadProgress();
-  }, [myEventsCount]);
+    if (dismissed) return;
+    let active = true;
+    setLoading(true);
+    setLoadError("");
 
-  const loadProgress = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const loadProgress = async () => {
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        if (!user?.email)
+          throw new Error("Please sign in to view getting started progress.");
 
-    const checks: Record<string, boolean> = {};
-    checks["created_event"] = myEventsCount > 0;
+        const checks: Record<string, boolean> = {
+          created_event: myEventsCount > 0,
+        };
 
-    if (checks["created_event"]) {
-      const [brandsRes, venueRes, spotsRes] = await Promise.all([
-        supabase.from("brands").select("id").eq("organizer_email", user.email).limit(1),
-        supabase.from("event_settings").select("venue_address").eq("organizer_email", user.email).not("venue_address", "is", null).limit(1),
-        supabase.from("event_settings").select("spots_to_fill").eq("organizer_email", user.email).gt("spots_to_fill", 0).limit(1),
-      ]);
-      checks["added_brand"] = (brandsRes.data?.length || 0) > 0;
-      checks["set_venue"] = (venueRes.data?.length || 0) > 0 && (venueRes.data?.[0]?.venue_address || "").trim() !== "";
-      checks["set_spots"] = (spotsRes.data?.length || 0) > 0;
-    }
+        const [progress] = await Promise.all([
+          checks.created_event
+            ? Promise.all([
+                supabase
+                  .from("brands")
+                  .select("id")
+                  .eq("organizer_email", user.email)
+                  .limit(1),
+                supabase
+                  .from("event_settings")
+                  .select("venue_address")
+                  .eq("organizer_email", user.email)
+                  .not("venue_address", "is", null)
+                  .limit(1),
+                supabase
+                  .from("event_settings")
+                  .select("spots_to_fill")
+                  .eq("organizer_email", user.email)
+                  .gt("spots_to_fill", 0)
+                  .limit(1),
+              ])
+            : null,
+        ]);
+        if (progress) {
+          const [brandsRes, venueRes, spotsRes] = progress;
+          const error = brandsRes.error || venueRes.error || spotsRes.error;
+          if (error) throw error;
+          checks.added_brand = (brandsRes.data?.length || 0) > 0;
+          checks.set_venue =
+            (venueRes.data?.length || 0) > 0 &&
+            (venueRes.data?.[0]?.venue_address || "").trim() !== "";
+          checks.set_spots = (spotsRes.data?.length || 0) > 0;
+        }
 
-    const { data: profile } = await supabase.from("profiles").select("getting_started").eq("email", user.email).maybeSingle();
-    if (profile?.getting_started?.sent_invite) checks["sent_invite"] = true;
-    if (profile?.getting_started?.dismissed) { setDismissed(true); onDismiss(); return; }
+        if (!active) return;
+        // if (profileRes.data?.getting_started?.sent_invite) checks.sent_invite = true;
+        // if (profileRes.data?.getting_started?.dismissed) {
+        //   setDismissed(true);
+        //   onDismissRef.current();
+        //   return;
+        // }
+        setCompleted(checks);
+      } catch (error) {
+        console.error("Failed to load getting started progress:", error);
+        if (active)
+          setLoadError(
+            "Could not load getting started progress. Please try again.",
+          );
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
 
-    setCompleted(checks);
-    setLoaded(true);
-  };
+    void loadProgress();
+    return () => {
+      active = false;
+    };
+  }, [myEventsCount, dismissed, retry]);
 
   const markStep = async (key: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
     const next = { ...completed, [key]: true };
     setCompleted(next);
-    const { data: profile } = await supabase.from("profiles").select("getting_started").eq("email", user.email).maybeSingle();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("getting_started")
+      .eq("email", user.email)
+      .maybeSingle();
     const existing = profile?.getting_started || {};
-    await supabase.from("profiles").update({ getting_started: { ...existing, [key]: true } }).eq("email", user.email);
+    await supabase
+      .from("profiles")
+      .update({ getting_started: { ...existing, [key]: true } })
+      .eq("email", user.email);
   };
 
   const handleDismiss = async () => {
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
-      const { data: profile } = await supabase.from("profiles").select("getting_started").eq("email", user.email).maybeSingle();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("getting_started")
+        .eq("email", user.email)
+        .maybeSingle();
       const existing = profile?.getting_started || {};
-      await supabase.from("profiles").update({ getting_started: { ...existing, dismissed: true } }).eq("email", user.email);
+      await supabase
+        .from("profiles")
+        .update({ getting_started: { ...existing, dismissed: true } })
+        .eq("email", user.email);
     }
     setDismissed(true);
     onDismiss();
     setSaving(false);
   };
 
-  if (!loaded || dismissed) return null;
+  if (dismissed) return null;
 
-  const completedCount = STEPS.filter(s => completed[s.key]).length;
+  const completedCount = STEPS.filter((s) => completed[s.key]).length;
   const allDone = completedCount === STEPS.length;
   const progress = Math.round((completedCount / STEPS.length) * 100);
 
   return (
-    <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #e4ebe6", marginBottom: "2rem", overflow: "hidden" }}>
-      <div style={{ background: "#1B3A2D", padding: "1.25rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <div style={{ fontSize: "0.65rem", color: "#E8C97A", letterSpacing: "0.12em", marginBottom: "4px" }}>GETTING STARTED</div>
-          <div style={{ fontSize: "1rem", color: "#fff" }}>
-            {allDone ? "You're all set 🎉" : `${completedCount} of ${STEPS.length} steps complete`}
-          </div>
-        </div>
-        <button
-          onClick={handleDismiss}
-          disabled={saving}
-          style={{ background: "transparent", border: "1px solid #ffffff33", color: "#ffffff88", padding: "4px 12px", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer", fontFamily: "Georgia, serif" }}
+    <LoadingView
+      loading={loading}
+      error={loadError}
+      onRetry={() => setRetry((value) => value + 1)}
+      customLoader={<GettingStartedSkeleton />}
+    >
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: "16px",
+          border: "1px solid #e4ebe6",
+          marginBottom: "2rem",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            background: "#1B3A2D",
+            padding: "1.25rem 1.5rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
         >
-          {allDone ? "Dismiss" : "Hide"}
-        </button>
-      </div>
-
-      <div style={{ height: "3px", background: "#e4ebe6" }}>
-        <div style={{ height: "100%", background: "#E8C97A", width: `${progress}%`, transition: "width 0.4s ease" }} />
-      </div>
-
-      <div style={{ padding: "0.5rem 1.5rem 1rem" }}>
-        {STEPS.map((step, i) => {
-          const done = !!completed[step.key];
-          return (
+          <div>
             <div
-              key={step.key}
               style={{
-                display: "flex",
-                gap: "12px",
-                alignItems: "flex-start",
-                padding: "12px 0",
-                borderBottom: i < STEPS.length - 1 ? "1px solid #f0f4f1" : "none",
-                opacity: done ? 0.45 : 1,
+                fontSize: "0.65rem",
+                color: "#E8C97A",
+                letterSpacing: "0.12em",
+                marginBottom: "4px",
               }}
             >
+              GETTING STARTED
+            </div>
+            <div style={{ fontSize: "1rem", color: "#fff" }}>
+              {allDone
+                ? "You're all set 🎉"
+                : `${completedCount} of ${STEPS.length} steps complete`}
+            </div>
+          </div>
+          <button
+            onClick={handleDismiss}
+            disabled={saving}
+            style={{
+              background: "transparent",
+              border: "1px solid #ffffff33",
+              color: "#ffffff88",
+              padding: "4px 12px",
+              borderRadius: "6px",
+              fontSize: "0.72rem",
+              cursor: "pointer",
+            }}
+          >
+            {allDone ? "Dismiss" : "Hide"}
+          </button>
+        </div>
+
+        <div style={{ height: "3px", background: "#e4ebe6" }}>
+          <div
+            style={{
+              height: "100%",
+              background: "#E8C97A",
+              width: `${progress}%`,
+              transition: "width 0.4s ease",
+            }}
+          />
+        </div>
+
+        <div style={{ padding: "0.5rem 1.5rem 1rem" }}>
+          {STEPS.map((step, i) => {
+            const done = !!completed[step.key];
+            return (
               <div
+                key={step.key}
                 style={{
-                  width: "20px",
-                  height: "20px",
-                  borderRadius: "50%",
-                  border: `2px solid ${done ? "#4a7c59" : "#e4ebe6"}`,
-                  background: done ? "#4a7c59" : "transparent",
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  marginTop: "2px",
-                  transition: "all 0.2s",
+                  gap: "12px",
+                  alignItems: "flex-start",
+                  padding: "12px 0",
+                  borderBottom:
+                    i < STEPS.length - 1 ? "1px solid #f0f4f1" : "none",
+                  opacity: done ? 0.45 : 1,
                 }}
               >
-                {done && (
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "0.88rem", color: "#1B3A2D", marginBottom: "3px", textDecoration: done ? "line-through" : "none" }}>
-                  {step.title}
+                <div
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "50%",
+                    border: `2px solid ${done ? "#4a7c59" : "#e4ebe6"}`,
+                    background: done ? "#4a7c59" : "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    marginTop: "2px",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {done && (
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                      <path
+                        d="M2 6l3 3 5-5"
+                        stroke="#fff"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
                 </div>
-                <div style={{ fontSize: "0.76rem", color: "#4a5a52", lineHeight: 1.6 }}>{step.desc}</div>
-                {step.manual && !done && (
-                  <button
-                    onClick={() => markStep(step.key)}
-                    style={{ marginTop: "6px", fontSize: "0.72rem", padding: "3px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52", fontFamily: "Georgia, serif" }}
+
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: "0.88rem",
+                      color: "#1B3A2D",
+                      marginBottom: "3px",
+                      textDecoration: done ? "line-through" : "none",
+                    }}
                   >
-                    Mark as done
-                  </button>
+                    {step.title}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.76rem",
+                      color: "#4a5a52",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {step.desc}
+                  </div>
+                  {step.manual && !done && (
+                    <button
+                      onClick={() => markStep(step.key)}
+                      style={{
+                        marginTop: "6px",
+                        fontSize: "0.72rem",
+                        padding: "3px 10px",
+                        background: "transparent",
+                        border: "1px solid #e4ebe6",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        color: "#4a5a52",
+                      }}
+                    >
+                      Mark as done
+                    </button>
+                  )}
+                </div>
+
+                {!done && (
+                  <div
+                    style={{
+                      fontSize: "0.65rem",
+                      color: "#d4c5b0",
+                      flexShrink: 0,
+                      marginTop: "3px",
+                    }}
+                  >
+                    {i + 1}/{STEPS.length}
+                  </div>
                 )}
               </div>
-
-              {!done && (
-                <div style={{ fontSize: "0.65rem", color: "#d4c5b0", flexShrink: 0, marginTop: "3px" }}>
-                  {i + 1}/{STEPS.length}
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </LoadingView>
   );
 }

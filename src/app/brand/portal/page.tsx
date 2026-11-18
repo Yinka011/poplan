@@ -2,13 +2,17 @@
 import { notifyOrganizer } from "@/lib/organizerNotify";
 import { sendEmail, emailTemplate } from "@/lib/email";
 import NotificationBell from "@/components/shared/NotificationBell";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { folderSegment, uploadToCloudinary } from "@/lib/cloudinary";
 import Announcements from "@/components/brand/Announcements";
 import FileUpload from "@/components/brand/FileUpload";
 import BrandInventory from "@/components/brand/BrandInventory";
 import BrandSales from "@/components/brand/BrandSales";
 import BrandTutorial from "@/components/brand/BrandTutorial";
+import { formatCurrency } from "@/lib/events";
+import LoadingView from "@/components/LoadingView";
+import PageSkeleton from "@/components/shared/PageSkeleton";
 
 type Brand = {
   id: number;
@@ -61,6 +65,10 @@ export default function BrandPortal() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [saving, setSaving] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [retry, setRetry] = useState(0);
+  const [action, setAction] = useState("");
+  const actionRef = useRef(false);
   const [userEmail, setUserEmail] = useState("");
   const [brandEmail, setBrandEmail] = useState("");
   const [venueAddress, setVenueAddress] = useState("");
@@ -91,38 +99,52 @@ export default function BrandPortal() {
   const today = new Date();
 
   useEffect(() => {
+    let active = true;
     const fetchAll = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.href = "/"; return; }
+      setLoading(true);
+      setLoadError("");
+      try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError && authError.name !== "AuthSessionMissingError") throw authError;
+      if (!user) { window.location.href = "/login"; return; }
       setUserEmail(user.email || "");
 
       let resolvedBrandEmail = user.email || "";
       let resolvedEvent = "";
 
       const brandRes = await supabase.from("brands").select("*").eq("email", user.email).order("id", { ascending: false }).limit(1).maybeSingle();
+      if (brandRes.error) throw brandRes.error;
 
+      let loadedBrand: Brand | null = brandRes.data;
+      let linkedOrganizerEmail = brandRes.data?.organizer_email || "";
       if (brandRes.data) {
         setBrand(brandRes.data);
         resolvedEvent = brandRes.data.event;
         setResolvedEvent(brandRes.data.event);
         setProfileData({ instagram: brandRes.data.instagram || "", website: brandRes.data.website || "", bio: brandRes.data.bio || "" });
       } else {
-        const { data: memberRes } = await supabase.from("brand_members").select("brand_email, event").eq("member_email", user.email).limit(1).maybeSingle();
+        const { data: memberRes, error: memberError } = await supabase.from("brand_members").select("brand_email, event").eq("member_email", user.email).limit(1).maybeSingle();
+        if (memberError) throw memberError;
         if (memberRes?.brand_email) {
           resolvedBrandEmail = memberRes.brand_email;
           resolvedEvent = memberRes.event || "";
-          const { data: linkedBrand } = await supabase.from("brands").select("*").eq("email", memberRes.brand_email).single();
+          const { data: linkedBrand, error: linkedError } = await supabase.from("brands").select("*").eq("email", memberRes.brand_email).single();
+          if (linkedError) throw linkedError;
           if (linkedBrand) {
+            loadedBrand = linkedBrand;
+            linkedOrganizerEmail = linkedBrand.organizer_email || "";
             setBrand(linkedBrand);
             setProfileData({ instagram: linkedBrand.instagram || "", website: linkedBrand.website || "", bio: linkedBrand.bio || "" });
           }
         }
       }
 
+      if (!active) return;
+      if (!loadedBrand) { setBrand(null); return; }
       setBrandEmail(resolvedBrandEmail);
 
       // Get organizer email from brand record
-      const brandOrgEmail = brandRes.data?.organizer_email || "";
+      const brandOrgEmail = linkedOrganizerEmail;
       setBrandOrgEmail(brandOrgEmail);
 
       const [deadlineRes, taskRes, settingsRes, messagesRes, eventRes, faqRes, profileRes] = await Promise.all([
@@ -135,6 +157,9 @@ export default function BrandPortal() {
         supabase.from("profiles").select("name").eq("email", brandOrgEmail).maybeSingle(),
       ]);
 
+      const queryError = [deadlineRes, taskRes, settingsRes, messagesRes, eventRes, faqRes, profileRes].find(result => result.error)?.error;
+      if (queryError) throw queryError;
+      if (!active) return;
       if (deadlineRes.data) setDeadlines(deadlineRes.data);
       if (taskRes.data) setTasks(taskRes.data);
       if (settingsRes.data?.venue_address) setVenueAddress(settingsRes.data.venue_address);
@@ -145,24 +170,24 @@ export default function BrandPortal() {
         if (eventRes.data.start_date) setEventStartDate(eventRes.data.start_date);
       }
       if (faqRes.data && faqRes.data.length > 0) {
-        setFaqs(faqRes.data.map((f: any) => ({ q: f.question, a: f.answer })));
+        setFaqs(faqRes.data.map(f => ({ q: f.question, a: f.answer })));
       }
       if (profileRes.data?.name) setOrganizerName(profileRes.data.name);
       else if (eventRes.data?.organizer_email) setOrganizerName(eventRes.data.organizer_email.split("@")[0]);
 
       const invRes = await supabase.from("brand_shipment_invoices").select("*").eq("brand_email", resolvedBrandEmail).order("created_at", { ascending: false });
       const shipRes = await supabase.from("brand_shipments").select("*").eq("brand_email", resolvedBrandEmail).order("created_at", { ascending: false });
+      if (invRes.error || shipRes.error) throw invRes.error || shipRes.error;
+      if (!active) return;
       if (shipRes.data) setBrandShipments(shipRes.data);
       if (invRes.data) setShipmentInvoices(invRes.data);
-      setLoading(false);
-
       // Notify organizer of brand login
       const loginKey = `brand_login_notified_${user.email}`;
       if (!localStorage.getItem(loginKey)) {
         await notifyOrganizer({
           event: resolvedEvent,
           brandEmail: resolvedBrandEmail,
-          brandName: brand?.name || resolvedBrandEmail,
+          brandName: loadedBrand.name || resolvedBrandEmail,
           type: "login",
           message: `logged in to their portal for the first time`,
         });
@@ -173,15 +198,37 @@ export default function BrandPortal() {
       if (!localStorage.getItem("brand_tutorial_seen_dismissed")) {
         setShowTutorial(true);
       }
+      } catch (error) {
+        console.error("Could not load brand portal:", error);
+        if (active) setLoadError("Could not load your portal. Please try again.");
+      } finally {
+        if (active) setLoading(false);
+      }
     };
-    fetchAll();
-  }, []);
+    void fetchAll();
+    return () => { active = false; };
+  }, [retry]);
+
+  const runAction = async (label: string, callback: () => Promise<void>) => {
+    if (actionRef.current) return;
+    actionRef.current = true;
+    setAction(label);
+    try { await callback(); }
+    catch (error) {
+      console.error(`${label} failed:`, error);
+      alert(`Could not ${label.toLowerCase()}. Please try again.`);
+    } finally {
+      actionRef.current = false;
+      setAction("");
+    }
+  };
 
   const daysToEvent = eventStartDate ? Math.ceil((new Date(eventStartDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
 
   const addShipmentPackage = async () => {
     if (!newShipment.courier || !brandEmail) return;
-    const { data } = await supabase.from("brand_shipments").insert({
+    await runAction("Add shipment", async () => {
+    const { data, error } = await supabase.from("brand_shipments").insert({
       brand_email: brandEmail,
       event: brand?.event || "",
       courier: newShipment.courier,
@@ -190,42 +237,61 @@ export default function BrandPortal() {
       shipped: true,
       shipped_at: new Date().toISOString(),
     }).select().single();
-    if (data) setBrandShipments(prev => [data, ...prev]);
+    if (error) throw error;
+    if (!data) throw new Error("Saved shipment was not returned.");
+    setBrandShipments(prev => [data, ...prev]);
     setNewShipment({ courier: "", tracking_number: "", description: "" });
     setAddingShipment(false);
+    });
   };
 
   const saveShippingDetails = async () => {
     if (!brand) return;
-    await supabase.from("brands").update({
+    await runAction("Save shipping details", async () => {
+    const { error } = await supabase.from("brands").update({
       courier: shippingDetails.courier,
       tracking_number: shippingDetails.tracking_number,
       shipping_invoice: shippingDetails.shipping_invoice,
-    }).eq("id", brand.id);
+    }).eq("id", brand.id).select("id").single();
+    if (error) throw error;
     setBrand(prev => prev ? { ...prev, ...shippingDetails } : prev);
     setEditingShipping(false);
+    });
   };
 
   const uploadShipmentInvoice = async () => {
     if (!newInvoiceFile || !brandEmail) return;
+    const amount = newInvoiceAmount.trim() ? Number(newInvoiceAmount) : 0;
+    if (!Number.isFinite(amount) || amount < 0) { alert("Enter a valid non-negative amount."); return; }
+    await runAction("Upload invoice", async () => {
     setUploadingInvoice(true);
-    const path = `${brandEmail}/shipment-invoices/${Date.now()}_${newInvoiceFile.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-    const { error } = await supabase.storage.from("brand-uploads").upload(path, newInvoiceFile, { upsert: true });
-    if (!error) {
-      const { data: urlData } = supabase.storage.from("brand-uploads").getPublicUrl(path);
-      const { data } = await supabase.from("brand_shipment_invoices").insert({ brand_email: brandEmail, event: brand?.event || "Atlanta", file_name: newInvoiceFile.name, file_url: urlData.publicUrl, amount: parseFloat(newInvoiceAmount) || 0, description: newInvoiceDesc }).select().single();
-      if (data) setShipmentInvoices(prev => [data, ...prev]);
+    try {
+    const uploaded = await uploadToCloudinary(newInvoiceFile, `${folderSegment(brandEmail)}/shipment-invoices`);
+    {
+      try {
+      const { data, error: insertError } = await supabase.from("brand_shipment_invoices").insert({ brand_email: brandEmail, event: brand?.event || "Atlanta", file_name: newInvoiceFile.name, file_url: uploaded.url, amount, description: newInvoiceDesc }).select().single();
+      if (insertError) throw insertError;
+      if (!data) throw new Error("Saved invoice was not returned.");
+      setShipmentInvoices(prev => [data, ...prev]);
       setNewInvoiceFile(null); setNewInvoiceDesc(""); setNewInvoiceAmount("");
+      } catch (error) {
+        console.error("Uploaded invoice record could not be saved:", error);
+        alert("The invoice file was uploaded, but its record could not be saved; the file may need separate cleanup.");
+      }
     }
-    setUploadingInvoice(false);
+    } finally { setUploadingInvoice(false); }
+    });
   };
 
   const toggleShipped = async () => {
     if (!brand) return;
+    await runAction("Update shipping status", async () => {
     setMarkingShipped(true);
+    try {
     const newShipped = !brand.shipped;
     const now = new Date().toISOString();
-    await supabase.from("brands").update({ shipped: newShipped, shipped_at: newShipped ? now : null }).eq("id", brand.id);
+    const { error } = await supabase.from("brands").update({ shipped: newShipped, shipped_at: newShipped ? now : null }).eq("id", brand.id).select("id").single();
+    if (error) throw error;
     setBrand(prev => prev ? { ...prev, shipped: newShipped, shipped_at: newShipped ? now : "" } : prev);
     if (newShipped && brand) {
       await notifyOrganizer({
@@ -236,37 +302,48 @@ export default function BrandPortal() {
         message: `marked their products as shipped`,
       });
     }
-    setMarkingShipped(false);
+    } finally { setMarkingShipped(false); }
+    });
   };
 
   const isCompleted = (deadlineId: number) => tasks.find(t => t.deadline_id === deadlineId)?.completed || false;
 
   const toggleTask = async (deadline: Deadline) => {
     if (!brandEmail) return;
+    await runAction("Update task", async () => {
     setSaving(deadline.id);
+    try {
     const existing = tasks.find(t => t.deadline_id === deadline.id);
     if (existing) {
       const { error } = await supabase.from("brand_tasks").update({ completed: !existing.completed }).eq("id", existing.id);
-      if (!error) setTasks(tasks.map(t => t.id === existing.id ? { ...t, completed: !t.completed } : t));
+      if (error) throw error;
+      setTasks(tasks.map(t => t.id === existing.id ? { ...t, completed: !t.completed } : t));
     } else {
       const { data, error } = await supabase.from("brand_tasks").insert({
         event: brand?.event || "Atlanta", task: deadline.task, due_date: deadline.due_date,
         brand_email: brandEmail, completed: true, deadline_id: deadline.id,
       }).select().single();
-      if (!error && data) setTasks([...tasks, data]);
+      if (error) throw error;
+      if (!data) throw new Error("Saved task was not returned.");
+      setTasks([...tasks, data]);
     }
-    setSaving(null);
+    } finally { setSaving(null); }
+    });
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
-    const { data } = await supabase.from("brand_messages").insert({
+    await runAction("Send message", async () => {
+    const { data, error } = await supabase.from("brand_messages").insert({
       event: brand?.event || "Atlanta", brand_email: brandEmail,
       organizer_email: brand?.organizer_email || "", sender_email: userEmail,
       sender_name: brand?.name || userEmail, message: newMessage,
     }).select().single();
-    if (data) {
+    if (error) throw error;
+    if (!data) throw new Error("Sent message was not returned.");
+    {
       setMessages(prev => [...prev, data]);
+      setNewMessage("");
       await notifyOrganizer({
         event: brand?.event || "Atlanta",
         brandEmail,
@@ -275,7 +352,7 @@ export default function BrandPortal() {
         message: `sent a message: "${newMessage.slice(0, 60)}${newMessage.length > 60 ? "..." : ""}"`,
       });
       // Email the organizer
-      await sendEmail({
+      const emailResult = await sendEmail({
         to: brand?.organizer_email || "",
 
         subject: `New message from ${brand?.name}`,
@@ -283,28 +360,36 @@ export default function BrandPortal() {
           title: `Message from ${brand?.name}`,
           message: newMessage,
           buttonText: "Reply in Nalpop",
-          buttonUrl: `https://nalpop.com/login/organizer/events`,
+          buttonUrl: `https://nalpop.com/organizer/events`,
         }),
       });
+      if (!emailResult?.success) alert("Your message was sent, but the organizer's email notification could not be sent.");
     }
-    setNewMessage("");
+    });
   };
 
   const saveProfile = async () => {
     if (!brand) return;
+    await runAction("Save profile", async () => {
     setSavingProfile(true);
-    await supabase.from("brands").update({ instagram: profileData.instagram, website: profileData.website, bio: profileData.bio }).eq("id", brand.id);
+    try {
+    const { error } = await supabase.from("brands").update({ instagram: profileData.instagram, website: profileData.website, bio: profileData.bio }).eq("id", brand.id).select("id").single();
+    if (error) throw error;
     setBrand(prev => prev ? { ...prev, ...profileData } : prev);
     setEditingProfile(false);
-    setSavingProfile(false);
+    } finally { setSavingProfile(false); }
+    });
   };
 
   const completed = deadlines.filter(d => isCompleted(d.id)).length;
   const progress = deadlines.length ? Math.round((completed / deadlines.length) * 100) : 0;
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/";
+    await runAction("Sign out", async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    window.location.href = "/login";
+    });
   };
 
   const formatDate = (dateStr: string) => {
@@ -312,7 +397,7 @@ export default function BrandPortal() {
     return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
-  const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", width: "100%", boxSizing: "border-box" as const, ...style });
+  const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", minWidth: 0, width: "100%", boxSizing: "border-box" as const, ...style });
 
   const tabs = [
     { key: "home", label: "Home" },
@@ -326,41 +411,41 @@ export default function BrandPortal() {
     { key: "faq", label: "FAQ" },
   ];
 
-  if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading your portal...</div>
-  );
+  if (loading || loadError) return <LoadingView loading={loading} error={loadError} onRetry={() => setRetry(value => value + 1)} customLoader={<PageSkeleton label="Loading your portal" />} page />;
 
   if (!brand) return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
+    <div className="[overflow-wrap:anywhere]" style={{ minHeight: "100vh", background: "#f8faf8", padding: "1.5rem", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "1.5rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>NALPOP</div>
         <p style={{ color: "#4a5a52", marginBottom: "1rem" }}>No brand found for {userEmail}. Please contact your event organizer.</p>
-        <button onClick={handleLogout} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>Sign out</button>
+        <button onClick={handleLogout} disabled={!!action} style={{ padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer" }}>{action ? "Signing out..." : "Sign out"}</button>
       </div>
     </div>
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif" }}>
+    <div className="[overflow-wrap:anywhere]" style={{ minHeight: "100vh", background: "#f8faf8" }}>
       {showTutorial && <BrandTutorial brandName={brand?.name || ""} eventName={eventName} onClose={() => setShowTutorial(false)} />}
+      {action && <div role="status" style={{ padding: "8px 1rem", color: "#1B3A2D" }}>{action} in progress...</div>}
+      <fieldset disabled={!!action} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
 
       {/* Top bar */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e4ebe6", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky" as const, top: 0, zIndex: 10 }}>
+      <div style={{ background: "#fff", borderBottom: "1px solid #e4ebe6", padding: "1rem 2rem", display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "space-between", alignItems: "center", position: "sticky" as const, top: 0, zIndex: 10 }}>
         <div>
           <div style={{ fontSize: "1.4rem", letterSpacing: "0.15em", color: "#1B3A2D" }}>NALPOP</div>
           <div style={{ width: "2rem", height: "1px", background: "#E8C97A", marginTop: "2px" }}></div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", minWidth: 0, alignItems: "center", gap: "1rem" }}>
           <span style={{ fontSize: "0.85rem", color: "#4a5a52" }}>{brand.name}</span>
           <NotificationBell userEmail={userEmail} />
-          <button onClick={handleLogout} style={{ fontSize: "0.8rem", padding: "5px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", cursor: "pointer", color: "#4a5a52", fontFamily: "Georgia, serif" }}>Sign out</button>
+          <button onClick={handleLogout} style={{ fontSize: "0.8rem", padding: "5px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", cursor: "pointer", color: "#4a5a52" }}>Sign out</button>
         </div>
       </div>
 
       {/* Nav tabs */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e4ebe6", padding: "0 1rem", display: "flex", gap: "0", overflowX: "auto" as const, scrollbarWidth: "none" as const }}>
+      <div role="navigation" aria-label="Portal sections" tabIndex={0} style={{ background: "#fff", borderBottom: "1px solid #e4ebe6", padding: "0 1rem", display: "flex", gap: "0", overflowX: "auto" as const }}>
         {tabs.map(tab => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key as "home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "shipments" | "profile" | "faq")} style={{ padding: "0.85rem 1.25rem", background: "transparent", border: "none", borderBottom: activeTab === tab.key ? "2px solid #E8C97A" : "2px solid transparent", color: activeTab === tab.key ? "#1B3A2D" : "#4a5a52", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif", whiteSpace: "nowrap" as const, transition: "all 0.15s" }}>
+          <button key={tab.key} onClick={() => setActiveTab(tab.key as "home" | "tasks" | "files" | "messages" | "inventory" | "sales" | "shipments" | "profile" | "faq")} style={{ padding: "0.85rem 1.25rem", background: "transparent", border: "none", borderBottom: activeTab === tab.key ? "2px solid #E8C97A" : "2px solid transparent", color: activeTab === tab.key ? "#1B3A2D" : "#4a5a52", fontSize: "0.82rem", cursor: "pointer",  whiteSpace: "nowrap" as const, transition: "all 0.15s" }}>
             {tab.label}
           </button>
         ))}
@@ -377,7 +462,7 @@ export default function BrandPortal() {
               <div style={{ fontSize: "1rem", color: "#1B3A2D", marginBottom: "2px" }}>{eventName}{eventDates ? ` · ${eventDates}` : ""}</div>
               {venueAddress && <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginBottom: "1.25rem" }}>{venueAddress}</div>}
               <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", margin: 0, lineHeight: 1.3 }}>
-                Welcome, <span style={{ fontFamily: "Didot, 'Playfair Display', 'Times New Roman', serif", fontStyle: "italic" }}>{brand.name}</span> 🖤
+                Welcome, <span style={{  fontStyle: "italic" }}>{brand.name}</span> 🖤
               </h1>
               <p style={{ color: "#4a5a52", marginTop: "1rem", fontSize: "0.95rem", lineHeight: 1.7 }}>
                 This is your brand portal — everything you need to prepare for {eventName} is right here. Work through your to-do list, upload your inventory, track your shipment and reach out if you have any questions.
@@ -389,18 +474,18 @@ export default function BrandPortal() {
 
             {/* Fee tracker */}
             <div style={{ background: "#1B3A2D", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "#fff" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1.5rem", alignItems: "center" }}>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4" style={{ alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: "0.65rem", color: "#d4c87a", letterSpacing: "0.15em", marginBottom: "8px" }}>PARTICIPATION FEE</div>
-                  <div style={{ fontSize: "1.6rem", fontWeight: "normal" }}>${Number(brand.fee_owed).toFixed(2)}</div>
+                  <div style={{ fontSize: "1.6rem", fontWeight: "normal" }}>{formatCurrency(Number(brand.fee_owed))}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: "0.65rem", color: "#d4c87a", letterSpacing: "0.15em", marginBottom: "8px" }}>PAID</div>
-                  <div style={{ fontSize: "1.6rem", color: "#90c9a0", fontWeight: "normal" }}>${Number(brand.amount_paid).toFixed(2)}</div>
+                  <div style={{ fontSize: "1.6rem", color: "#90c9a0", fontWeight: "normal" }}>{formatCurrency(Number(brand.amount_paid))}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: "0.65rem", color: "#d4c87a", letterSpacing: "0.15em", marginBottom: "8px" }}>BALANCE DUE</div>
-                  <div style={{ fontSize: "1.6rem", color: Number(brand.balance) > 0 ? "#e8c97a" : "#90c9a0", fontWeight: "normal" }}>${Number(brand.balance).toFixed(2)}</div>
+                  <div style={{ fontSize: "1.6rem", color: Number(brand.balance) > 0 ? "#e8c97a" : "#90c9a0", fontWeight: "normal" }}>{formatCurrency(Number(brand.balance))}</div>
                   {Number(brand.balance) > 0 && <div style={{ fontSize: "0.68rem", color: "#e8c97a", marginTop: "4px" }}>Payment outstanding</div>}
                 </div>
                 <div style={{ background: "#fff", borderRadius: "12px", padding: "1rem", textAlign: "center" as const }}>
@@ -414,7 +499,7 @@ export default function BrandPortal() {
             <Announcements event={brand.event || "Atlanta"} brandEmail={brandEmail} organizerEmail={brandOrgEmail} />
 
             {/* Shipment + Tasks side by side */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1.5rem" }}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2" style={{ marginTop: "1.5rem" }}>
               {/* Shipment card */}
               <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6", cursor: "pointer" }} onClick={() => setActiveTab("shipments")}>
                 <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "8px" }}>SHIPMENTS</div>
@@ -446,9 +531,9 @@ export default function BrandPortal() {
         {activeTab === "shipments" && (
           <div>
             <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6", marginBottom: "1rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                 <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em" }}>SHIPMENT PACKAGES</div>
-                <button onClick={() => setAddingShipment(true)} style={{ fontSize: "0.78rem", padding: "5px 12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add package</button>
+                <button onClick={() => setAddingShipment(true)} style={{ fontSize: "0.78rem", padding: "5px 12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>+ Add package</button>
               </div>
               <div style={{ background: "#f0f4f1", borderRadius: "8px", padding: "8px 10px", marginBottom: "12px", borderLeft: "3px solid #1B3A2D" }}>
                 <div style={{ fontSize: "0.65rem", color: "#1B3A2D", letterSpacing: "0.08em", marginBottom: "3px" }}>SHIP TO</div>
@@ -456,15 +541,15 @@ export default function BrandPortal() {
               </div>
               {addingShipment && (
                 <div style={{ border: "1px solid #e4ebe6", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
-                  <div style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
-                    <input placeholder="Description e.g. Box 1 - 10 dresses" value={newShipment.description} onChange={e => setNewShipment({...newShipment, description: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
-                    <select value={newShipment.courier} onChange={e => setNewShipment({...newShipment, courier: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }}>
+                  <div className="[&>input]:min-w-0 [&>select]:min-w-0" style={{ display: "flex", flexDirection: "column" as const, gap: "8px" }}>
+                    <input placeholder="Description e.g. Box 1 - 10 dresses" value={newShipment.description} onChange={e => setNewShipment({...newShipment, description: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem" }} />
+                    <select value={newShipment.courier} onChange={e => setNewShipment({...newShipment, courier: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem" }}>
                       <option value="">Select courier...</option>
                       {["DHL", "UPS", "FedEx", "USPS", "Amgray Logistics", "Other"].map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
-                    <input placeholder="Tracking number" value={newShipment.tracking_number} onChange={e => setNewShipment({...newShipment, tracking_number: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif" }} />
+                    <input placeholder="Tracking number" value={newShipment.tracking_number} onChange={e => setNewShipment({...newShipment, tracking_number: e.target.value})} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem" }} />
                     <div style={{ display: "flex", gap: "8px" }}>
-                      <button onClick={addShipmentPackage} style={{ flex: 1, padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>Save package</button>
+                      <button onClick={addShipmentPackage} style={{ flex: 1, padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Save package</button>
                       <button onClick={() => setAddingShipment(false)} style={{ padding: "8px 12px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>Cancel</button>
                     </div>
                   </div>
@@ -473,7 +558,7 @@ export default function BrandPortal() {
               {brandShipments.length === 0 ? (
                 <div style={{ textAlign: "center" as const, padding: "1.5rem", color: "#4a5a52", fontSize: "0.82rem" }}>No packages added yet. Click + Add package to start.</div>
               ) : brandShipments.map(s => (
-                <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid #f0f4f1" }}>
+                <div key={s.id} style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid #f0f4f1" }}>
                   <div>
                     <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>{s.description || "Shipment package"}</div>
                     <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>🚚 {s.courier} {s.tracking_number && `· ${s.tracking_number}`}</div>
@@ -486,25 +571,25 @@ export default function BrandPortal() {
               <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "8px" }}>SHIPPING INVOICES</div>
               <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1rem" }}>Upload invoices from your shipping carrier so your organizer can reconcile payments.</p>
               <div style={{ border: "1px dashed #e4ebe6", borderRadius: "10px", padding: "1rem", marginBottom: "1rem" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
-                  <input placeholder="Description e.g. DHL invoice" value={newInvoiceDesc} onChange={e => setNewInvoiceDesc(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
-                  <input placeholder="Amount" type="number" value={newInvoiceAmount} onChange={e => setNewInvoiceAmount(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 [&>input]:min-w-0" style={{ marginBottom: "8px" }}>
+                  <input placeholder="Description e.g. DHL invoice" value={newInvoiceDesc} onChange={e => setNewInvoiceDesc(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem" }} />
+                  <input placeholder="Amount" type="number" value={newInvoiceAmount} onChange={e => setNewInvoiceAmount(e.target.value)} style={{ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.82rem" }} />
                 </div>
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setNewInvoiceFile(e.target.files?.[0] || null)} style={{ marginBottom: "8px", fontSize: "0.82rem", width: "100%" }} />
-                <button onClick={uploadShipmentInvoice} disabled={uploadingInvoice || !newInvoiceFile} style={{ width: "100%", padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+                <button onClick={uploadShipmentInvoice} disabled={uploadingInvoice || !newInvoiceFile} style={{ width: "100%", padding: "8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.82rem", cursor: "pointer" }}>
                   {uploadingInvoice ? "Uploading..." : "↑ Upload invoice"}
                 </button>
               </div>
               {shipmentInvoices.length === 0 ? (
                 <div style={{ textAlign: "center" as const, padding: "1.5rem", color: "#4a5a52", fontSize: "0.82rem" }}>No invoices uploaded yet.</div>
               ) : shipmentInvoices.map(inv => (
-                <div key={inv.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f0f4f1" }}>
+                <div key={inv.id} style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f0f4f1" }}>
                   <div>
                     <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>{inv.description || inv.file_name}</div>
                     <div style={{ fontSize: "0.7rem", color: "#4a5a52" }}>{new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
                   </div>
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    {inv.amount > 0 && <span style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>${Number(inv.amount).toFixed(2)}</span>}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+                    {inv.amount > 0 && <span style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>{formatCurrency(Number(inv.amount))}</span>}
                     <a href={inv.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.75rem", padding: "4px 10px", background: "#f0f4f1", color: "#1B3A2D", borderRadius: "6px", textDecoration: "none" }}>↓</a>
                   </div>
                 </div>
@@ -515,7 +600,7 @@ export default function BrandPortal() {
 
         {activeTab === "tasks" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
               <div style={{ fontSize: "1rem", color: "#1B3A2D" }}>Your to-do list</div>
               <div style={{ fontSize: "0.8rem", color: "#4a5a52" }}>{completed} of {deadlines.length} complete</div>
             </div>
@@ -527,13 +612,13 @@ export default function BrandPortal() {
               const done = isCompleted(deadline.id);
               const isSaving = saving === deadline.id;
               return (
-                <div key={deadline.id} onClick={() => !isSaving && toggleTask(deadline)} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 8px", borderRadius: "8px", cursor: isSaving ? "wait" : "pointer", opacity: isSaving ? 0.7 : 1 }} onMouseEnter={e => (e.currentTarget.style.background = "#f8faf8")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                <div key={deadline.id} onClick={() => !action && !isSaving && toggleTask(deadline)} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px", padding: "10px 8px", borderRadius: "8px", cursor: isSaving ? "wait" : "pointer", opacity: isSaving ? 0.7 : 1 }} onMouseEnter={e => (e.currentTarget.style.background = "#f8faf8")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                   <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: done ? "none" : "2px solid #d4c5b0", background: done ? "#E8C97A" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
                     {done && <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>}
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "0.9rem", color: done ? "#b0a090" : "#1B3A2D", textDecoration: done ? "line-through" : "none" }}>{deadline.task}</div>
-                    <div style={{ display: "flex", gap: "8px", marginTop: "2px" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "2px" }}>
                       <span style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Due {deadline.due_date}</span>
                       <span style={{ fontSize: "0.7rem", padding: "1px 6px", borderRadius: "10px", background: (categoryColors[deadline.category] || "#4a5a52") + "22", color: categoryColors[deadline.category] || "#4a5a52" }}>{deadline.category}</span>
                     </div>
@@ -607,7 +692,7 @@ export default function BrandPortal() {
         {/* PROFILE TAB */}
         {activeTab === "profile" && (
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <div style={{ fontSize: "1rem", color: "#1B3A2D" }}>Brand profile</div>
               {!editingProfile ? (
                 <button onClick={() => setEditingProfile(true)} style={{ fontSize: "0.8rem", padding: "5px 14px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", cursor: "pointer", color: "#4a5a52" }}>Edit profile</button>
@@ -677,6 +762,7 @@ export default function BrandPortal() {
         )}
 
       </div>
+      </fieldset>
     </div>
   );
 }

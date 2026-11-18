@@ -31,7 +31,7 @@ export default function WelcomeModal({ brandName, onClose }: { brandName: string
 
   return (
     <div style={{ position: "fixed" as const, inset: 0, background: "#00000066", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "480px", width: "100%", fontFamily: "Georgia, serif", position: "relative" as const }}>
+      <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "480px", width: "100%",  position: "relative" as const }}>
         <div style={{ marginBottom: "2rem" }}>
           <div style={{ fontSize: "0.7rem", letterSpacing: "0.15em", color: "#E8C97A", marginBottom: "6px" }}>WELCOME TO NALPOP</div>
           <h2 style={{ fontSize: "1.4rem", color: "#1B3A2D", fontWeight: "normal", margin: 0 }}>
@@ -53,7 +53,7 @@ export default function WelcomeModal({ brandName, onClose }: { brandName: string
           <button onClick={() => setStep(s => s - 1)} style={{ fontSize: "0.85rem", color: "#4a5a52", background: "transparent", border: "none", cursor: "pointer", padding: "8px 0", visibility: step === 0 ? "hidden" : "visible" as const }}>
             Back
           </button>
-          <button onClick={() => isLast ? onClose() : setStep(s => s + 1)} style={{ padding: "10px 24px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.9rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+          <button onClick={() => isLast ? onClose() : setStep(s => s + 1)} style={{ padding: "10px 24px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.9rem", cursor: "pointer" }}>
             {isLast ? "Lets go" : "Next"}
           </button>
         </div>

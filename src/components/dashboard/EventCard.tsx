@@ -18,7 +18,7 @@ type EventCardProps = {
 export function EventCard({ event }: EventCardProps) {
   return (
     <Link
-      href={`/login/organizer/events/${event.slug}`}
+      href={`/organizer/events/${event.slug}`}
       className="group flex flex-col rounded-2xl border border-nude-300/50 bg-white/70 p-6 shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-brown-500/30 hover:bg-white hover:shadow-md hover:shadow-brown-500/5"
     >
       <div className="flex items-start justify-between gap-3">

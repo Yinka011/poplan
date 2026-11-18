@@ -55,7 +55,7 @@ export default function WelcomeTutorial({ onClose }: Props) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#00000066", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "480px", width: "100%", fontFamily: "Georgia, serif", position: "relative" as const }}>
+      <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "480px", width: "100%",  position: "relative" as const }}>
 
         {/* Progress dots */}
         <div style={{ display: "flex", gap: "6px", marginBottom: "2rem", justifyContent: "center" }}>
@@ -76,9 +76,9 @@ export default function WelcomeTutorial({ onClose }: Props) {
         {/* Buttons */}
         <div style={{ display: "flex", gap: "10px" }}>
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: "10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#4a5a52", fontFamily: "Georgia, serif" }}>Back</button>
+            <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: "10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#4a5a52" }}>Back</button>
           )}
-          <button onClick={isLast ? onClose : () => setStep(step + 1)} style={{ flex: 2, padding: "10px", background: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#fff", fontFamily: "Georgia, serif" }}>
+          <button onClick={isLast ? onClose : () => setStep(step + 1)} style={{ flex: 2, padding: "10px", background: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#fff" }}>
             {isLast ? `Let's go →` : "Next →"}
           </button>
         </div>
@@ -86,7 +86,7 @@ export default function WelcomeTutorial({ onClose }: Props) {
         {/* Skip */}
         {!isLast && (
           <div style={{ textAlign: "center", marginTop: "1rem" }}>
-            <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "0.78rem", color: "#b0a090", fontFamily: "Georgia, serif" }}>Skip tutorial</button>
+            <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "0.78rem", color: "#b0a090" }}>Skip tutorial</button>
           </div>
         )}
       </div>

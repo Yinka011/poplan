@@ -56,7 +56,7 @@ export default function Announcements({ event, brandEmail, organizerEmail }: { e
   return (
     <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6", marginBottom: "1.5rem" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
-        <div style={{ fontSize: "1rem", color: "#1B3A2D", fontFamily: "Georgia, serif" }}>Announcements</div>
+        <div style={{ fontSize: "1rem", color: "#1B3A2D" }}>Announcements</div>
         {visible.length > 0 && (
           <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "20px", background: "#f0f4f1", color: "#4a5a52" }}>{visible.length}</span>
         )}
@@ -68,8 +68,8 @@ export default function Announcements({ event, brandEmail, organizerEmail }: { e
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {visible.map(a => (
             <div key={a.id} style={{ background: a.pinned ? "#fdf8f3" : "#f8faf8", borderRadius: "10px", padding: "1rem", border: `1px solid ${a.pinned ? "#e4ebe6" : "#f0f4f1"}`, position: "relative" as const }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", minWidth: 0, alignItems: "center", gap: "6px" }}>
                   {a.pinned && <span style={{ fontSize: "0.65rem", padding: "1px 6px", borderRadius: "10px", background: "#f0f4f1", color: "#4a5a52", letterSpacing: "0.05em" }}>PINNED</span>}
                   <span style={{ fontSize: "0.75rem", color: "#E8C97A", fontWeight: 500 }}>{a.author}</span>
                 </div>

@@ -31,7 +31,7 @@ export default function WelcomeModal({ brandName, onClose }: { brandName: string
 
   return (
     <div style={{ position: "fixed" as const, inset: 0, background: "#00000066", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "480px", width: "100%", fontFamily: "Georgia, serif", position: "relative" as const }}>
+      <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "480px", width: "100%",  position: "relative" as const }}>
 
         <div style={{ marginBottom: "2rem" }}>
           <div style={{ fontSize: "0.7rem", letterSpacing: "0.15em", color: "#b87333", marginBottom: "6px" }}>WELCOME TO POPLAN</div>
@@ -48,7 +48,7 @@ export default function WelcomeModal({ brandName, onClose }: { brandName: string
         </div>
 
         <div style={{ marginBottom: "2rem" }}>
-          <div style={{ fontSize: "2.5rem", color: "#f0ebe4", fontFamily: "Georgia, serif", lineHeight: 1, marginBottom: "0.5rem" }}>{current.number}</div>
+          <div style={{ fontSize: "2.5rem", color: "#f0ebe4",  lineHeight: 1, marginBottom: "0.5rem" }}>{current.number}</div>
           <h3 style={{ fontSize: "1.1rem", color: "#2c1810", fontWeight: "normal", margin: "0 0 0.75rem 0" }}>{current.title}</h3>
           <p style={{ fontSize: "0.88rem", color: "#8b7355", lineHeight: 1.75, margin: 0 }}>{current.description}</p>
         </div>
@@ -57,7 +57,7 @@ export default function WelcomeModal({ brandName, onClose }: { brandName: string
           <button onClick={() => setStep(s => s - 1)} style={{ fontSize: "0.85rem", color: "#8b7355", background: "transparent", border: "none", cursor: "pointer", padding: "8px 0", visibility: step === 0 ? "hidden" : "visible" as const }}>
             ← Back
           </button>
-          <button onClick={() => isLast ? onClose() : setStep(s => s + 1)} style={{ padding: "10px 24px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.9rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+          <button onClick={() => isLast ? onClose() : setStep(s => s + 1)} style={{ padding: "10px 24px", background: "#2c1810", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.9rem", cursor: "pointer" }}>
             {isLast ? "Let's go →" : "Next →"}
           </button>
         </div>

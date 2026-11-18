@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { OrganizerProvider } from "@/context/OrganizerContext";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  DM_Sans,
+  Inter,
+  Space_Grotesk,
+} from "next/font/google";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -13,6 +18,18 @@ const sans = DM_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-sans",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-space-grotesk",
 });
 
 export const metadata: Metadata = {
@@ -28,7 +45,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${display.variable} ${sans.variable} antialiased`}>
+      <body
+        className={`${display.variable} ${sans.variable} ${inter.variable} ${spaceGrotesk.variable} antialiased`}
+      >
         <OrganizerProvider>{children}</OrganizerProvider>
       </body>
     </html>
