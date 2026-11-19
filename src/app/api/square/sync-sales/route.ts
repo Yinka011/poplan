@@ -69,34 +69,62 @@ export async function POST(request: Request) {
       let productName = itemName;
       const variationName = lineItem.variation_name || "";
 
-      const separator = itemName.includes(" — ") ? " — " : itemName.includes(" - ") ? " - " : null;
-      if (separator) {
-        const parts = itemName.split(separator);
-        brandName = parts[0].trim().replace(/\s+/g, " ");
-        productName = parts.slice(1).join(separator).trim();
-        const brandProduct = inventory?.find(p => p.brand_name?.trim() === brandName?.trim());
-        if (brandProduct) brandEmail = brandProduct.brand_email;
+      const knownBrands = [
+        "Cladini", "Ciscacecil", "Jayda Woman", "Moelle Essentials",
+        "Ara Lagos", "FSS", "Isaleekofromderin", "Lola Signatures",
+        "Spice of Lagos", "Temade Studios", "Zoba Martin", "Ayaba Woman",
+        "YinkaMB", "Ayabawoman", "J- JaydaWoman",
+      ];
+
+      if (itemName.includes(" — ")) {
+        const parts = itemName.split(" — ");
+        const candidateBrand = parts[0].trim().replace(/\s+/g, " ");
+        const candidateProduct = parts.slice(1).join(" — ").trim();
+        if (candidateProduct.length > 0 && knownBrands.some(b => b.toLowerCase() === candidateBrand.toLowerCase())) {
+          brandName = candidateBrand;
+          productName = candidateProduct;
+          const brandProduct = inventory?.find(p => p.brand_name?.trim().toLowerCase() === brandName.toLowerCase());
+          if (brandProduct) brandEmail = brandProduct.brand_email;
+        }
       }
 
       const manualMap: Record<string, string> = {
+        // Cladini
+        "cladini top": "Cladini",
+        "athena pant & shirt (black)": "Cladini",
+        "havillah bubu (blue neckline)": "Cladini",
         "limited bubu": "Cladini",
+        "mari bubu": "Cladini",
         "slip dress": "Cladini",
+        // Ciscacecil
+        "tessa top": "Ciscacecil",
+        "tessa - custom": "Ciscacecil",
         "palm top": "Ciscacecil",
         "saffra midi skirt": "Ciscacecil",
         "saffra mini skirt": "Ciscacecil",
         "zaya pant": "Ciscacecil",
-        "tessa top": "Ciscacecil",
-        "tessa - custom": "Ciscacecil",
+        "zaya top": "Ciscacecil",
+        // Jayda Woman
         "north dress": "Jayda Woman",
-        "havillah bubu (blue neckline)": "Cladini",
-        "mari bubu": "Cladini",
         "low back linen kaftan": "Jayda Woman",
-        "cladini top": "Cladini",
-        "athena pant & shirt (black)": "Cladini",
+        "j3- daffodil skirt set": "Jayda Woman",
+        "poppy": "Jayda Woman",
+        "jayda mesh top": "Jayda Woman",
+        // Isaleekofromderin
+        "lolu tennis skirt": "Isaleekofromderin",
+        // Moelle Essentials
         "ivoru dress": "Moelle Essentials",
+        // Ara Lagos
         "l4 -  ara beaded summer dress": "Ara Lagos",
+        "l4 - ara beaded summer dress": "Ara Lagos",
+        "l12 - dele black and white short sleeved set": "Ara Lagos",
         "l15 - elana beaded kaftan green": "Ara Lagos",
         "l23 - olanna aso oke pants vintage (blue/crem/gold mix)": "Ara Lagos",
+        "l23 - olanna aso oke pants vintage": "Ara Lagos",
+        "l29 - onjawu aso oke trousers (red)": "Ara Lagos",
+        "l45 - tolani cotton brush work purple jumpsuit": "Ara Lagos",
+        // Yinka MB
+        "yinkamb yago": "Yinka MB",
       };
 
       if (!brandName) {
@@ -108,7 +136,7 @@ export async function POST(request: Request) {
       }
 
       if (!brandEmail) {
-        const brandProduct = inventory?.find(p => p.brand_name?.trim() === brandName?.trim());
+        const brandProduct = inventory?.find(p => p.brand_name?.trim().toLowerCase() === brandName.toLowerCase());
         if (brandProduct) brandEmail = brandProduct.brand_email;
       }
 
@@ -119,11 +147,13 @@ export async function POST(request: Request) {
         brandTaxMap[brandEmail] = (brandTaxMap[brandEmail] || 0) + (orderTotalTax * lineShare);
       }
 
+      const normalizedProduct = productName.trim().toLowerCase();
       const { data: existing } = await supabase
         .from("brand_sales")
         .select("id")
         .eq("square_order_id", order.id)
-        .eq("product_name", productName)
+        .eq("brand_email", brandEmail)
+        .ilike("product_name", normalizedProduct)
         .maybeSingle();
 
       if (existing) continue;
@@ -132,7 +162,7 @@ export async function POST(request: Request) {
         event,
         brand_email: brandEmail,
         brand_name: brandName,
-        product_name: productName,
+        product_name: productName.trim(),
         variation_name: variationName,
         quantity_sold: quantity,
         unit_price: unitPrice,
