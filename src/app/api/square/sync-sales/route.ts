@@ -43,6 +43,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, message: "No orders found", count: 0 });
   }
 
+  // Fetch refunds for the date range so we can skip refunded items
+  const refundsResponse = await fetch("https://connect.squareup.com/v2/refunds?" + new URLSearchParams({
+    begin_time: startAt,
+    end_time: endAt,
+    location_id: locationId,
+  }), {
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Square-Version": "2024-01-18",
+    },
+  });
+  const refundsData = await refundsResponse.json();
+  // Build a set of refunded order IDs for quick lookup
+  const refundedOrderIds = new Set<string>(
+    (refundsData.refunds || []).map((r: any) => r.order_id)
+  );
+
   const { data: inventory } = await supabase
     .from("brand_products")
     .select("*, brand_product_variations(*)")
@@ -52,6 +69,9 @@ export async function POST(request: Request) {
   const brandTaxMap: Record<string, number> = {};
 
   for (const order of orders) {
+    // Skip entire order if it was refunded
+    if (refundedOrderIds.has(order.id)) continue;
+
     const orderDate = order.created_at?.split("T")[0] || new Date().toISOString().split("T")[0];
     const lineItems = order.line_items || [];
     const orderTotalTax = Number(order.total_tax_money?.amount || 0) / 100;
@@ -61,11 +81,6 @@ export async function POST(request: Request) {
       const quantity = parseInt(lineItem.quantity || "1");
       const unitPrice = Number(lineItem.base_price_money?.amount || 0) / 100;
       const grossSales = Number((lineItem as any).gross_sales_money?.amount || 0) / 100;
-
-      // Skip fully refunded items
-      const appliedDiscounts = (lineItem as any).applied_discounts || [];
-      const totalDiscount = appliedDiscounts.reduce((sum: number, d: any) => sum + Number(d.applied_money?.amount || 0) / 100, 0);
-      const netSalesForItem = grossSales - totalDiscount;
       if (grossSales === 0) continue;
 
       const totalRevenue = grossSales || (unitPrice * quantity);
@@ -119,8 +134,6 @@ export async function POST(request: Request) {
         "jayda mesh top": "Jayda Woman",
         // Isaleekofromderin
         "lolu tennis skirt": "Isaleekofromderin",
-        // Moelle Essentials
-        "ivoru dress": "Moelle Essentials",
         // Ara Lagos
         "l4 -  ara beaded summer dress": "Ara Lagos",
         "l4 - ara beaded summer dress": "Ara Lagos",
