@@ -74,22 +74,16 @@ export default function SalesPage() {
         if (!organizerEmail)
           throw new Error("Please sign in to view sales and payouts.");
         const [reportsRes, payoutsRes, salesRes] = await Promise.all([
-          supabase
-            .from("brand_payout_reports")
-            .select("*")
-            .eq("event", event)
-            .eq("organizer_email", "olaniyanyin@gmail.com"),
+          supabase.from("brand_payout_reports").select("*").eq("event", event),
           supabase
             .from("event_payouts")
             .select("*")
             .eq("event", event)
-            .eq("organizer_email", "olaniyanyin@gmail.com")
             .order("brand_name"),
           supabase
             .from("brand_sales")
             .select("*")
             .eq("event", event)
-            .eq("organizer_email", "olaniyanyin@gmail.com")
             .order("sale_date"),
         ]);
         const error = reportsRes.error || payoutsRes.error || salesRes.error;
@@ -157,10 +151,16 @@ export default function SalesPage() {
     setUploadingReport(brandEmail);
     let uploadedUrl: string;
     try {
-      const uploaded = await uploadToCloudinary(file, `payout-reports/${folderSegment(event)}/${folderSegment(brandEmail)}`);
+      const uploaded = await uploadToCloudinary(
+        file,
+        `payout-reports/${folderSegment(event)}/${folderSegment(brandEmail)}`,
+      );
       uploadedUrl = uploaded.url;
     } catch (error) {
-      alert("Upload failed: " + (error instanceof Error ? error.message : "Please try again."));
+      alert(
+        "Upload failed: " +
+          (error instanceof Error ? error.message : "Please try again."),
+      );
       setUploadingReport(null);
       return;
     }
@@ -318,7 +318,10 @@ export default function SalesPage() {
     : [];
 
   return (
-    <div className="[overflow-wrap:anywhere]" style={{ minHeight: "100vh", background: "#f8faf8" }}>
+    <div
+      className="[overflow-wrap:anywhere]"
+      style={{ minHeight: "100vh", background: "#f8faf8" }}
+    >
       {/* Header */}
       <div
         style={{
@@ -1066,11 +1069,20 @@ export default function SalesPage() {
 
                     {/* Brand sales breakdown */}
                     {selectedBrand === payout.brand_email && (
-                      <div role="region" aria-label={`${payout.brand_name} sales`} tabIndex={0} style={{ borderTop: "1px solid #f0f4f1", overflowX: "auto" }}>
+                      <div
+                        role="region"
+                        aria-label={`${payout.brand_name} sales`}
+                        tabIndex={0}
+                        style={{
+                          borderTop: "1px solid #f0f4f1",
+                          overflowX: "auto",
+                        }}
+                      >
                         <div
                           style={{
                             display: "grid",
-                            gridTemplateColumns: "minmax(0, 2fr) repeat(3, minmax(0, 1fr))",
+                            gridTemplateColumns:
+                              "minmax(0, 2fr) repeat(3, minmax(0, 1fr))",
                             minWidth: "500px",
                             padding: "8px 16px",
                             background: "#f8faf8",
@@ -1100,7 +1112,8 @@ export default function SalesPage() {
                               key={sale.id}
                               style={{
                                 display: "grid",
-                                gridTemplateColumns: "minmax(0, 2fr) repeat(3, minmax(0, 1fr))",
+                                gridTemplateColumns:
+                                  "minmax(0, 2fr) repeat(3, minmax(0, 1fr))",
                                 minWidth: "500px",
                                 padding: "10px 16px",
                                 borderTop: "1px solid #f5f2ee",
