@@ -61,12 +61,14 @@ export async function POST(request: Request) {
       const quantity = parseInt(lineItem.quantity || "1");
       const unitPrice = Number(lineItem.base_price_money?.amount || 0) / 100;
       const grossSales = Number((lineItem as any).gross_sales_money?.amount || 0) / 100;
-      const netLineTotal = Number((lineItem as any).total_money?.amount || 0) / 100;
 
-      // Skip refunded items — gross > 0 but net = 0 means it was fully refunded
-      if (netLineTotal === 0 && grossSales > 0) continue;
+      // Skip fully refunded items
+      const appliedDiscounts = (lineItem as any).applied_discounts || [];
+      const totalDiscount = appliedDiscounts.reduce((sum: number, d: any) => sum + Number(d.applied_money?.amount || 0) / 100, 0);
+      const netSalesForItem = grossSales - totalDiscount;
+      if (grossSales === 0) continue;
 
-      const totalRevenue = netLineTotal || grossSales || (unitPrice * quantity);
+      const totalRevenue = grossSales || (unitPrice * quantity);
       const itemName = lineItem.name || "";
 
       let brandEmail = "";
