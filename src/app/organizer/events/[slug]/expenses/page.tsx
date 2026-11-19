@@ -2,7 +2,7 @@
 import { useOrganizer } from "@/context/OrganizerContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency } from "@/lib/events";
+import { formatCurrency, formatEventName } from "@/lib/events";
 import LoadingView from "@/components/LoadingView";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -83,28 +83,28 @@ export default function ExpensesPage() {
             supabase
               .from("expenses")
               .select("*")
-              .eq("event", eventName)
+              .eq("event", formatEventName(slug))
               .eq("organizer_email", organizerEmail)
               .order("category"),
             supabase
               .from("planning_decor")
               .select("cost")
-              .eq("event", eventName)
+              .eq("event", formatEventName(slug))
               .eq("organizer_email", organizerEmail),
             supabase
               .from("planning_refreshments")
               .select("cost")
-              .eq("event", eventName)
+              .eq("event", formatEventName(slug))
               .eq("organizer_email", organizerEmail),
             supabase
               .from("planning_staff")
               .select("pay_rate")
-              .eq("event", eventName)
+              .eq("event", formatEventName(slug))
               .eq("organizer_email", organizerEmail),
             supabase
               .from("event_settings")
               .select("budget")
-              .eq("event", eventName)
+              .eq("event", formatEventName(slug))
               .eq("organizer_email", organizerEmail)
               .maybeSingle(),
           ]);
@@ -128,7 +128,7 @@ export default function ExpensesPage() {
         );
         const savedBudget =
           settingsRes.data?.budget == null
-            ? 8000
+            ? 0
             : Number(settingsRes.data.budget);
         setBudget(savedBudget);
         setNewBudget(String(savedBudget));
@@ -151,7 +151,7 @@ export default function ExpensesPage() {
     return () => {
       active = false;
     };
-  }, [eventName, loadKey, organizerEmail, organizerLoading, retry]);
+  }, [slug, loadKey, organizerEmail, organizerLoading, retry]);
 
   const saveBudget = async () => {
     if (savingBudget) return;
@@ -165,7 +165,11 @@ export default function ExpensesPage() {
       const { error } = await supabase
         .from("event_settings")
         .upsert(
-          { event: eventName, organizer_email: organizerEmail, budget: value },
+          {
+            event: formatEventName(slug),
+            organizer_email: organizerEmail,
+            budget: value,
+          },
           { onConflict: "event,organizer_email" },
         );
       if (error) throw error;
@@ -204,7 +208,7 @@ export default function ExpensesPage() {
           cost,
           deposit,
           notes: newExpense.notes,
-          event: eventName,
+          event: formatEventName(slug),
         })
         .select()
         .single();
@@ -248,7 +252,7 @@ export default function ExpensesPage() {
         .from("expenses")
         .update({ item: editData.item, cost, deposit, notes: editData.notes })
         .eq("id", id)
-        .eq("event", eventName)
+        .eq("event", formatEventName(slug))
         .eq("organizer_email", organizerEmail)
         .select()
         .single();
@@ -760,280 +764,285 @@ export default function ExpensesPage() {
                     </strong>
                   </div>
                 </div>
-                <div className="overflow-x-auto" role="region" aria-label={`${cat} expenses`} tabIndex={0}>
-                <table
-                  style={{
-                    width: "100%",
-                    minWidth: "700px",
-                    borderCollapse: "collapse",
-                    fontSize: "13px",
-                  }}
+                <div
+                  className="overflow-x-auto"
+                  role="region"
+                  aria-label={`${cat} expenses`}
+                  tabIndex={0}
                 >
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #f0f4f1" }}>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "6px 8px",
-                          fontSize: "11px",
-                          color: "#4a5a52",
-                          fontWeight: 400,
-                        }}
-                      >
-                        Item
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "6px 8px",
-                          fontSize: "11px",
-                          color: "#4a5a52",
-                          fontWeight: 400,
-                        }}
-                      >
-                        Cost
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "6px 8px",
-                          fontSize: "11px",
-                          color: "#4a5a52",
-                          fontWeight: 400,
-                        }}
-                      >
-                        Deposit
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "6px 8px",
-                          fontSize: "11px",
-                          color: "#4a5a52",
-                          fontWeight: 400,
-                        }}
-                      >
-                        Balance
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "6px 8px",
-                          fontSize: "11px",
-                          color: "#4a5a52",
-                          fontWeight: 400,
-                        }}
-                      >
-                        Notes
-                      </th>
-                      <th style={{ padding: "6px 8px" }}></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((exp) => (
-                      <tr
-                        key={exp.id}
-                        style={{ borderBottom: "1px solid #f8f5f0" }}
-                      >
-                        <td style={{ padding: "10px 8px", color: "#1B3A2D" }}>
-                          {editing === exp.id ? (
-                            <input
-                              disabled={savingEdit}
-                              value={editData.item}
-                              onChange={(e) =>
-                                setEditData({
-                                  ...editData,
-                                  item: e.target.value,
-                                })
-                              }
-                              style={{
-                                padding: "4px",
-                                border: "1px solid #E8C97A",
-                                borderRadius: "4px",
-                                fontSize: "13px",
-                                width: "150px",
-                              }}
-                            />
-                          ) : (
-                            exp.item
-                          )}
-                        </td>
-                        <td style={{ padding: "10px 8px", color: "#1B3A2D" }}>
-                          {editing === exp.id ? (
-                            <input
-                              disabled={savingEdit}
-                              value={editData.cost}
-                              onChange={(e) =>
-                                setEditData({
-                                  ...editData,
-                                  cost: e.target.value,
-                                })
-                              }
-                              style={{
-                                padding: "4px",
-                                border: "1px solid #E8C97A",
-                                borderRadius: "4px",
-                                fontSize: "13px",
-                                width: "70px",
-                              }}
-                            />
-                          ) : (
-                            formatCurrency(Number(exp.cost))
-                          )}
-                        </td>
-                        <td style={{ padding: "10px 8px", color: "#4a7c59" }}>
-                          {editing === exp.id ? (
-                            <input
-                              disabled={savingEdit}
-                              value={editData.deposit}
-                              onChange={(e) =>
-                                setEditData({
-                                  ...editData,
-                                  deposit: e.target.value,
-                                })
-                              }
-                              style={{
-                                padding: "4px",
-                                border: "1px solid #E8C97A",
-                                borderRadius: "4px",
-                                fontSize: "13px",
-                                width: "70px",
-                              }}
-                            />
-                          ) : (
-                            formatCurrency(Number(exp.deposit))
-                          )}
-                        </td>
-                        <td
+                  <table
+                    style={{
+                      width: "100%",
+                      minWidth: "700px",
+                      borderCollapse: "collapse",
+                      fontSize: "13px",
+                    }}
+                  >
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid #f0f4f1" }}>
+                        <th
                           style={{
-                            padding: "10px 8px",
-                            color:
-                              Number(exp.balance) > 0 ? "#c0392b" : "#4a7c59",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {formatCurrency(Number(exp.balance))}
-                        </td>
-                        <td
-                          style={{
-                            padding: "10px 8px",
+                            textAlign: "left",
+                            padding: "6px 8px",
+                            fontSize: "11px",
                             color: "#4a5a52",
-                            fontSize: "12px",
+                            fontWeight: 400,
                           }}
                         >
-                          {editing === exp.id ? (
-                            <input
-                              disabled={savingEdit}
-                              value={editData.notes}
-                              onChange={(e) =>
-                                setEditData({
-                                  ...editData,
-                                  notes: e.target.value,
-                                })
-                              }
-                              style={{
-                                padding: "4px",
-                                border: "1px solid #E8C97A",
-                                borderRadius: "4px",
-                                fontSize: "13px",
-                                width: "120px",
-                              }}
-                            />
-                          ) : (
-                            exp.notes
-                          )}
-                        </td>
-                        <td style={{ padding: "10px 8px" }}>
-                          {editing === exp.id ? (
-                            <div style={{ display: "flex", gap: "4px" }}>
-                              <button
-                                disabled={savingEdit}
-                                onClick={() => saveEdit(exp.id)}
-                                style={{
-                                  fontSize: "11px",
-                                  padding: "3px 8px",
-                                  background: "#1B3A2D",
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: "4px",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                {savingEdit ? "Saving..." : "Save"}
-                              </button>
-                              <button
-                                disabled={savingEdit}
-                                onClick={() => setEditing(null)}
-                                style={{
-                                  fontSize: "11px",
-                                  padding: "3px 8px",
-                                  background: "transparent",
-                                  border: "1px solid #e4ebe6",
-                                  borderRadius: "4px",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <div style={{ display: "flex", gap: "4px" }}>
-                              <button
-                                disabled={savingEdit}
-                                onClick={() => {
-                                  setEditing(exp.id);
-                                  setEditData({
-                                    item: exp.item,
-                                    cost: String(exp.cost),
-                                    deposit: String(exp.deposit),
-                                    notes: exp.notes || "",
-                                  });
-                                }}
-                                title="Edit"
-                                style={{
-                                  background: "transparent",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  color: "#4a5a52",
-                                  fontSize: "14px",
-                                  padding: "2px 4px",
-                                }}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.color = "#1B3A2D")
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.color = "#4a5a52")
-                                }
-                              >
-                                ✎
-                              </button>
-                              <button
-                                onClick={() => deleteExpense(exp.id)}
-                                title="Remove"
-                                style={{
-                                  background: "transparent",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  color: "#d4c5b0",
-                                  fontSize: "12px",
-                                  padding: "2px 4px",
-                                }}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.color = "#c0392b")
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.color = "#d4c5b0")
-                                }
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )}
-                        </td>
+                          Item
+                        </th>
+                        <th
+                          style={{
+                            textAlign: "left",
+                            padding: "6px 8px",
+                            fontSize: "11px",
+                            color: "#4a5a52",
+                            fontWeight: 400,
+                          }}
+                        >
+                          Cost
+                        </th>
+                        <th
+                          style={{
+                            textAlign: "left",
+                            padding: "6px 8px",
+                            fontSize: "11px",
+                            color: "#4a5a52",
+                            fontWeight: 400,
+                          }}
+                        >
+                          Deposit
+                        </th>
+                        <th
+                          style={{
+                            textAlign: "left",
+                            padding: "6px 8px",
+                            fontSize: "11px",
+                            color: "#4a5a52",
+                            fontWeight: 400,
+                          }}
+                        >
+                          Balance
+                        </th>
+                        <th
+                          style={{
+                            textAlign: "left",
+                            padding: "6px 8px",
+                            fontSize: "11px",
+                            color: "#4a5a52",
+                            fontWeight: 400,
+                          }}
+                        >
+                          Notes
+                        </th>
+                        <th style={{ padding: "6px 8px" }}></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {items.map((exp) => (
+                        <tr
+                          key={exp.id}
+                          style={{ borderBottom: "1px solid #f8f5f0" }}
+                        >
+                          <td style={{ padding: "10px 8px", color: "#1B3A2D" }}>
+                            {editing === exp.id ? (
+                              <input
+                                disabled={savingEdit}
+                                value={editData.item}
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    item: e.target.value,
+                                  })
+                                }
+                                style={{
+                                  padding: "4px",
+                                  border: "1px solid #E8C97A",
+                                  borderRadius: "4px",
+                                  fontSize: "13px",
+                                  width: "150px",
+                                }}
+                              />
+                            ) : (
+                              exp.item
+                            )}
+                          </td>
+                          <td style={{ padding: "10px 8px", color: "#1B3A2D" }}>
+                            {editing === exp.id ? (
+                              <input
+                                disabled={savingEdit}
+                                value={editData.cost}
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    cost: e.target.value,
+                                  })
+                                }
+                                style={{
+                                  padding: "4px",
+                                  border: "1px solid #E8C97A",
+                                  borderRadius: "4px",
+                                  fontSize: "13px",
+                                  width: "70px",
+                                }}
+                              />
+                            ) : (
+                              formatCurrency(Number(exp.cost))
+                            )}
+                          </td>
+                          <td style={{ padding: "10px 8px", color: "#4a7c59" }}>
+                            {editing === exp.id ? (
+                              <input
+                                disabled={savingEdit}
+                                value={editData.deposit}
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    deposit: e.target.value,
+                                  })
+                                }
+                                style={{
+                                  padding: "4px",
+                                  border: "1px solid #E8C97A",
+                                  borderRadius: "4px",
+                                  fontSize: "13px",
+                                  width: "70px",
+                                }}
+                              />
+                            ) : (
+                              formatCurrency(Number(exp.deposit))
+                            )}
+                          </td>
+                          <td
+                            style={{
+                              padding: "10px 8px",
+                              color:
+                                Number(exp.balance) > 0 ? "#c0392b" : "#4a7c59",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {formatCurrency(Number(exp.balance))}
+                          </td>
+                          <td
+                            style={{
+                              padding: "10px 8px",
+                              color: "#4a5a52",
+                              fontSize: "12px",
+                            }}
+                          >
+                            {editing === exp.id ? (
+                              <input
+                                disabled={savingEdit}
+                                value={editData.notes}
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    notes: e.target.value,
+                                  })
+                                }
+                                style={{
+                                  padding: "4px",
+                                  border: "1px solid #E8C97A",
+                                  borderRadius: "4px",
+                                  fontSize: "13px",
+                                  width: "120px",
+                                }}
+                              />
+                            ) : (
+                              exp.notes
+                            )}
+                          </td>
+                          <td style={{ padding: "10px 8px" }}>
+                            {editing === exp.id ? (
+                              <div style={{ display: "flex", gap: "4px" }}>
+                                <button
+                                  disabled={savingEdit}
+                                  onClick={() => saveEdit(exp.id)}
+                                  style={{
+                                    fontSize: "11px",
+                                    padding: "3px 8px",
+                                    background: "#1B3A2D",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {savingEdit ? "Saving..." : "Save"}
+                                </button>
+                                <button
+                                  disabled={savingEdit}
+                                  onClick={() => setEditing(null)}
+                                  style={{
+                                    fontSize: "11px",
+                                    padding: "3px 8px",
+                                    background: "transparent",
+                                    border: "1px solid #e4ebe6",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <div style={{ display: "flex", gap: "4px" }}>
+                                <button
+                                  disabled={savingEdit}
+                                  onClick={() => {
+                                    setEditing(exp.id);
+                                    setEditData({
+                                      item: exp.item,
+                                      cost: String(exp.cost),
+                                      deposit: String(exp.deposit),
+                                      notes: exp.notes || "",
+                                    });
+                                  }}
+                                  title="Edit"
+                                  style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    color: "#4a5a52",
+                                    fontSize: "14px",
+                                    padding: "2px 4px",
+                                  }}
+                                  onMouseEnter={(e) =>
+                                    (e.currentTarget.style.color = "#1B3A2D")
+                                  }
+                                  onMouseLeave={(e) =>
+                                    (e.currentTarget.style.color = "#4a5a52")
+                                  }
+                                >
+                                  ✎
+                                </button>
+                                <button
+                                  onClick={() => deleteExpense(exp.id)}
+                                  title="Remove"
+                                  style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    color: "#d4c5b0",
+                                    fontSize: "12px",
+                                    padding: "2px 4px",
+                                  }}
+                                  onMouseEnter={(e) =>
+                                    (e.currentTarget.style.color = "#c0392b")
+                                  }
+                                  onMouseLeave={(e) =>
+                                    (e.currentTarget.style.color = "#d4c5b0")
+                                  }
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             );

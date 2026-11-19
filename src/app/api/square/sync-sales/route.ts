@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { calculatePayout, DEFAULT_PROCESSING_RATE } from "@/lib/payouts";
 
 export async function POST(request: Request) {
   const { event, start_date, end_date, organizer_email } = await request.json();
@@ -146,10 +147,17 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data: allBrands } = await supabase
+  const { data: allBrands, error: salesError } = await supabase
     .from("brand_sales")
     .select("brand_email, brand_name, total_revenue")
-    .eq("event", event);
+    .eq("event", event)
+    .not("square_order_id", "is", null)
+    .neq("square_order_id", "");
+
+  if (salesError) {
+    console.error("Failed to load Square-linked sales for payouts:", salesError);
+    return NextResponse.json({ error: "Could not load sales for payout calculation." }, { status: 500 });
+  }
 
   if (allBrands) {
     const brandTotals: Record<string, { email: string; name: string; revenue: number }> = {};
@@ -163,22 +171,42 @@ export async function POST(request: Request) {
     for (const [email, data] of Object.entries(brandTotals)) {
       const netSales = data.revenue;
       const tax = brandTaxMap[email] || 0;
-      const processingFee = 0.0271 * (netSales + tax);
-      const commissionAmount = (netSales - processingFee) * 0.20;
-      const payoutAmount = netSales - processingFee - commissionAmount;
-
-      await supabase.from("event_payouts").delete().eq("event", event).eq("brand_email", email);
-      await supabase.from("event_payouts").insert({
+      const { data: existingPayout, error: existingError } = await supabase
+        .from("event_payouts")
+        .select("id, square_processing_rate")
+        .eq("event", event)
+        .eq("brand_email", email)
+        .maybeSingle();
+      if (existingError) {
+        console.error("Failed to load payout rate:", existingError);
+        return NextResponse.json({ error: "Could not load payout rate." }, { status: 500 });
+      }
+      const processingRate = Number(existingPayout?.square_processing_rate ?? DEFAULT_PROCESSING_RATE);
+      if (!Number.isFinite(processingRate) || processingRate < 0 || processingRate > 100) {
+        console.error("Invalid stored payout processing rate");
+        return NextResponse.json({ error: "A payout has an invalid processing rate." }, { status: 500 });
+      }
+      const { commissionAmount, payoutAmount } = calculatePayout(netSales, 20, processingRate, tax);
+      const payout = {
         event,
         brand_email: email,
         brand_name: data.name,
         total_revenue: netSales,
         commission_rate: 20,
-        commission_amount: Math.round(commissionAmount * 100) / 100,
-        payout_amount: Math.round(payoutAmount * 100) / 100,
+        square_processing_rate: processingRate,
+        commission_amount: commissionAmount,
+        payout_amount: payoutAmount,
         payout_status: "pending",
-        organizer_email,
-      });
+        payout_date: null,
+        ...(organizer_email ? { organizer_email } : {}),
+      };
+      const result = existingPayout
+        ? await supabase.from("event_payouts").update(payout).eq("id", existingPayout.id).select("id").single()
+        : await supabase.from("event_payouts").insert(payout);
+      if (result.error) {
+        console.error("Failed to save payout:", result.error);
+        return NextResponse.json({ error: "Could not save payout." }, { status: 500 });
+      }
     }
   }
 

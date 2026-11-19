@@ -64,7 +64,7 @@ function BrandSalesContent({ event, brandEmail }: Props) {
     try {
     const reportRes = await supabase.from("brand_payout_reports").select("*").eq("brand_email", brandEmail).eq("event", event).maybeSingle();
     const [salesRes, payoutRes] = await Promise.all([
-      supabase.from("brand_sales").select("*").eq("event", event).eq("brand_email", brandEmail).order("sale_date"),
+      supabase.from("brand_sales").select("*").eq("event", event).eq("brand_email", brandEmail).not("square_order_id", "is", null).neq("square_order_id", "").order("sale_date"),
       supabase.from("event_payouts").select("*").eq("event", event).eq("brand_email", brandEmail).maybeSingle(),
     ]);
     if (reportRes.error || salesRes.error || payoutRes.error) throw reportRes.error || salesRes.error || payoutRes.error;
@@ -123,6 +123,11 @@ function BrandSalesContent({ event, brandEmail }: Props) {
     <div className="[overflow-wrap:anywhere]">
 
       {/* Payout summary */}
+      {payout && (
+        <p className="mb-3 text-sm text-[#4a5a52]">
+          Sales lists show Square-linked sales only. Payout totals are stored separately and may include other sales or adjustments.
+        </p>
+      )}
       {payout && (
         <div style={{ background: "#1B3A2D", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "#fff" }}>
           <div style={{ fontSize: "0.65rem", color: "#d4c87a", letterSpacing: "0.15em", marginBottom: "1rem" }}>YOUR SALES SUMMARY</div>

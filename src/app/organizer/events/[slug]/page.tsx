@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { EventDashboard } from "@/components/dashboard/EventDashboard";
+import { formatEventName } from "@/lib/events";
 
 type EventPageProps = {
   params: Promise<{ slug: string }>;
@@ -32,7 +33,7 @@ export default async function EventPage({ params }: EventPageProps) {
   const { data: brands } = await supabase
     .from("brands")
     .select("*")
-    .eq("event", city)
+    .eq("event", formatEventName(slug))
     .eq("organizer_email", organizerEmail);
 
   const brandsCount = brands?.length || 0;

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { formatEventName } from "@/lib/events";
 import LoadingView from "@/components/LoadingView";
 import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 
@@ -62,17 +63,17 @@ export default function BrandActivityOverview({
             supabase
               .from("brands")
               .select("*")
-              .eq("event", eventCity)
+              .eq("event", formatEventName(eventSlug))
               .eq("organizer_email", orgEmail),
             supabase
               .from("brand_products")
               .select("brand_email, review_status")
-              .eq("event", eventCity)
+              .eq("event", formatEventName(eventSlug))
               .eq("organizer_email", orgEmail),
             supabase
               .from("brand_tasks")
               .select("brand_email, completed")
-              .eq("event", eventCity)
+              .eq("event", formatEventName(eventSlug))
               .eq("organizer_email", orgEmail),
           ]);
         const fetchError =
@@ -132,7 +133,7 @@ export default function BrandActivityOverview({
       .from("brands")
       .insert({
         organizer_email: orgEmail,
-        event: eventCity,
+        event: formatEventName(eventSlug),
         name: newBrand.name.trim(),
         email: newBrand.email.trim(),
         fee_owed: 0,

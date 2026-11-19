@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import PaymentTracker from "@/components/dashboard/PaymentTracker";
 import LoadingView from "@/components/LoadingView";
 import { supabase } from "@/lib/supabase";
+import { formatEventName } from "@/lib/events";
 
 type EventInfo = {
   name: string;
@@ -82,7 +83,7 @@ export default function PaymentsPage() {
       >
         {current?.event && (
           <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-            <PaymentTracker event={current.event.city} />
+            <PaymentTracker event={formatEventName(slug)} />
           </div>
         )}
       </LoadingView>

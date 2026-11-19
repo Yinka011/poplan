@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { formatEventName } from "@/lib/events";
 
 const FEATURE_LIST = [
   {
@@ -135,7 +136,7 @@ export default function SettingsPage() {
       supabase
         .from("event_faqs")
         .select("*")
-        .eq("event", city)
+        .eq("event", formatEventName(slug))
         .eq("organizer_email", orgEmail)
         .order("id"),
     ]);
@@ -196,7 +197,7 @@ export default function SettingsPage() {
     const { data } = await supabase
       .from("event_faqs")
       .insert({
-        event: eventCity,
+        event: formatEventName(slug),
         organizer_email: user.email,
         question: newFaq.question.trim(),
         answer: newFaq.answer.trim(),
