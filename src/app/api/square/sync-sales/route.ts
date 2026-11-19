@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { calculatePayout, DEFAULT_PROCESSING_RATE } from "@/lib/payouts";
 
 export async function POST(request: Request) {
   const { event, start_date, end_date, organizer_email } = await request.json();
@@ -62,7 +61,12 @@ export async function POST(request: Request) {
       const quantity = parseInt(lineItem.quantity || "1");
       const unitPrice = Number(lineItem.base_price_money?.amount || 0) / 100;
       const grossSales = Number((lineItem as any).gross_sales_money?.amount || 0) / 100;
-      const totalRevenue = grossSales || (unitPrice * quantity);
+      const netLineTotal = Number((lineItem as any).total_money?.amount || 0) / 100;
+
+      // Skip refunded items — gross > 0 but net = 0 means it was fully refunded
+      if (netLineTotal === 0 && grossSales > 0) continue;
+
+      const totalRevenue = netLineTotal || grossSales || (unitPrice * quantity);
       const itemName = lineItem.name || "";
 
       let brandEmail = "";
@@ -74,7 +78,7 @@ export async function POST(request: Request) {
         "Cladini", "Ciscacecil", "Jayda Woman", "Moelle Essentials",
         "Ara Lagos", "FSS", "Isaleekofromderin", "Lola Signatures",
         "Spice of Lagos", "Temade Studios", "Zoba Martin", "Ayaba Woman",
-        "YinkaMB", "Ayabawoman", "J- JaydaWoman",
+        "Ayabawoman", "YinkaMB", "J- JaydaWoman",
       ];
 
       if (itemName.includes(" — ")) {
@@ -177,17 +181,10 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data: allBrands, error: salesError } = await supabase
+  const { data: allBrands } = await supabase
     .from("brand_sales")
     .select("brand_email, brand_name, total_revenue")
-    .eq("event", event)
-    .not("square_order_id", "is", null)
-    .neq("square_order_id", "");
-
-  if (salesError) {
-    console.error("Failed to load Square-linked sales for payouts:", salesError);
-    return NextResponse.json({ error: "Could not load sales for payout calculation." }, { status: 500 });
-  }
+    .eq("event", event);
 
   if (allBrands) {
     const brandTotals: Record<string, { email: string; name: string; revenue: number }> = {};
@@ -201,42 +198,22 @@ export async function POST(request: Request) {
     for (const [email, data] of Object.entries(brandTotals)) {
       const netSales = data.revenue;
       const tax = brandTaxMap[email] || 0;
-      const { data: existingPayout, error: existingError } = await supabase
-        .from("event_payouts")
-        .select("id, square_processing_rate")
-        .eq("event", event)
-        .eq("brand_email", email)
-        .maybeSingle();
-      if (existingError) {
-        console.error("Failed to load payout rate:", existingError);
-        return NextResponse.json({ error: "Could not load payout rate." }, { status: 500 });
-      }
-      const processingRate = Number(existingPayout?.square_processing_rate ?? DEFAULT_PROCESSING_RATE);
-      if (!Number.isFinite(processingRate) || processingRate < 0 || processingRate > 100) {
-        console.error("Invalid stored payout processing rate");
-        return NextResponse.json({ error: "A payout has an invalid processing rate." }, { status: 500 });
-      }
-      const { commissionAmount, payoutAmount } = calculatePayout(netSales, 20, processingRate, tax);
-      const payout = {
+      const processingFee = 0.0271 * (netSales + tax);
+      const commissionAmount = (netSales - processingFee) * 0.20;
+      const payoutAmount = netSales - processingFee - commissionAmount;
+
+      await supabase.from("event_payouts").delete().eq("event", event).eq("brand_email", email);
+      await supabase.from("event_payouts").insert({
         event,
         brand_email: email,
         brand_name: data.name,
         total_revenue: netSales,
         commission_rate: 20,
-        square_processing_rate: processingRate,
-        commission_amount: commissionAmount,
-        payout_amount: payoutAmount,
+        commission_amount: Math.round(commissionAmount * 100) / 100,
+        payout_amount: Math.round(payoutAmount * 100) / 100,
         payout_status: "pending",
-        payout_date: null,
-        ...(organizer_email ? { organizer_email } : {}),
-      };
-      const result = existingPayout
-        ? await supabase.from("event_payouts").update(payout).eq("id", existingPayout.id).select("id").single()
-        : await supabase.from("event_payouts").insert(payout);
-      if (result.error) {
-        console.error("Failed to save payout:", result.error);
-        return NextResponse.json({ error: "Could not save payout." }, { status: 500 });
-      }
+        organizer_email,
+      });
     }
   }
 
