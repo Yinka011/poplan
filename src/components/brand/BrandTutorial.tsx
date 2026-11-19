@@ -90,7 +90,7 @@ export default function BrandTutorial({ brandName, eventName, onClose }: Props) 
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#00000066", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "2.5rem", maxWidth: "520px", width: "100%", fontFamily: "Georgia, serif", position: "relative" as const, maxHeight: "90vh", overflowY: "auto" as const }}>
+      <div className="p-6 sm:p-10 [overflow-wrap:anywhere]" style={{ background: "#fff", borderRadius: "20px", maxWidth: "520px", width: "100%",  position: "relative" as const, maxHeight: "90vh", overflowY: "auto" as const }}>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
           <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.15em" }}>GETTING STARTED {step + 1} OF {steps.length}</div>
@@ -116,9 +116,9 @@ export default function BrandTutorial({ brandName, eventName, onClose }: Props) 
 
         <div style={{ display: "flex", gap: "10px" }}>
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: "10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#4a5a52", fontFamily: "Georgia, serif" }}>Back</button>
+            <button onClick={() => setStep(step - 1)} style={{ flex: 1, padding: "10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#4a5a52" }}>Back</button>
           )}
-          <button onClick={isLast ? handleClose : () => setStep(step + 1)} style={{ flex: 2, padding: "10px", background: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#fff", fontFamily: "Georgia, serif" }}>
+          <button onClick={isLast ? handleClose : () => setStep(step + 1)} style={{ flex: 2, padding: "10px", background: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "0.85rem", cursor: "pointer", color: "#fff" }}>
             {isLast ? "Start using Nalpop" : "Next"}
           </button>
         </div>
@@ -130,7 +130,7 @@ export default function BrandTutorial({ brandName, eventName, onClose }: Props) 
 
         {!isLast && (
           <div style={{ textAlign: "center", marginTop: "0.5rem" }}>
-            <button onClick={handleClose} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "0.78rem", color: "#b0a090", fontFamily: "Georgia, serif" }}>Skip tutorial</button>
+            <button onClick={handleClose} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "0.78rem", color: "#b0a090" }}>Skip tutorial</button>
           </div>
         )}
       </div>

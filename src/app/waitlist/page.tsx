@@ -28,7 +28,7 @@ export default function WaitlistPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", fontFamily: "Georgia, serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex" }}>
       
       {/* Left panel */}
       <div style={{ width: "45%", background: "#1B3A2D", display: "flex", flexDirection: "column" as const, justifyContent: "space-between", padding: "3rem" }}>
@@ -80,12 +80,12 @@ export default function WaitlistPage() {
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" as const, gap: "16px" }}>
                 <div>
                   <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>YOUR NAME OR BRAND</div>
-                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. AO Curates or Lola Signatures" required style={{ width: "100%", padding: "12px 14px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#fff", boxSizing: "border-box" as const, outline: "none" }} />
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. AO Curates or Lola Signatures" required style={{ width: "100%", padding: "12px 14px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.95rem",  background: "#fff", boxSizing: "border-box" as const, outline: "none" }} />
                 </div>
 
                 <div>
                   <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "5px" }}>EMAIL</div>
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={{ width: "100%", padding: "12px 14px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#fff", boxSizing: "border-box" as const, outline: "none" }} />
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" required style={{ width: "100%", padding: "12px 14px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.95rem",  background: "#fff", boxSizing: "border-box" as const, outline: "none" }} />
                 </div>
 
                 <div>
@@ -104,14 +104,14 @@ export default function WaitlistPage() {
                   </div>
                 </div>
 
-                <button type="submit" disabled={loading || !role} style={{ padding: "12px", background: role ? "#1B3A2D" : "#e4ebe6", color: role ? "#fff" : "#4a5a52", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: role ? "pointer" : "not-allowed", fontFamily: "Georgia, serif", marginTop: "8px" }}>
+                <button type="submit" disabled={loading || !role} style={{ padding: "12px", background: role ? "#1B3A2D" : "#e4ebe6", color: role ? "#fff" : "#4a5a52", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: role ? "pointer" : "not-allowed",  marginTop: "8px" }}>
                   {loading ? "Submitting..." : "Request access"}
                 </button>
               </form>
 
               <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
                 <span style={{ fontSize: "0.82rem", color: "#4a5a52" }}>Already have access? </span>
-                <Link href="/login-page" style={{ fontSize: "0.82rem", color: "#1B3A2D", textDecoration: "none" }}>Sign in →</Link>
+                <Link href="/login" style={{ fontSize: "0.82rem", color: "#1B3A2D", textDecoration: "none" }}>Sign in →</Link>
               </div>
             </div>
           )}

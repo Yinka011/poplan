@@ -1,7 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { supabase } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/events";
+import LoadingView from "@/components/LoadingView";
+import PageSkeleton from "@/components/shared/PageSkeleton";
 
 type Sale = {
   id: number;
@@ -22,61 +25,94 @@ type Payout = {
   payout_date?: string;
 };
 
+type Report = {
+  id: number;
+  file_url: string;
+  file_name: string;
+  payment_confirmed: boolean;
+  payment_method?: string;
+  payment_details?: string;
+};
+
 type Props = {
   event: string;
   brandEmail: string;
 };
 
 export default function BrandSales({ event, brandEmail }: Props) {
+  return <BrandSalesContent key={JSON.stringify([event, brandEmail])} event={event} brandEmail={brandEmail} />;
+}
+
+function BrandSalesContent({ event, brandEmail }: Props) {
   const [sales, setSales] = useState<Sale[]>([]);
   const [payout, setPayout] = useState<Payout | null>(null);
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<Report | null>(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentForm, setPaymentForm] = useState({ method: "Zelle", details: "" });
   const [savingPayment, setSavingPayment] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [retry, setRetry] = useState(0);
+  const savingRef = useRef(false);
   const [activeDay, setActiveDay] = useState("all");
 
   useEffect(() => {
-    fetchSales();
-  }, [event, brandEmail]);
-
-  const fetchSales = async () => {
+    let active = true;
+    const fetchSales = async () => {
+    setLoading(true);
+    setLoadError("");
+    try {
     const reportRes = await supabase.from("brand_payout_reports").select("*").eq("brand_email", brandEmail).eq("event", event).maybeSingle();
-    if (reportRes.data) {
-      setReport(reportRes.data);
-      if (!reportRes.data.payment_confirmed) setShowPaymentForm(true);
-    }
     const [salesRes, payoutRes] = await Promise.all([
       supabase.from("brand_sales").select("*").eq("event", event).eq("brand_email", brandEmail).order("sale_date"),
       supabase.from("event_payouts").select("*").eq("event", event).eq("brand_email", brandEmail).maybeSingle(),
     ]);
-    if (salesRes.data) setSales(salesRes.data);
-    if (payoutRes.data) setPayout(payoutRes.data);
-    setLoading(false);
-  };
+    if (reportRes.error || salesRes.error || payoutRes.error) throw reportRes.error || salesRes.error || payoutRes.error;
+    if (!active) return;
+    setReport(reportRes.data);
+    setShowPaymentForm(!!reportRes.data && !reportRes.data.payment_confirmed);
+    setSales(salesRes.data ?? []);
+    setPayout(payoutRes.data);
+    } catch (error) {
+      console.error("Could not load sales:", error);
+      if (active) setLoadError("Could not load sales data. Please try again.");
+    } finally {
+      if (active) setLoading(false);
+    }
+    };
+    void fetchSales();
+    return () => { active = false; };
+  }, [event, brandEmail, retry]);
 
   const days = [...new Set(sales.map(s => s.sale_date))].sort();
   const filteredSales = activeDay === "all" ? sales : sales.filter(s => s.sale_date === activeDay);
 
   const dayTotal = filteredSales.reduce((s, sale) => s + Number(sale.total_revenue), 0);
-  const dayUnits = filteredSales.reduce((s, sale) => s + sale.quantity_sold, 0);
+  const dayUnits = filteredSales.reduce((s, sale) => s + Number(sale.quantity_sold), 0);
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   const savePaymentDetails = async () => {
-    if (!paymentForm.details.trim() || !report) return;
+    if (savingRef.current || !report) return;
+    if (!paymentForm.details.trim()) { alert("Enter your payment details."); return; }
+    savingRef.current = true;
     setSavingPayment(true);
-    await supabase.from("brand_payout_reports").update({ payment_method: paymentForm.method, payment_details: paymentForm.details, payment_confirmed: true }).eq("id", report.id);
-    setReport((prev: any) => ({ ...prev, payment_method: paymentForm.method, payment_details: paymentForm.details, payment_confirmed: true }));
+    try {
+    const { error } = await supabase.from("brand_payout_reports").update({ payment_method: paymentForm.method, payment_details: paymentForm.details, payment_confirmed: true }).eq("id", report.id).select("id").single();
+    if (error) throw error;
+    setReport(prev => prev ? { ...prev, payment_method: paymentForm.method, payment_details: paymentForm.details, payment_confirmed: true } : prev);
     setShowPaymentForm(false);
+    } catch (error) {
+      console.error("Could not save payment details:", error);
+      alert("Could not save payment details. Please try again.");
+    } finally {
+    savingRef.current = false;
     setSavingPayment(false);
+    }
   };
 
-  const formatCurrency = (n: number) => `$${Number(n).toFixed(2)}`;
+  if (loading || loadError) return <LoadingView loading={loading} error={loadError} onRetry={() => setRetry(value => value + 1)} customLoader={<PageSkeleton label="Loading sales data" />} />;
 
-  if (loading) return <div style={{ fontSize: "0.85rem", color: "#4a5a52", padding: "1rem" }}>Loading sales data...</div>;
-
-  if (sales.length === 0) return (
+  if (sales.length === 0 && !report && !payout) return (
     <div style={{ background: "#fff", borderRadius: "14px", padding: "3rem", textAlign: "center", border: "1px solid #e4ebe6" }}>
       <div style={{ fontSize: "1rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>No sales yet</div>
       <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>Your sales will appear here after the event begins.</div>
@@ -84,13 +120,13 @@ export default function BrandSales({ event, brandEmail }: Props) {
   );
 
   return (
-    <div style={{ fontFamily: "Georgia, serif" }}>
+    <div className="[overflow-wrap:anywhere]">
 
       {/* Payout summary */}
       {payout && (
         <div style={{ background: "#1B3A2D", borderRadius: "16px", padding: "1.75rem 2rem", marginBottom: "1.5rem", color: "#fff" }}>
           <div style={{ fontSize: "0.65rem", color: "#d4c87a", letterSpacing: "0.15em", marginBottom: "1rem" }}>YOUR SALES SUMMARY</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1.5rem" }}>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <div style={{ fontSize: "0.6rem", color: "#d4c87a", marginBottom: "6px" }}>TOTAL REVENUE</div>
               <div style={{ fontSize: "1.6rem" }}>{formatCurrency(payout.total_revenue)}</div>
@@ -118,17 +154,17 @@ export default function BrandSales({ event, brandEmail }: Props) {
 
       {/* Day filter */}
       <div style={{ display: "flex", gap: "6px", marginBottom: "1.5rem", flexWrap: "wrap" as const }}>
-        <button onClick={() => setActiveDay("all")} style={{ padding: "5px 14px", background: activeDay === "all" ? "#1B3A2D" : "#fff", color: activeDay === "all" ? "#fff" : "#4a5a52", border: "1px solid " + (activeDay === "all" ? "#1B3A2D" : "#e4ebe6"), borderRadius: "20px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>All days</button>
+        <button onClick={() => setActiveDay("all")} style={{ padding: "5px 14px", background: activeDay === "all" ? "#1B3A2D" : "#fff", color: activeDay === "all" ? "#fff" : "#4a5a52", border: "1px solid " + (activeDay === "all" ? "#1B3A2D" : "#e4ebe6"), borderRadius: "20px", fontSize: "0.78rem", cursor: "pointer" }}>All days</button>
         {days.map(day => (
-          <button key={day} onClick={() => setActiveDay(day)} style={{ padding: "5px 14px", background: activeDay === day ? "#1B3A2D" : "#fff", color: activeDay === day ? "#fff" : "#4a5a52", border: "1px solid " + (activeDay === day ? "#1B3A2D" : "#e4ebe6"), borderRadius: "20px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>{formatDate(day)}</button>
+          <button key={day} onClick={() => setActiveDay(day)} style={{ padding: "5px 14px", background: activeDay === day ? "#1B3A2D" : "#fff", color: activeDay === day ? "#fff" : "#4a5a52", border: "1px solid " + (activeDay === day ? "#1B3A2D" : "#e4ebe6"), borderRadius: "20px", fontSize: "0.78rem", cursor: "pointer" }}>{formatDate(day)}</button>
         ))}
       </div>
 
       {/* Day summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2" style={{ marginBottom: "1.5rem" }}>
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6" }}>
           <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "8px" }}>UNITS SOLD</div>
-          <div style={{ fontSize: "2rem", color: "#1B3A2D", fontWeight: "normal" }}>{dayUnits}</div>
+          <div style={{ fontSize: "2rem", color: "#1B3A2D", fontWeight: "normal" }}>{dayUnits.toLocaleString("en-US")}</div>
         </div>
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6" }}>
           <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "8px" }}>REVENUE</div>
@@ -140,7 +176,7 @@ export default function BrandSales({ event, brandEmail }: Props) {
       {report && (
         <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6", marginBottom: "1rem" }}>
           <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "0.75rem" }}>PAYOUT REPORT</div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", alignItems: "center" }}>
             <a href={report.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.88rem", color: "#1B3A2D", textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}>
               📄 <span style={{ textDecoration: "underline" }}>{report.file_name}</span>
             </a>
@@ -152,13 +188,13 @@ export default function BrandSales({ event, brandEmail }: Props) {
           {showPaymentForm && (
             <div style={{ marginTop: "1rem", padding: "1rem", background: "#f8faf8", borderRadius: "8px", border: "1px solid #E8C97A" }}>
               <div style={{ fontSize: "0.72rem", color: "#b87333", marginBottom: "0.75rem" }}>Please confirm your payment details to receive your payout</div>
-              <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
-                <select value={paymentForm.method} onChange={e => setPaymentForm({...paymentForm, method: e.target.value})} style={{ padding: "7px 10px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "8px" }}>
+                <select disabled={savingPayment} value={paymentForm.method} onChange={e => setPaymentForm({...paymentForm, method: e.target.value})} style={{ padding: "7px 10px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem" }}>
                   {["Zelle","Bank Transfer","Cash App","PayPal","Venmo"].map(m => <option key={m}>{m}</option>)}
                 </select>
-                <input placeholder="Phone, email or account number" value={paymentForm.details} onChange={e => setPaymentForm({...paymentForm, details: e.target.value})} style={{ flex: 1, padding: "7px 10px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} />
+                <input disabled={savingPayment} placeholder="Phone, email or account number" value={paymentForm.details} onChange={e => setPaymentForm({...paymentForm, details: e.target.value})} style={{ flex: "1 1 160px", minWidth: 0, padding: "7px 10px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem" }} />
               </div>
-              <button onClick={savePaymentDetails} disabled={savingPayment || !paymentForm.details.trim()} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+              <button onClick={savePaymentDetails} disabled={savingPayment || !paymentForm.details.trim()} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.82rem", cursor: "pointer" }}>
                 {savingPayment ? "Saving..." : "Confirm payment details"}
               </button>
             </div>
@@ -168,7 +204,7 @@ export default function BrandSales({ event, brandEmail }: Props) {
 
       {/* Charts */}
       {filteredSales.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 [&>div]:min-w-0">
           <div style={{ background: "#fff", borderRadius: "12px", padding: "1.25rem", border: "1px solid #e4ebe6" }}>
             <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "0.75rem" }}>REVENUE BY PRODUCT</div>
             <ResponsiveContainer width="100%" height={200}>
@@ -180,7 +216,7 @@ export default function BrandSales({ event, brandEmail }: Props) {
                   labelLine={false} fontSize={9}>
                   {filteredSales.map((_, i) => <Cell key={i} fill={["#1B3A2D","#E8C97A","#4a7c59","#2a4d3e","#8b6ab0","#5b7fa6","#a0522d","#d4a574"][i % 8]} />)}
                 </Pie>
-                <Tooltip formatter={(val: any) => `$${Number(val).toFixed(2)}`} />
+                <Tooltip formatter={(val) => formatCurrency(Number(val))} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -201,21 +237,23 @@ export default function BrandSales({ event, brandEmail }: Props) {
       )}
 
       {/* Sales table */}
-      <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e4ebe6", overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "10px 16px", background: "#f8faf8", fontSize: "0.68rem", color: "#4a5a52", letterSpacing: "0.08em" }}>
+      <div role="region" aria-label="Sales breakdown" tabIndex={0} style={{ background: "#fff", borderRadius: "14px", border: "1px solid #e4ebe6", overflowX: "auto" }}>
+        <div style={{ minWidth: "560px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 2fr) repeat(3, minmax(0, 1fr))", padding: "10px 16px", background: "#f8faf8", fontSize: "0.68rem", color: "#4a5a52", letterSpacing: "0.08em" }}>
           <div>PRODUCT</div><div>VARIATION</div><div>QTY</div><div>REVENUE</div>
         </div>
         {filteredSales.map(sale => (
-          <div key={sale.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "12px 16px", borderTop: "1px solid #f0f4f1", alignItems: "center" }}>
+          <div key={sale.id} style={{ display: "grid", gridTemplateColumns: "minmax(0, 2fr) repeat(3, minmax(0, 1fr))", padding: "12px 16px", borderTop: "1px solid #f0f4f1", alignItems: "center" }}>
             <div style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>{sale.product_name}</div>
             <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>{sale.variation_name || "—"}</div>
-            <div style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>{sale.quantity_sold}</div>
+            <div style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>{Number(sale.quantity_sold).toLocaleString("en-US")}</div>
             <div style={{ fontSize: "0.88rem", color: "#4a7c59" }}>{formatCurrency(Number(sale.total_revenue))}</div>
           </div>
         ))}
         <div style={{ padding: "12px 16px", borderTop: "1px solid #f0f4f1", display: "flex", justifyContent: "space-between" }}>
           <span style={{ fontSize: "0.8rem", color: "#4a5a52" }}>{filteredSales.length} line item{filteredSales.length !== 1 ? "s" : ""}</span>
           <span style={{ fontSize: "0.88rem", color: "#1B3A2D", fontWeight: 500 }}>Total: {formatCurrency(dayTotal)}</span>
+        </div>
         </div>
       </div>
     </div>

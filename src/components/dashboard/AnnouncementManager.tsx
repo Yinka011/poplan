@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { sendNotification } from "@/lib/notifications";
 import { sendEmail, emailTemplate } from "@/lib/email";
+import LoadingView from "@/components/LoadingView";
+import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 
 type Announcement = {
   id: number;
@@ -14,77 +16,124 @@ type Announcement = {
 };
 
 export default function AnnouncementManager({ event }: { event: string }) {
-  const { organizerEmail } = useOrganizer();
+  const { organizerEmail, loading: organizerLoading } = useOrganizer();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [retry, setRetry] = useState(0);
   const [newMessage, setNewMessage] = useState("");
   const [pinned, setPinned] = useState(false);
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchAnnouncements();
+    if (organizerLoading) return;
+    let active = true;
+    let latestRequest = 0;
+    setLoading(true);
+    setLoadError("");
+
+    const fetchAnnouncements = async () => {
+      const request = ++latestRequest;
+      try {
+        if (!organizerEmail) throw new Error("Please sign in to view announcements.");
+        const { data, error } = await supabase
+          .from("announcements")
+          .select("*")
+          .eq("event", event)
+          .eq("organizer_email", organizerEmail)
+          .order("pinned", { ascending: false })
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        if (active && request === latestRequest) {
+          setAnnouncements(data || []);
+          setLoadError("");
+        }
+      } catch (error) {
+        console.error("Failed to load announcements:", error);
+        if (active && request === latestRequest) setLoadError("Could not load announcements. Please try again.");
+      } finally {
+        if (active && request === latestRequest) setLoading(false);
+      }
+    };
+
+    void fetchAnnouncements();
     const channel = supabase
       .channel("announcements-org")
-      .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, fetchAnnouncements)
+      .on("postgres_changes", { event: "*", schema: "public", table: "announcements" }, () => { void fetchAnnouncements(); })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
-
-  const fetchAnnouncements = async () => {
-    const { data } = await supabase
-      .from("announcements")
-      .select("*")
-      .eq("event", event)
-      .eq("organizer_email", organizerEmail)
-      .order("pinned", { ascending: false })
-      .order("created_at", { ascending: false });
-    if (data) setAnnouncements(data);
-  };
+    return () => { active = false; supabase.removeChannel(channel); };
+  }, [event, organizerEmail, organizerLoading, retry]);
 
   const postAnnouncement = async () => {
-    if (!newMessage.trim()) return;
+    if (saving) return;
+    if (!newMessage.trim()) {
+      alert("Enter an announcement before posting.");
+      return;
+    }
+    if (!organizerEmail) {
+      alert("Please sign in before posting an announcement.");
+      return;
+    }
     setSaving(true);
-    const { data, error } = await supabase.from("announcements").insert({
-      event,
-      organizer_email: organizerEmail,
-      message: newMessage,
-      author: organizerEmail,
-      pinned,
-    }).select().single();
-    if (data) {
-      setAnnouncements(prev => [data, ...prev]);
-      // Notify all brands in this event
+    let posted = false;
+    try {
+      const { data, error } = await supabase.from("announcements").insert({
+        event,
+        organizer_email: organizerEmail,
+        message: newMessage,
+        author: organizerEmail,
+        pinned,
+      }).select().single();
+      if (error) throw error;
+      if (!data) throw new Error("The new announcement was not returned.");
+      posted = true;
+      setAnnouncements(prev => [data, ...prev.filter(item => item.id !== data.id)]);
+      setNewMessage("");
+      setPinned(false);
+      setAdding(false);
+
       const { data: brands, error: brandsError } = await supabase.from("brands").select("email").eq("event", event).eq("organizer_email", organizerEmail).not("email", "is", null);
-      if (brands) {
-        // Send individual notifications
-        await Promise.all(brands.map(brand => sendNotification({
-          recipientEmail: brand.email,
-          eventSlug: event,
-          type: "announcement",
-          title: "New announcement",
-          message: newMessage.slice(0, 100),
-          link: "/brand/portal",
-        })));
-        // Send one batch email to all brands
-        const emails = brands.map(b => b.email).filter(Boolean);
-        if (emails.length > 0) {
-          await sendEmail({
+      if (brandsError) throw brandsError;
+      const emails = (brands || []).map(brand => brand.email).filter((email): email is string => typeof email === "string" && email.trim().length > 0);
+      if (emails.length > 0) {
+        const [notificationResults, emailResult] = await Promise.allSettled([
+          Promise.all(emails.map(recipientEmail => sendNotification({
+            recipientEmail,
+            eventSlug: event,
+            type: "announcement",
+            title: "New announcement",
+            message: newMessage.slice(0, 100),
+            link: "/brand/portal",
+          }))),
+          sendEmail({
             to: emails,
-            subject: `New announcement`,
+            subject: "New announcement",
             html: emailTemplate({
               title: "New announcement",
               message: newMessage,
               buttonText: "View in portal",
               buttonUrl: "https://nalpop.com/brand/portal",
             }),
-          });
+          }),
+        ]);
+        if (
+          notificationResults.status === "rejected" ||
+          notificationResults.value.some(success => !success) ||
+          emailResult.status === "rejected" ||
+          !emailResult.value?.success
+        ) {
+          throw new Error("One or more announcement notifications could not be sent.");
         }
       }
+    } catch (error) {
+      console.error("Failed to post or notify about announcement:", error);
+      alert(posted
+        ? "The announcement was posted, but some brand notifications could not be sent."
+        : "Could not post the announcement. Please try again.");
+    } finally {
+      setSaving(false);
     }
-    setNewMessage("");
-    setPinned(false);
-    setAdding(false);
-    setSaving(false);
   };
 
   const deleteAnnouncement = async (id: number) => {
@@ -104,34 +153,36 @@ export default function AnnouncementManager({ event }: { event: string }) {
   };
 
   return (
+    <LoadingView loading={loading || organizerLoading} error={loadError} onRetry={() => setRetry(value => value + 1)} customLoader={<DashboardSkeleton section="announcements" />}>
     <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
         <div>
-          <div style={{ fontSize: "1.1rem", color: "#1B3A2D", fontFamily: "Georgia, serif" }}>Announcements</div>
+          <div style={{ fontSize: "1.1rem", color: "#1B3A2D" }}>Announcements</div>
           <div style={{ fontSize: "0.8rem", color: "#4a5a52", marginTop: "2px" }}>All brands see these in their portal instantly</div>
         </div>
-        <button onClick={() => setAdding(!adding)} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Post</button>
+        <button onClick={() => setAdding(!adding)} disabled={saving} style={{ fontSize: "0.8rem", padding: "6px 14px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer" }}>{saving ? "Posting..." : "+ Post"}</button>
       </div>
 
       {adding && (
         <div style={{ background: "#f8faf8", borderRadius: "12px", padding: "1rem", marginBottom: "1rem", border: "1px solid #e4ebe6" }}>
           <textarea
             placeholder="Write your announcement to all brands..."
+            disabled={saving}
             value={newMessage}
             onChange={e => setNewMessage(e.target.value)}
             rows={3}
-            style={{ width: "100%", padding: "10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.875rem", fontFamily: "Georgia, serif", marginBottom: "10px", boxSizing: "border-box" as const, resize: "vertical" as const }}
+            style={{ width: "100%", padding: "10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.875rem",  marginBottom: "10px", boxSizing: "border-box" as const, resize: "vertical" as const }}
           />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "#4a5a52", cursor: "pointer" }}>
-              <input type="checkbox" checked={pinned} onChange={e => setPinned(e.target.checked)} />
+              <input type="checkbox" checked={pinned} disabled={saving} onChange={e => setPinned(e.target.checked)} />
               Pin this announcement
             </label>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={postAnnouncement} disabled={saving} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+              <button onClick={postAnnouncement} disabled={saving} style={{ padding: "7px 16px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>
                 {saving ? "Posting..." : "Post to all brands"}
               </button>
-              <button onClick={() => setAdding(false)} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => setAdding(false)} disabled={saving} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
             </div>
           </div>
         </div>
@@ -171,5 +222,6 @@ export default function AnnouncementManager({ event }: { event: string }) {
         ))}
       </div>
     </div>
+    </LoadingView>
   );
 }

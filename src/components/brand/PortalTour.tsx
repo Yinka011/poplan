@@ -41,7 +41,7 @@ export default function PortalTour({ onClose }: { onClose: () => void }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "1rem", pointerEvents: "none" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "2rem 2rem 1.5rem", maxWidth: "460px", width: "100%", boxShadow: "0 8px 40px #00000022", border: "1px solid #e4ebe6", fontFamily: "Georgia, serif", pointerEvents: "all", marginTop: "1rem" }}>
+      <div style={{ background: "#fff", borderRadius: "20px", padding: "2rem 2rem 1.5rem", maxWidth: "460px", width: "100%", boxShadow: "0 8px 40px #00000022", border: "1px solid #e4ebe6",  pointerEvents: "all", marginTop: "1rem" }}>
 
         {/* Progress bar */}
         <div style={{ display: "flex", gap: "5px", marginBottom: "1.5rem" }}>
@@ -61,13 +61,13 @@ export default function PortalTour({ onClose }: { onClose: () => void }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <button
             onClick={() => setStep(s => s - 1)}
-            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "#4a5a52", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "8px 14px", cursor: "pointer", fontFamily: "Georgia, serif", visibility: step === 0 ? "hidden" : "visible" }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "#4a5a52", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "8px 14px", cursor: "pointer",  visibility: step === 0 ? "hidden" : "visible" }}
           >
             ← Back
           </button>
           <button
             onClick={() => isLast ? onClose() : setStep(s => s + 1)}
-            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 20px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Georgia, serif" }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 20px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}
           >
             {isLast ? "Done ✓" : "Next →"}
           </button>
@@ -75,7 +75,7 @@ export default function PortalTour({ onClose }: { onClose: () => void }) {
 
         {/* Skip */}
         <div style={{ textAlign: "center", marginTop: "1rem" }}>
-          <button onClick={onClose} style={{ fontSize: "0.75rem", color: "#c8bfb5", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+          <button onClick={onClose} style={{ fontSize: "0.75rem", color: "#c8bfb5", background: "transparent", border: "none", cursor: "pointer" }}>
             Skip tour
           </button>
         </div>

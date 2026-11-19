@@ -1,14 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { deleteBrandFile, folderSegment, listBrandFiles, safeFileName, uploadToCloudinary, type BrandFile } from "@/lib/cloudinary";
 
-type UploadedFile = {
-  name: string;
-  size: number;
-  url: string;
-  category: string;
-  uploaded_at: string;
-};
+type UploadedFile = BrandFile;
 
 type FileApproval = {
   file_name: string;
@@ -48,27 +43,10 @@ export default function FileUpload({ brandName, brandEmail, event }: { brandName
   }, []);
 
   const fetchFiles = async () => {
-    const { data } = await supabase.storage
-      .from("brand-uploads")
-      .list(`${brandEmail}/`, { sortBy: { column: "created_at", order: "desc" } });
-
-    if (data) {
-      const filesWithUrls = await Promise.all(
-        data.filter(f => f.name !== ".emptyFolderPlaceholder").map(async (f) => {
-          const { data: urlData } = supabase.storage
-            .from("brand-uploads")
-            .getPublicUrl(`${brandEmail}/${f.name}`);
-          const parts = f.name.split("__");
-          return {
-            name: parts[1] || f.name,
-            size: f.metadata?.size || 0,
-            url: urlData.publicUrl,
-            category: parts[0]?.replace(/-/g, " ") || "Other",
-            uploaded_at: f.created_at || "",
-          };
-        })
-      );
-      setFiles(filesWithUrls);
+    try {
+      setFiles(await listBrandFiles(brandEmail));
+    } catch (err) {
+      console.error("Failed to load files:", err);
     }
   };
 
@@ -132,15 +110,15 @@ export default function FileUpload({ brandName, brandEmail, event }: { brandName
     setError("");
 
     for (const file of Array.from(fileList)) {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `${brandEmail}/${category.replace(/ /g, "-")}__${safeName}`;
-      const { error } = await supabase.storage
-        .from("brand-uploads")
-        .upload(path, file, { upsert: true });
-      if (error) {
-        setError(`Failed to upload ${file.name}: ${error.message}`);
-      } else {
+      try {
+        await uploadToCloudinary(
+          file,
+          folderSegment(brandEmail),
+          `${category.replace(/ /g, "-")}__${safeFileName(file.name)}`,
+        );
         await autoCheckTask(category);
+      } catch (err) {
+        setError(`Failed to upload ${file.name}: ${err instanceof Error ? err.message : "Please try again."}`);
       }
     }
 
@@ -150,9 +128,13 @@ export default function FileUpload({ brandName, brandEmail, event }: { brandName
 
   const deleteFile = async (file: UploadedFile) => {
     if (!confirm(`Delete ${file.name}?`)) return;
-    const path = `${brandEmail}/${file.category.replace(/ /g, "-")}__${file.name}`;
-    await supabase.storage.from("brand-uploads").remove([path]);
-    setFiles(prev => prev.filter(f => f.name !== file.name));
+    try {
+      await deleteBrandFile(file);
+      setFiles(prev => prev.filter(f => f !== file));
+    } catch (err) {
+      console.error("Failed to delete file:", err);
+      alert(`Could not delete ${file.name}. Please try again.`);
+    }
   };
 
   const formatSize = (bytes: number) => {
@@ -173,22 +155,22 @@ export default function FileUpload({ brandName, brandEmail, event }: { brandName
 
   return (
     <div style={{ background: "#fff", borderRadius: "16px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
-      <div style={{ fontSize: "1rem", color: "#1B3A2D", fontFamily: "Georgia, serif", marginBottom: "0.5rem" }}>Upload documents</div>
+      <div style={{ fontSize: "1rem", color: "#1B3A2D",  marginBottom: "0.5rem" }}>Upload documents</div>
       <p style={{ fontSize: "0.85rem", color: "#4a5a52", marginBottom: "1.25rem" }}>Upload your brand assets directly here. The organiser will be notified and can access everything from their dashboard.</p>
 
-      <div style={{ background: "#f8faf8", borderRadius: "10px", padding: "1rem", border: "1px solid #f0f4f1", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "#f8faf8", borderRadius: "10px", padding: "1rem", border: "1px solid #f0f4f1", marginBottom: "1.25rem", display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: "0.85rem", color: "#1B3A2D", fontFamily: "Georgia, serif", marginBottom: "2px" }}>Inventory template</div>
+          <div style={{ fontSize: "0.85rem", color: "#1B3A2D",  marginBottom: "2px" }}>Inventory template</div>
           <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>Download, fill in your products, then upload below</div>
         </div>
-        <a href={TEMPLATE_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.8rem", padding: "7px 14px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", fontFamily: "Georgia, serif" }}>
+        <a href={TEMPLATE_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.8rem", padding: "7px 14px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none" }}>
           Download template
         </a>
       </div>
 
       <div style={{ marginBottom: "1rem" }}>
         <label style={{ fontSize: "0.8rem", color: "#4a5a52", display: "block", marginBottom: "6px" }}>Category</label>
-        <select value={category} onChange={e => setCategory(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", color: "#1B3A2D", background: "#f8faf8" }}>
+        <select value={category} onChange={e => setCategory(e.target.value)} style={{ width: "100%", padding: "8px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem",  color: "#1B3A2D", background: "#f8faf8" }}>
           {CATEGORIES.map(c => <option key={c}>{c}</option>)}
         </select>
       </div>
@@ -221,13 +203,13 @@ export default function FileUpload({ brandName, brandEmail, event }: { brandName
                   const approvalStatus = getApprovalStatus(file.name);
                   const badge = approvalBadge(approvalStatus);
                   return (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", background: "#f8faf8", marginBottom: "4px" }}>
+                    <div key={i} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", background: "#f8faf8", marginBottom: "4px" }}>
                       <span style={{ fontSize: "0.85rem", color: "#c8bfb5" }}>
                         {file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? "▣" :
                          file.name.match(/\.pdf$/i) ? "▤" :
                          file.name.match(/\.(xlsx|csv|xls)$/i) ? "▦" : "▢"}
                       </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ flex: "1 1 100px", minWidth: 0 }}>
                         <div style={{ fontSize: "0.85rem", color: "#1B3A2D", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
                         <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>{formatSize(file.size)} · {formatDate(file.uploaded_at)}</div>
                       </div>

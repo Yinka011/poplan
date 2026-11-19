@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import WanniTutorial from "@/components/shared/WanniTutorial";
 import MoodBoard from "@/components/shared/MoodBoard";
+import { formatCurrency } from "@/lib/events";
+import LoadingView from "@/components/LoadingView";
+import PageSkeleton from "@/components/shared/PageSkeleton";
 
 type PlannerInfo = {
   id: number;
@@ -66,7 +69,10 @@ type StaffItem = { id: number; name: string; role: string; pay_rate: number; not
 export default function BrandCityDashboard() {
   const params = useParams();
   const slug = params.slug as string;
+  return <BrandCityDashboardContent key={slug} slug={slug} />;
+}
 
+function BrandCityDashboardContent({ slug }: { slug: string }) {
   const [planner, setPlanner] = useState<PlannerInfo | null>(null);
   const [myTasks, setMyTasks] = useState<Task[]>([]);
   const [assignedTasks, setAssignedTasks] = useState<Task[]>([]);
@@ -82,6 +88,11 @@ export default function BrandCityDashboard() {
   const [expenses, setExpenses] = useState<{id: number; category: string; item: string; cost: number; deposit: number;}[]>([]);
   const [comments, setComments] = useState<{id: number; item_name: string; sender_email: string; sender_name: string; message: string; created_at: string;}[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [loadedFor, setLoadedFor] = useState("");
+  const [retry, setRetry] = useState(0);
+  const [action, setAction] = useState("");
+  const actionRef = useRef(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "planning" | "budget" | "invoices" | "tasks" | "shipments" | "chat" | "moodboard">("overview");
   const [planningTab, setPlanningTab] = useState<"decor" | "refreshments" | "staff">("decor");
@@ -102,14 +113,17 @@ export default function BrandCityDashboard() {
   const [editingBudget, setEditingBudget] = useState(false);
   const [newBudget, setNewBudget] = useState("");
 
-  useEffect(() => { if (slug) fetchAll(); }, [slug]);
-
-  const fetchAll = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { window.location.href = "/"; return; }
-    setUserEmail(user.email || "");
-    const { data: profile } = await supabase.from("profiles").select("name").eq("email", user.email).single();
-    if (profile?.name) setUserName(profile.name);
+  useEffect(() => {
+    let active = true;
+    const fetchAll = async () => {
+    setLoading(true);
+    setLoadError("");
+    try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError && authError.name !== "AuthSessionMissingError") throw authError;
+    if (!user) { window.location.href = "/login"; return; }
+    const { data: profile, error: profileError } = await supabase.from("profiles").select("name").eq("email", user.email).maybeSingle();
+    if (profileError) throw profileError;
 
     const [plannerRes, eventRes, allTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes, commentsRes, plannerReceiptsRes] = await Promise.all([
       supabase.from("event_planners").select("*").eq("event_slug", slug).maybeSingle(),
@@ -127,6 +141,11 @@ export default function BrandCityDashboard() {
       supabase.from("planner_receipts").select("*").eq("event_slug", slug).order("created_at", { ascending: false }),
     ]);
 
+    const error = [plannerRes, eventRes, allTasksRes, messagesRes, invoicesRes, shipmentsRes, decorRes, refreshRes, staffRes, shiftsRes, expensesRes, commentsRes, plannerReceiptsRes].find(result => result.error)?.error;
+    if (error) throw error;
+    if (!active) return;
+    setUserEmail(user.email || "");
+    setUserName(profile?.name || "");
     const eventData = eventRes?.data;
     if (plannerRes.data || eventData) {
       setPlanner({
@@ -159,117 +178,184 @@ export default function BrandCityDashboard() {
     }
     if (expensesRes.data) setExpenses(expensesRes.data);
     if (commentsRes.data) setComments(commentsRes.data);
-    setLoading(false);
-
-
     // Show tutorial until dismissed
     if (!localStorage.getItem("wanni_tutorial_dismissed")) {
       setShowTutorial(true);
     }
+    } catch (error) {
+      console.error("Could not load event dashboard:", error);
+      if (active) setLoadError("Could not load event dashboard. Please try again.");
+    } finally {
+      if (active) { setLoadedFor(slug); setLoading(false); }
+    }
+    };
+    void fetchAll();
+    return () => { active = false; };
+  }, [slug, retry]);
+
+  const runAction = async (label: string, callback: () => Promise<void>) => {
+    if (actionRef.current) return;
+    actionRef.current = true;
+    setAction(label);
+    try { await callback(); }
+    catch (error) {
+      console.error(`${label} failed:`, error);
+      alert(`Could not ${label.toLowerCase()}. Please try again.`);
+    } finally {
+      actionRef.current = false;
+      setAction("");
+    }
   };
 
   const saveTracking = async (shipmentId: number) => {
-    await supabase.from("shipments").update({
+    await runAction("Save tracking", async () => {
+    const { error } = await supabase.from("shipments").update({
       courier: shipmentTracking.courier,
       tracking_number: shipmentTracking.tracking_number,
-    }).eq("id", shipmentId);
+    }).eq("id", shipmentId).select("id").single();
+    if (error) throw error;
     setShipments(prev => prev.map(s => s.id === shipmentId ? { ...s, ...shipmentTracking } : s));
     setEditingShipment(null);
+    });
   };
 
   const toggleReceived = async (shipment: Shipment) => {
     const newReceived = !shipment.received;
-    await supabase.from("shipments").update({ received: newReceived }).eq("id", shipment.id);
+    await runAction("Update shipment", async () => {
+    const { error } = await supabase.from("shipments").update({ received: newReceived }).eq("id", shipment.id).select("id").single();
+    if (error) throw error;
     setShipments(prev => prev.map(s => s.id === shipment.id ? { ...s, received: newReceived } : s));
+    });
   };
 
   const deleteMyTask = async (id: number) => {
-    await supabase.from("planner_tasks").delete().eq("id", id);
+    await runAction("Remove task", async () => {
+    const { error } = await supabase.from("planner_tasks").delete().eq("id", id).select("id").single();
+    if (error) throw error;
     setMyTasks(prev => prev.filter(t => t.id !== id));
+    });
   };
 
   const toggleTask = async (task: Task, isMine: boolean) => {
-    await supabase.from("planner_tasks").update({ completed: !task.completed }).eq("id", task.id);
+    await runAction("Update task", async () => {
+    const { error } = await supabase.from("planner_tasks").update({ completed: !task.completed }).eq("id", task.id).select("id").single();
+    if (error) throw error;
     if (isMine) setMyTasks(prev => prev.map(t => t.id === task.id ? { ...t, completed: !t.completed } : t));
     else setAssignedTasks(prev => prev.map(t => t.id === task.id ? { ...t, completed: !t.completed } : t));
+    });
   };
 
   const addMyTask = async () => {
-    if (!newMyTask.task.trim()) return;
-    const { data } = await supabase.from("planner_tasks").insert({
+    if (!newMyTask.task.trim()) { alert("Enter a task."); return; }
+    await runAction("Add task", async () => {
+    const { data, error } = await supabase.from("planner_tasks").insert({
       event_slug: slug, planner_email: planner?.planner_email || "", brand_email: userEmail,
       task: newMyTask.task, due_date: newMyTask.due_date || null, completed: false, owner: "brand_self"
     }).select().single();
-    if (data) setMyTasks(prev => [...prev, data]);
+    if (error) throw error;
+    if (!data) throw new Error("Saved task was not returned.");
+    setMyTasks(prev => [...prev, data]);
     setNewMyTask({ task: "", due_date: "" });
+    });
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim()) return;
-    const { data } = await supabase.from("planner_messages").insert({
+    if (!newMessage.trim()) { alert("Enter a message."); return; }
+    await runAction("Send message", async () => {
+    const { data, error } = await supabase.from("planner_messages").insert({
       event_slug: slug, sender_email: userEmail, sender_name: userName || userEmail, message: newMessage
     }).select().single();
-    if (data) setMessages(prev => [...prev, data]);
+    if (error) throw error;
+    if (!data) throw new Error("Sent message was not returned.");
+    setMessages(prev => [...prev, data]);
     setNewMessage("");
+    });
   };
 
   const approveInvoice = async (id: number) => {
-    await supabase.from("item_invoices").update({ status: "approved" }).eq("id", id);
+    await runAction("Approve invoice", async () => {
+    const { error } = await supabase.from("item_invoices").update({ status: "approved" }).eq("id", id).select("id").single();
+    if (error) throw error;
     setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: "approved" } : inv));
+    });
   };
 
   const rejectInvoice = async (id: number) => {
-    if (!rejectionNote.trim()) return;
-    await supabase.from("item_invoices").update({ status: "rejected", rejection_note: rejectionNote }).eq("id", id);
+    if (!rejectionNote.trim()) { alert("Enter a rejection note."); return; }
+    await runAction("Reject invoice", async () => {
+    const { error } = await supabase.from("item_invoices").update({ status: "rejected", rejection_note: rejectionNote }).eq("id", id).select("id").single();
+    if (error) throw error;
     setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: "rejected", rejection_note: rejectionNote } : inv));
     setRejecting(null);
     setRejectionNote("");
+    });
   };
 
   const addShipment = async () => {
-    if (!newShipment.trim()) return;
-    const { data } = await supabase.from("shipments").insert({
+    if (!newShipment.trim()) { alert("Enter shipment details."); return; }
+    await runAction("Add shipment", async () => {
+    const { data, error } = await supabase.from("shipments").insert({
       event_slug: slug, organizer_email: userEmail, notes: newShipment, shipped: false
     }).select().single();
-    if (data) setShipments(prev => [...prev, data]);
+    if (error) throw error;
+    if (!data) throw new Error("Saved shipment was not returned.");
+    setShipments(prev => [...prev, data]);
     setNewShipment("");
     setAddingShipment(false);
+    });
   };
 
   const toggleShipment = async (shipment: Shipment) => {
-    await supabase.from("shipments").update({ shipped: !shipment.shipped }).eq("id", shipment.id);
+    await runAction("Update shipment", async () => {
+    const { error } = await supabase.from("shipments").update({ shipped: !shipment.shipped }).eq("id", shipment.id).select("id").single();
+    if (error) throw error;
     setShipments(prev => prev.map(s => s.id === shipment.id ? { ...s, shipped: !s.shipped } : s));
+    });
   };
 
   const updateBrandStatus = async (table: string, itemId: number, status: string) => {
-    await supabase.from(table).update({ brand_status: status }).eq("id", itemId);
+    await runAction("Update planning item", async () => {
+    const { error } = await supabase.from(table).update({ brand_status: status }).eq("id", itemId).select("id").single();
+    if (error) throw error;
     if (table === "planning_decor") setDecor(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
     if (table === "planning_refreshments") setRefresh(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
     if (table === "planning_staff") setStaff(prev => prev.map(i => i.id === itemId ? { ...i, brand_status: status } : i));
+    });
   };
 
   const sendComment = async (itemName: string) => {
-    if (!newComment.trim()) return;
-    const { data } = await supabase.from("item_comments").insert({
+    if (!newComment.trim()) { alert("Enter a note."); return; }
+    await runAction("Send note", async () => {
+    const { data, error } = await supabase.from("item_comments").insert({
       event_slug: slug, item_name: itemName,
       sender_email: userEmail, sender_name: userName || userEmail, message: newComment,
     }).select().single();
-    if (data) setComments(prev => [...prev, data]);
+    if (error) throw error;
+    if (!data) throw new Error("Sent note was not returned.");
+    setComments(prev => [...prev, data]);
     setNewComment("");
+    });
   };
 
   const savePlannerName = async () => {
     if (!planner) return;
-    await supabase.from("event_planners").update({ planner_name: newPlannerName }).eq("id", planner.id);
+    await runAction("Save planner name", async () => {
+    const { error } = await supabase.from("event_planners").update({ planner_name: newPlannerName }).eq("id", planner.id).select("id").single();
+    if (error) throw error;
     setPlanner(prev => prev ? { ...prev, planner_name: newPlannerName } : prev);
     setEditingPlannerName(false);
+    });
   };
 
   const saveBudget = async () => {
-    const val = parseFloat(newBudget) || 0;
-    await supabase.from("event_planners").update({ budget: val }).eq("event_slug", slug);
+    const val = Number(newBudget);
+    if (!newBudget.trim() || !Number.isFinite(val) || val < 0) { alert("Enter a valid non-negative budget."); return; }
+    await runAction("Save budget", async () => {
+    const { error } = await supabase.from("event_planners").update({ budget: val }).eq("event_slug", slug).select("id").single();
+    if (error) throw error;
     setBudget(val);
     setEditingBudget(false);
+    });
   };
 
   const totalDecor = decor.reduce((s, x) => s + Number(x.cost), 0);
@@ -283,8 +369,11 @@ export default function BrandCityDashboard() {
   const isOverBudget = budget > 0 && totalSpent > budget;
 
   const deleteExpense = async (id: number) => {
-    await supabase.from("event_expenses").delete().eq("id", id);
+    await runAction("Remove expense", async () => {
+    const { error } = await supabase.from("expenses").delete().eq("id", id).select("id").single();
+    if (error) throw error;
     setExpenses(prev => prev.filter(e => e.id !== id));
+    });
   };
 
   const pendingInvoices = invoices.filter(i => i.status === "pending").length;
@@ -310,7 +399,7 @@ export default function BrandCityDashboard() {
     { key: "moodboard", label: "Mood Board" },
   ];
 
-  const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem", fontFamily: "Georgia, serif", ...style });
+  const inp = (style?: object) => ({ padding: "8px 10px", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.85rem",  ...style });
 
   const CommentThread = ({ itemName }: { itemName: string }) => {
     const itemComments = comments.filter(c => c.item_name === itemName);
@@ -329,7 +418,7 @@ export default function BrandCityDashboard() {
               </div>
             ))}
             <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
-              <input placeholder="Add a note..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(itemName)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.78rem", fontFamily: "Georgia, serif" }} autoFocus />
+              <input placeholder="Add a note..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && sendComment(itemName)} style={{ flex: 1, padding: "5px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.78rem" }} autoFocus />
               <button onClick={() => sendComment(itemName)} style={{ padding: "5px 10px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>Send</button>
             </div>
           </div>
@@ -345,8 +434,8 @@ export default function BrandCityDashboard() {
           <div style={{ background: "#E8C97A11", borderRadius: "8px", padding: "8px 10px", marginBottom: "6px", border: "1px solid #E8C97A33" }}>
             <div style={{ fontSize: "0.72rem", color: "#E8C97A", marginBottom: "6px", letterSpacing: "0.05em" }}>SUGGESTED BY YOUR PLANNER</div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={() => updateBrandStatus(table, itemId, "approved")} title="Approve" style={{ padding: "4px 14px", background: "transparent", color: "#E8C97A", border: "1px solid #4a7c59", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontFamily: "Georgia, serif" }}>Approve</button>
-              <button onClick={() => updateBrandStatus(table, itemId, "rejected")} title="Decline" style={{ padding: "4px 14px", background: "transparent", color: "#c0392b", border: "1px solid #c0392b", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontFamily: "Georgia, serif" }}>Decline</button>
+              <button onClick={() => updateBrandStatus(table, itemId, "approved")} title="Approve" style={{ padding: "4px 14px", background: "transparent", color: "#E8C97A", border: "1px solid #4a7c59", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem" }}>Approve</button>
+              <button onClick={() => updateBrandStatus(table, itemId, "rejected")} title="Decline" style={{ padding: "4px 14px", background: "transparent", color: "#c0392b", border: "1px solid #c0392b", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem" }}>Decline</button>
             </div>
           </div>
         )}
@@ -367,11 +456,13 @@ export default function BrandCityDashboard() {
     );
   };
 
-  if (loading) return <div style={{ minHeight: "100vh", background: "#faf7f4", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>;
+  if (loading || loadedFor !== slug || loadError) return <LoadingView loading={loading || loadedFor !== slug} error={loadError} onRetry={() => setRetry(value => value + 1)} customLoader={<PageSkeleton label="Loading event dashboard" />} page />;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#faf7f4", fontFamily: "Georgia, serif" }}>
+    <div style={{ minHeight: "100vh", background: "#faf7f4" }}>
       {showTutorial && <WanniTutorial onClose={() => setShowTutorial(false)} />}
+      {action && <div role="status" style={{ padding: "8px 1rem", color: "#1B3A2D" }}>{action} in progress...</div>}
+      <fieldset disabled={!!action} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
 
       {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "#00000033", zIndex: 15 }} />}
       <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: "240px", background: "#1B3A2D", zIndex: 16, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.3s ease", display: "flex", flexDirection: "column" as const }}>
@@ -424,8 +515,8 @@ export default function BrandCityDashboard() {
                 </div>
                 <div>
                   <div style={{ fontSize: "0.6rem", color: "#ffffff88", letterSpacing: "0.2em", marginBottom: "8px" }}>BUDGET</div>
-                  <div style={{ fontSize: "1.4rem", color: isOverBudget ? "#ff6b6b" : "#c8a882" }}>${totalSpent.toFixed(0)}</div>
-                  {budget > 0 && <div style={{ fontSize: "0.72rem", color: isOverBudget ? "#ff6b6b" : "#ffffff88", marginTop: "4px" }}>of ${budget.toFixed(0)}</div>}
+                  <div style={{ fontSize: "1.4rem", color: isOverBudget ? "#ff6b6b" : "#c8a882" }}>{formatCurrency(totalSpent)}</div>
+                  {budget > 0 && <div style={{ fontSize: "0.72rem", color: isOverBudget ? "#ff6b6b" : "#ffffff88", marginTop: "4px" }}>of {formatCurrency(budget)}</div>}
                   {budget > 0 && (
                     <div style={{ height: "2px", background: "#1B3A2D", borderRadius: "2px", marginTop: "8px" }}>
                       <div style={{ height: "100%", width: `${Math.min((totalSpent / budget) * 100, 100)}%`, background: isOverBudget ? "#ff6b6b" : "#c8a882", borderRadius: "2px" }} />
@@ -452,7 +543,7 @@ export default function BrandCityDashboard() {
                 <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "12px" }}>YOUR PLANNER</div>
                 {editingPlannerName ? (
                   <div style={{ display: "flex", gap: "6px" }}>
-                    <input value={newPlannerName} onChange={e => setNewPlannerName(e.target.value)} placeholder="Planner name" style={{ flex: 1, padding: "5px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem", fontFamily: "Georgia, serif" }} autoFocus />
+                    <input value={newPlannerName} onChange={e => setNewPlannerName(e.target.value)} placeholder="Planner name" style={{ flex: 1, padding: "5px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.82rem" }} autoFocus />
                     <button onClick={savePlannerName} style={{ padding: "5px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>✓</button>
                     <button onClick={() => setEditingPlannerName(false)} style={{ padding: "5px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.75rem", cursor: "pointer" }}>✕</button>
                   </div>
@@ -502,8 +593,8 @@ export default function BrandCityDashboard() {
               <div style={{ background: "#ff6b6b11", border: "1px solid #ff6b6b33", borderRadius: "14px", padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ fontSize: "1.2rem" }}>⚠️</span>
                 <div>
-                  <div style={{ fontSize: "0.9rem", color: "#c0392b" }}>Over budget by ${(totalSpent - budget).toFixed(2)}</div>
-                  <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginTop: "2px" }}>Your spending of ${totalSpent.toFixed(2)} exceeds your target of ${budget.toFixed(2)}</div>
+                  <div style={{ fontSize: "0.9rem", color: "#c0392b" }}>Over budget by {formatCurrency(totalSpent - budget)}</div>
+                  <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginTop: "2px" }}>Your spending of {formatCurrency(totalSpent)} exceeds your target of {formatCurrency(budget)}</div>
                 </div>
               </div>
             )}
@@ -515,7 +606,7 @@ export default function BrandCityDashboard() {
           <div>
             <div style={{ display: "flex", gap: "8px", marginBottom: "2rem" }}>
               {(["decor", "refreshments", "staff"] as const).map(t => (
-                <button key={t} onClick={() => setPlanningTab(t)} style={{ padding: "8px 24px", background: planningTab === t ? "#1B3A2D" : "#fff", color: planningTab === t ? "#fff" : "#4a5a52", border: "1px solid " + (planningTab === t ? "#1B3A2D" : "#ede8e2"), borderRadius: "30px", fontSize: "0.78rem", cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" as const, letterSpacing: "0.08em" }}>{t}</button>
+                <button key={t} onClick={() => setPlanningTab(t)} style={{ padding: "8px 24px", background: planningTab === t ? "#1B3A2D" : "#fff", color: planningTab === t ? "#fff" : "#4a5a52", border: "1px solid " + (planningTab === t ? "#1B3A2D" : "#ede8e2"), borderRadius: "30px", fontSize: "0.78rem", cursor: "pointer",  textTransform: "capitalize" as const, letterSpacing: "0.08em" }}>{t}</button>
               ))}
             </div>
 
@@ -523,7 +614,7 @@ export default function BrandCityDashboard() {
               <div>
                 <div style={{ background: "#fff", borderRadius: "10px", padding: "10px 16px", marginBottom: "1rem", border: "1px solid #ede8e2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.1em" }}>{decor.length} ITEMS</span>
-                  <span style={{ fontSize: "0.95rem", color: "#1B3A2D" }}>Total: <strong>${totalDecor.toFixed(2)}</strong></span>
+                  <span style={{ fontSize: "0.95rem", color: "#1B3A2D" }}>Total: <strong>{formatCurrency(totalDecor)}</strong></span>
                 </div>
                 {["Furniture", "Props", "Lighting", "Signage", "Theme", "Florals"].map(cat => {
                   const items = decor.filter(d => d.category === cat);
@@ -539,7 +630,7 @@ export default function BrandCityDashboard() {
                           <div key={item.id} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", border: "1px solid #ede8e2", borderLeft: item.brand_status === "approved" ? "3px solid #4a7c59" : item.brand_status === "rejected" ? "3px solid #c0392b" : item.brand_status === "suggested" ? "3px solid #E8C97A" : "1px solid #ede8e2" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><div style={{ fontSize: "0.95rem", color: "#1B3A2D", fontWeight: 500 }}>{item.item}</div>{invoices.filter(inv => inv.item_name === item.item && inv.status === "approved").length > 0 && <span style={{ fontSize: "0.65rem", background: "#4a7c5922", color: "#E8C97A", padding: "1px 6px", borderRadius: "10px" }}>✓ paid</span>}</div>
-                              {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#E8C97A" }}>${Number(item.cost).toFixed(2)}</div>}
+                              {item.cost > 0 && <div style={{ fontSize: "0.85rem", color: "#E8C97A" }}>{formatCurrency(Number(item.cost))}</div>}
                             </div>
                             {item.quantity > 0 && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginBottom: "2px" }}>Qty: {item.quantity}</div>}
                             {item.decision && item.decision !== "TBD" && <div style={{ fontSize: "0.78rem", color: "#5a4a3a", marginBottom: "4px", lineHeight: 1.4 }}>{item.decision}</div>}
@@ -550,7 +641,7 @@ export default function BrandCityDashboard() {
                               <div key={inv.id} style={{ marginTop: "6px", padding: "6px 8px", background: "#f8faf8", borderRadius: "6px", border: "1px solid #f0f4f1" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2px" }}>
                                   <span style={{ fontSize: "0.75rem", color: "#4a5a52" }}>{inv.description}</span>
-                                  <span style={{ fontSize: "0.78rem", color: "#E8C97A" }}>${Number(inv.amount).toFixed(2)}</span>
+                                  <span style={{ fontSize: "0.78rem", color: "#E8C97A" }}>{formatCurrency(Number(inv.amount))}</span>
                                 </div>
                                 <a href={inv.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.68rem", color: "#E8C97A", textDecoration: "none" }}>↓ View invoice</a>
                               </div>
@@ -569,7 +660,7 @@ export default function BrandCityDashboard() {
               <div>
                 <div style={{ background: "#fff", borderRadius: "10px", padding: "10px 16px", marginBottom: "1rem", border: "1px solid #ede8e2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.1em" }}>{refresh.length} ITEMS</span>
-                  <span style={{ fontSize: "0.95rem", color: "#1B3A2D" }}>Total: <strong>${totalRefresh.toFixed(2)}</strong></span>
+                  <span style={{ fontSize: "0.95rem", color: "#1B3A2D" }}>Total: <strong>{formatCurrency(totalRefresh)}</strong></span>
                 </div>
               <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #ede8e2", overflow: "hidden" }}>
                 {refresh.length === 0 && <p style={{ padding: "1.5rem", fontSize: "0.85rem", color: "#4a5a52" }}>No refreshments yet.</p>}
@@ -580,7 +671,7 @@ export default function BrandCityDashboard() {
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><div style={{ fontSize: "0.9rem", color: "#1B3A2D" }}>{item.item}</div>{invoices.filter(inv => inv.item_name === item.item && inv.status === "approved").length > 0 && <span style={{ fontSize: "0.65rem", background: "#4a7c5922", color: "#E8C97A", padding: "1px 6px", borderRadius: "10px" }}>✓ paid</span>}</div>
                         {item.quantity && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>{item.quantity}</div>}
                       </div>
-                      {item.cost > 0 && <span style={{ fontSize: "0.85rem", color: "#E8C97A" }}>${Number(item.cost).toFixed(2)}</span>}
+                      {item.cost > 0 && <span style={{ fontSize: "0.85rem", color: "#E8C97A" }}>{formatCurrency(Number(item.cost))}</span>}
                     </div>
                     <BrandApproval itemName={item.item} table="planning_refreshments" itemId={item.id} brandStatus={item.brand_status} />
                   </div>
@@ -593,7 +684,7 @@ export default function BrandCityDashboard() {
               <div>
                 <div style={{ background: "#fff", borderRadius: "10px", padding: "10px 16px", marginBottom: "1rem", border: "1px solid #ede8e2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.1em" }}>{staff.length} STAFF MEMBERS</span>
-                  <span style={{ fontSize: "0.95rem", color: "#1B3A2D" }}>Total: <strong>${totalStaff.toFixed(2)}</strong></span>
+                  <span style={{ fontSize: "0.95rem", color: "#1B3A2D" }}>Total: <strong>{formatCurrency(totalStaff)}</strong></span>
                 </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
               {staff.length === 0 && <p style={{ fontSize: "0.85rem", color: "#4a5a52" }}>No staff yet.</p>}
@@ -604,7 +695,7 @@ export default function BrandCityDashboard() {
                     <div key={member.id} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", border: "1px solid #ede8e2" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
                         <div style={{ fontSize: "0.95rem", color: "#1B3A2D" }}>{member.name}</div>
-                        {totalPay > 0 && <div style={{ fontSize: "0.85rem", color: "#E8C97A" }}>${totalPay.toFixed(2)}</div>}
+                        {totalPay > 0 && <div style={{ fontSize: "0.85rem", color: "#E8C97A" }}>{formatCurrency(totalPay)}</div>}
                       </div>
                       {member.notes && <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>{member.notes}</div>}
                       {totalHours > 0 && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>{totalHours} hrs</div>}
@@ -626,7 +717,7 @@ export default function BrandCityDashboard() {
                 <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.15em" }}>YOUR TARGET BUDGET</div>
                 {editingBudget ? (
                   <div style={{ display: "flex", gap: "6px" }}>
-                    <input value={newBudget} onChange={e => setNewBudget(e.target.value)} placeholder="Enter amount" style={{ padding: "5px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.85rem", width: "120px", fontFamily: "Georgia, serif" }} autoFocus />
+                    <input value={newBudget} onChange={e => setNewBudget(e.target.value)} placeholder="Enter amount" style={{ padding: "5px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.85rem", width: "120px" }} autoFocus />
                     <button onClick={saveBudget} style={{ padding: "5px 10px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
                     <button onClick={() => setEditingBudget(false)} style={{ padding: "5px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Cancel</button>
                   </div>
@@ -639,22 +730,22 @@ export default function BrandCityDashboard() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.5rem" }}>
                 <div>
                   <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.1em", marginBottom: "6px" }}>TARGET</div>
-                  <div style={{ fontSize: "1.5rem", color: "#1B3A2D" }}>{budget > 0 ? `$${budget.toFixed(0)}` : "—"}</div>
+                  <div style={{ fontSize: "1.5rem", color: "#1B3A2D" }}>{budget > 0 ? formatCurrency(budget) : "—"}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.1em", marginBottom: "6px" }}>SPENT</div>
-                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#c0392b" : "#1B3A2D" }}>${totalSpent.toFixed(0)}</div>
+                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#c0392b" : "#1B3A2D" }}>{formatCurrency(totalSpent)}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.1em", marginBottom: "6px" }}>{isOverBudget ? "OVER" : "REMAINING"}</div>
-                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#c0392b" : "#4a7c59" }}>{budget > 0 ? `$${Math.abs(budget - totalSpent).toFixed(0)}` : "—"}</div>
+                  <div style={{ fontSize: "1.5rem", color: isOverBudget ? "#c0392b" : "#4a7c59" }}>{budget > 0 ? formatCurrency(Math.abs(budget - totalSpent)) : "—"}</div>
                 </div>
               </div>
               {budget > 0 && (
                 <div style={{ marginTop: "1rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "#4a5a52", marginBottom: "6px" }}>
                     <span>{Math.round((totalSpent / budget) * 100)}% of budget used</span>
-                    {isOverBudget && <span style={{ color: "#c0392b" }}>Over by ${(totalSpent - budget).toFixed(0)}</span>}
+                    {isOverBudget && <span style={{ color: "#c0392b" }}>Over by {formatCurrency(totalSpent - budget)}</span>}
                   </div>
                   <div style={{ height: "4px", background: "#f0f4f1", borderRadius: "2px" }}>
                     <div style={{ height: "100%", width: `${Math.min((totalSpent / budget) * 100, 100)}%`, background: isOverBudget ? "#c0392b" : totalSpent / budget > 0.8 ? "#E8C97A" : "#4a7c59", borderRadius: "2px" }} />
@@ -674,12 +765,12 @@ export default function BrandCityDashboard() {
                     <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: section.color }} />
                     <span style={{ fontSize: "0.82rem", color: "#1B3A2D", letterSpacing: "0.05em" }}>{section.label.toUpperCase()}</span>
                   </div>
-                  <span style={{ fontSize: "0.95rem", color: section.color }}>${section.total.toFixed(2)}</span>
+                  <span style={{ fontSize: "0.95rem", color: section.color }}>{formatCurrency(section.total)}</span>
                 </div>
                 {section.items.filter(i => i.cost > 0).map((item, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #f8f5f2", fontSize: "0.8rem" }}>
                     <span style={{ color: "#4a5a52" }}>{item.name}</span>
-                    <span style={{ color: section.color }}>${Number(item.cost).toFixed(2)}</span>
+                    <span style={{ color: section.color }}>{formatCurrency(Number(item.cost))}</span>
                   </div>
                 ))}
               </div>
@@ -692,19 +783,19 @@ export default function BrandCityDashboard() {
                     <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4a5a52" }} />
                     <span style={{ fontSize: "0.82rem", color: "#1B3A2D", letterSpacing: "0.05em" }}>VENUE & OTHER</span>
                   </div>
-                  <span style={{ fontSize: "0.95rem", color: "#4a5a52" }}>${totalManual.toFixed(2)}</span>
+                  <span style={{ fontSize: "0.95rem", color: "#4a5a52" }}>{formatCurrency(totalManual)}</span>
                 </div>
                 {expenses.map((exp, i) => (
                   <div key={exp.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: i < expenses.length - 1 ? "1px solid #f8f5f2" : "none", fontSize: "0.8rem" }}>
                     <span style={{ color: "#4a5a52" }}>{exp.category} — {exp.item}</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span style={{ color: "#4a5a52" }}>${Number(exp.cost).toFixed(2)}</span><button onClick={() => deleteExpense(exp.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span style={{ color: "#4a5a52" }}>{formatCurrency(Number(exp.cost))}</span><button onClick={() => deleteExpense(exp.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#d4c5b0", fontSize: "11px" }} onMouseEnter={e => (e.currentTarget.style.color = "#c0392b")} onMouseLeave={e => (e.currentTarget.style.color = "#d4c5b0")}>✕</button></div>
                   </div>
                 ))}
               </div>
             )}
             <div style={{ background: "#1B3A2D", borderRadius: "14px", padding: "1rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "0.72rem", color: "#ffffff88", letterSpacing: "0.15em" }}>TOTAL SPEND</span>
-              <span style={{ fontSize: "1.2rem", color: "#fff" }}>${totalSpent.toFixed(2)}</span>
+              <span style={{ fontSize: "1.2rem", color: "#fff" }}>{formatCurrency(totalSpent)}</span>
             </div>
           </div>
         )}
@@ -732,7 +823,7 @@ export default function BrandCityDashboard() {
                         <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginTop: "4px", lineHeight: 1.5 }}>{items.join(" · ")}</div>
                         <div style={{ fontSize: "0.68rem", color: "#4a5a52", marginTop: "4px" }}>{new Date(receipt.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
                       </div>
-                      <div style={{ fontSize: "1.1rem", color: "#E8C97A", fontWeight: 500 }}>{receipt.amount ? `$${Number(receipt.amount).toFixed(2)}` : ""}</div>
+                      <div style={{ fontSize: "1.1rem", color: "#E8C97A", fontWeight: 500 }}>{receipt.amount ? formatCurrency(Number(receipt.amount)) : ""}</div>
                     </div>
                     <a href={receipt.file_url} download target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.78rem", padding: "6px 14px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none", display: "inline-block" }}>↓ Download receipt</a>
                   </div>
@@ -821,11 +912,11 @@ export default function BrandCityDashboard() {
                 </div>
                 {editingShipment === shipment.id && (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "6px", paddingTop: "8px", borderTop: "1px solid #f0f4f1" }}>
-                    <select value={shipmentTracking.courier} onChange={e => setShipmentTracking({...shipmentTracking, courier: e.target.value})} style={{ padding: "6px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.8rem", fontFamily: "Georgia, serif" }}>
+                    <select value={shipmentTracking.courier} onChange={e => setShipmentTracking({...shipmentTracking, courier: e.target.value})} style={{ padding: "6px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.8rem" }}>
                       <option value="">Courier...</option>
                       {["DHL", "UPS", "FedEx", "USPS", "ShipBob", "Other"].map(c => <option key={c}>{c}</option>)}
                     </select>
-                    <input placeholder="Tracking number" value={shipmentTracking.tracking_number} onChange={e => setShipmentTracking({...shipmentTracking, tracking_number: e.target.value})} style={{ padding: "6px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.8rem", fontFamily: "Georgia, serif" }} />
+                    <input placeholder="Tracking number" value={shipmentTracking.tracking_number} onChange={e => setShipmentTracking({...shipmentTracking, tracking_number: e.target.value})} style={{ padding: "6px 8px", border: "1px solid #e4ebe6", borderRadius: "6px", fontSize: "0.8rem" }} />
                     <button onClick={() => saveTracking(shipment.id)} style={{ padding: "6px 12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>Save</button>
                   </div>
                 )}
@@ -864,6 +955,7 @@ export default function BrandCityDashboard() {
         )}
 
       </div>
+      </fieldset>
     </div>
   );
 }

@@ -60,7 +60,7 @@ export default function Onboarding() {
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_email", user.email).limit(1);
       const role = roles?.[0]?.role;
       if (role === "brand_organizer") { router.push("/brand-organizer"); return; }
-      if (role === "organizer" || role === "planner") { router.push("/login/organizer/events"); return; }
+      if (role === "organizer" || role === "planner") { router.push("/organizer/events"); return; }
       setChecking(false);
     };
     checkRole();
@@ -70,13 +70,13 @@ export default function Onboarding() {
     if (!selected || !name.trim()) return;
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/"); return; }
+    if (!user) { router.push("/login"); return; }
     await Promise.all([
       supabase.from("user_roles").upsert({ user_email: user.email, role: selected }),
       supabase.from("profiles").upsert({ email: user.email, name, organizer_mode: selected }),
     ]);
     if (selected === "brand_organizer") { router.push("/brand-organizer"); return; }
-    if (selected === "planner") { router.push("/login/organizer/events"); return; }
+    if (selected === "planner") { router.push("/organizer/events"); return; }
     setStep("welcome");
     setLoading(false);
   };
@@ -84,23 +84,23 @@ export default function Onboarding() {
   const handleFeaturesSave = async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/"); return; }
+    if (!user) { router.push("/login"); return; }
     // Save features to profile so they persist across devices
     await supabase.from("profiles").update({ default_features: features }).eq("email", user.email);
     // Also store in localStorage as backup
     localStorage.setItem("nalpop_onboarding_features", JSON.stringify(features));
-    router.push("/login/organizer/events");
+    router.push("/organizer/events");
   };
 
   if (step === "password") return (
-    <div style={{ minHeight: "100vh", background: "#1B3A2D", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", padding: "2rem" }}>
+    <div style={{ minHeight: "100vh", background: "#1B3A2D", display: "flex", alignItems: "center", justifyContent: "center",  padding: "2rem" }}>
       <div style={{ maxWidth: "420px", width: "100%", background: "#fff", borderRadius: "16px", padding: "2.5rem", border: "1px solid #e4ebe6" }}>
         <div style={{ fontSize: "1.5rem", letterSpacing: "0.15em", color: "#1B3A2D", marginBottom: "0.5rem", textAlign: "center" as const }}>NALPOP</div>
         <h2 style={{ fontSize: "1.2rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" as const }}>Create your password</h2>
         <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1.5rem", textAlign: "center" as const }}>Choose a password to secure your Nalpop account.</p>
         <form onSubmit={handleSetPassword} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
-          <input type="password" placeholder="Choose a password (min 6 characters)" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ width: "100%", padding: "12px 14px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.95rem", fontFamily: "Georgia, serif", outline: "none", boxSizing: "border-box" as const }} autoFocus />
-          <button type="submit" disabled={settingPassword || newPassword.length < 6} style={{ width: "100%", padding: "12px", background: newPassword.length >= 6 ? "#1B3A2D" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+          <input type="password" placeholder="Choose a password (min 6 characters)" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ width: "100%", padding: "12px 14px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.95rem",  outline: "none", boxSizing: "border-box" as const }} autoFocus />
+          <button type="submit" disabled={settingPassword || newPassword.length < 6} style={{ width: "100%", padding: "12px", background: newPassword.length >= 6 ? "#1B3A2D" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: "pointer" }}>
             {settingPassword ? "Setting up..." : "Create account →"}
           </button>
         </form>
@@ -109,12 +109,12 @@ export default function Onboarding() {
   );
 
   if (checking) return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center",  color: "#4a5a52" }}>Loading...</div>
   );
 
   // STEP: WELCOME
   if (step === "welcome") return (
-    <div style={{ minHeight: "100vh", background: "#1B3A2D", fontFamily: "Georgia, serif" }}>
+    <div style={{ minHeight: "100vh", background: "#1B3A2D" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "4rem 2rem" }}>
         <div style={{ textAlign: "center", marginBottom: "4rem" }}>
           <div style={{ fontSize: "1.2rem", letterSpacing: "0.2em", color: "#E8C97A", marginBottom: "1rem" }}>NALPOP</div>
@@ -169,7 +169,7 @@ export default function Onboarding() {
         </div>
 
         <div style={{ textAlign: "center" }}>
-          <button onClick={() => setStep("features")} style={{ padding: "14px 48px", background: "#E8C97A", color: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "1rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+          <button onClick={() => setStep("features")} style={{ padding: "14px 48px", background: "#E8C97A", color: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "1rem", cursor: "pointer" }}>
             Choose my features →
           </button>
           <div style={{ fontSize: "0.78rem", color: "#ffffff44", marginTop: "1rem" }}>You can change these at any time in Settings</div>
@@ -180,7 +180,7 @@ export default function Onboarding() {
 
   // STEP: FEATURES
   if (step === "features") return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8" }}>
       <div style={{ background: "#1B3A2D", padding: "1.5rem 2rem", textAlign: "center" }}>
         <div style={{ fontSize: "1rem", letterSpacing: "0.2em", color: "#fff" }}>NALPOP</div>
       </div>
@@ -206,7 +206,7 @@ export default function Onboarding() {
         </div>
 
         <div style={{ textAlign: "center" }}>
-          <button onClick={handleFeaturesSave} disabled={loading} style={{ padding: "14px 48px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "10px", fontSize: "1rem", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+          <button onClick={handleFeaturesSave} disabled={loading} style={{ padding: "14px 48px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "10px", fontSize: "1rem", cursor: "pointer" }}>
             {loading ? "Setting up..." : "Build my dashboard →"}
           </button>
           <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginTop: "1rem" }}>
@@ -219,7 +219,7 @@ export default function Onboarding() {
 
   // STEP: ROLE (default)
   return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8",  display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
       <div style={{ maxWidth: "620px", width: "100%" }}>
         <div style={{ textAlign: "center", marginBottom: "3rem" }}>
           <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#1B3A2D" }}>NALPOP</div>
@@ -230,7 +230,7 @@ export default function Onboarding() {
 
         <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e4ebe6", marginBottom: "1.5rem" }}>
           <div style={{ fontSize: "0.8rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "1rem" }}>YOUR NAME OR ORGANISATION NAME</div>
-          <input type="text" placeholder="e.g. AO Curates" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "0.85rem", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#f8faf8", outline: "none", boxSizing: "border-box" as const }} />
+          <input type="text" placeholder="e.g. AO Curates" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "0.85rem", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.95rem",  background: "#f8faf8", outline: "none", boxSizing: "border-box" as const }} />
         </div>
 
         <div style={{ fontSize: "0.8rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "1rem", textAlign: "center" as const }}>WHAT BEST DESCRIBES YOU?</div>
@@ -241,7 +241,7 @@ export default function Onboarding() {
             { key: "brand_organizer", icon: "✈️", title: "I run my own brand across multiple cities", desc: "You take your brand to pop-ups in different locations worldwide." },
             { key: "planner", icon: "📋", title: "I plan pop-ups on behalf of brands", desc: "You are hired by brands to organize and manage their pop-up events." },
           ].map(role => (
-            <button key={role.key} onClick={() => setSelected(role.key as any)} style={{ padding: "1.5rem", background: selected === role.key ? "#1B3A2D" : "#fff", color: selected === role.key ? "#fff" : "#1B3A2D", border: `2px solid ${selected === role.key ? "#1B3A2D" : "#e4ebe6"}`, borderRadius: "14px", cursor: "pointer", textAlign: "left" as const, fontFamily: "Georgia, serif" }}>
+            <button key={role.key} onClick={() => setSelected(role.key as any)} style={{ padding: "1.5rem", background: selected === role.key ? "#1B3A2D" : "#fff", color: selected === role.key ? "#fff" : "#1B3A2D", border: `2px solid ${selected === role.key ? "#1B3A2D" : "#e4ebe6"}`, borderRadius: "14px", cursor: "pointer", textAlign: "left" as const }}>
               <div style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{role.icon}</div>
               <div style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>{role.title}</div>
               <div style={{ fontSize: "0.75rem", color: selected === role.key ? "#d4c87a" : "#4a5a52", lineHeight: 1.5 }}>{role.desc}</div>
@@ -249,7 +249,7 @@ export default function Onboarding() {
           ))}
         </div>
 
-        <button onClick={handleRoleContinue} disabled={!selected || !name.trim() || loading} style={{ width: "100%", padding: "1rem", background: selected && name.trim() ? "#1B3A2D" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: selected && name.trim() ? "pointer" : "not-allowed" }}>
+        <button onClick={handleRoleContinue} disabled={!selected || !name.trim() || loading} style={{ width: "100%", padding: "1rem", background: selected && name.trim() ? "#1B3A2D" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem",  cursor: selected && name.trim() ? "pointer" : "not-allowed" }}>
           {loading ? "Setting up..." : "Continue →"}
         </button>
       </div>

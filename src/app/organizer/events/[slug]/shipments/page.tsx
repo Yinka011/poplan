@@ -1,0 +1,195 @@
+"use client";
+import { useOrganizer } from "@/context/OrganizerContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/events";
+import LoadingView from "@/components/LoadingView";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import ShipmentsSkeleton from "./ShipmentsSkeleton";
+
+type Shipment = {
+  id: number;
+  event_slug: string;
+  notes: string;
+  shipped: boolean;
+  shipped_at?: string;
+  courier?: string;
+  tracking_number?: string;
+  received?: boolean;
+  brand_email?: string;
+};
+
+export default function ShipmentsPage() {
+  const { organizerEmail, loading: organizerLoading } = useOrganizer();
+  const params = useParams();
+  const slug = params.slug as string;
+  const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [brands, setBrands] = useState<{email: string; name: string; shipped: boolean; shipped_at?: string; courier?: string; tracking_number?: string; shipping_invoice?: string;}[]>([]);
+  const [brandInvoices, setBrandInvoices] = useState<{id: number; brand_email: string; file_name: string; file_url: string; amount: number; description: string; created_at: string;}[]>([]);
+  const [expandedBrand, setExpandedBrand] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [loadedFor, setLoadedFor] = useState("");
+  const [retry, setRetry] = useState(0);
+  const loadKey = `${slug}:${organizerEmail}`;
+
+  const [filter, setFilter] = useState("all");
+
+  useEffect(() => {
+    if (organizerLoading) return;
+    let active = true;
+    const fetchData = async () => {
+      setLoading(true);
+      setLoadError("");
+      try {
+        if (!organizerEmail) throw new Error("Please sign in to view shipments.");
+        const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+        const [shipmentsRes, brandsRes, invoicesRes] = await Promise.all([
+          supabase.from("shipments").select("*").eq("event_slug", slug).order("created_at"),
+          supabase.from("brands").select("email, name, shipped, shipped_at, courier, tracking_number, shipping_invoice").eq("event", eventName).eq("organizer_email", organizerEmail),
+          supabase.from("brand_shipment_invoices").select("*").eq("event", eventName).eq("organizer_email", organizerEmail).order("created_at", { ascending: false }),
+        ]);
+        const error = shipmentsRes.error || brandsRes.error || invoicesRes.error;
+        if (error) throw error;
+        if (!active) return;
+        setShipments(shipmentsRes.data ?? []);
+        setBrands(brandsRes.data ?? []);
+        setBrandInvoices(invoicesRes.data ?? []);
+      } catch (error) {
+        if (!active) return;
+        console.error("Failed to load shipments:", error);
+        setLoadError(error instanceof Error && error.message === "Please sign in to view shipments." ? error.message : "Could not load shipments. Please try again.");
+      } finally {
+        if (active) {
+          setLoadedFor(loadKey);
+          setLoading(false);
+        }
+      }
+    };
+    void fetchData();
+    return () => { active = false; };
+  }, [slug, organizerEmail, organizerLoading, loadKey, retry]);
+
+  const markReceived = async (id: number, received: boolean) => {
+    await supabase.from("shipments").update({ received }).eq("id", id);
+    setShipments(prev => prev.map(s => s.id === id ? { ...s, received } : s));
+  };
+
+  const filtered = filter === "all" ? shipments :
+    filter === "shipped" ? shipments.filter(s => s.shipped && !s.received) :
+    filter === "received" ? shipments.filter(s => s.received) :
+    shipments.filter(s => !s.shipped);
+
+  const getBrandName = (email: string) => brands.find(b => b.email === email)?.name || email;
+
+  return (
+    <div className="[overflow-wrap:anywhere]" style={{ minHeight: "100vh", background: "#f8faf8" }}>
+      <div style={{ background: "#1B3A2D", padding: "1rem 2rem", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
+        <Link href={`/organizer/events/${slug}`} style={{ fontSize: "0.8rem", color: "#E8C97A", textDecoration: "none" }}>← Back to event</Link>
+        <div style={{ fontSize: "1rem", color: "#fff" }}>Shipments — {slug.charAt(0).toUpperCase() + slug.slice(1)}</div>
+      </div>
+
+      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem 1.5rem" }}>
+        <LoadingView loading={organizerLoading || loading || loadedFor !== loadKey} error={loadError} onRetry={() => setRetry(value => value + 1)} customLoader={<ShipmentsSkeleton />}>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4" style={{ marginBottom: "1.5rem" }}>
+          {[
+            { label: "TOTAL", value: shipments.length, color: "#1B3A2D" },
+            { label: "PENDING", value: shipments.filter(s => !s.shipped).length, color: "#4a5a52" },
+            { label: "SHIPPED", value: shipments.filter(s => s.shipped && !s.received).length, color: "#b87333" },
+            { label: "RECEIVED", value: shipments.filter(s => s.received).length, color: "#4a7c59" },
+          ].map(stat => (
+            <div key={stat.label} style={{ background: "#fff", borderRadius: "12px", padding: "1rem", border: "1px solid #e4ebe6", textAlign: "center" as const }}>
+              <div style={{ fontSize: "1.8rem", color: stat.color, fontWeight: "normal" }}>{stat.value}</div>
+              <div style={{ fontSize: "0.65rem", color: "#4a5a52", letterSpacing: "0.12em", marginTop: "4px" }}>{stat.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Brand shipping summary */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <div style={{ fontSize: "0.72rem", color: "#4a5a52", letterSpacing: "0.12em", marginBottom: "8px" }}>BRAND SHIPMENTS</div>
+          {brands.map(brand => {
+            const invoices = brandInvoices.filter(inv => inv.brand_email === brand.email);
+            const isExpanded = expandedBrand === brand.email;
+            return (
+              <div key={brand.email} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "8px", border: "1px solid #e4ebe6", borderLeft: `3px solid ${brand.shipped ? "#4a7c59" : "#e4ebe6"}` }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "4px" }}>{brand.name}</div>
+                    {brand.courier && <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>🚚 {brand.courier} {brand.tracking_number && `· ${brand.tracking_number}`}</div>}
+                    {brand.shipping_invoice && <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>Invoice #: {brand.shipping_invoice}</div>}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: "20px", background: brand.shipped ? "#4a7c5922" : "#f0f4f1", color: brand.shipped ? "#4a7c59" : "#4a5a52" }}>
+                      {brand.shipped ? "✓ Shipped" : "Not shipped"}
+                    </span>
+                    {invoices.length > 0 && (
+                      <button onClick={() => setExpandedBrand(isExpanded ? null : brand.email)} style={{ fontSize: "0.72rem", padding: "3px 8px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>
+                        {invoices.length} invoice{invoices.length > 1 ? "s" : ""} {isExpanded ? "▲" : "▼"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {isExpanded && invoices.map(inv => (
+                  <div key={inv.id} style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", alignItems: "center", marginTop: "8px", padding: "8px", background: "#f8faf8", borderRadius: "8px" }}>
+                    <div>
+                      <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{inv.description || inv.file_name}</div>
+                      <div style={{ fontSize: "0.68rem", color: "#4a5a52" }}>{new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      {inv.amount > 0 && <span style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>{formatCurrency(Number(inv.amount))}</span>}
+                      <a href={inv.file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.72rem", padding: "4px 10px", background: "#1B3A2D", color: "#fff", borderRadius: "6px", textDecoration: "none" }}>↓</a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Filters */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "1.5rem" }}>
+          {["all", "pending", "shipped", "received"].map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{ padding: "5px 14px", background: filter === f ? "#1B3A2D" : "#fff", color: filter === f ? "#fff" : "#4a5a52", border: "1px solid " + (filter === f ? "#1B3A2D" : "#e4ebe6"), borderRadius: "20px", fontSize: "0.78rem", cursor: "pointer",  textTransform: "capitalize" as const }}>{f}</button>
+          ))}
+        </div>
+
+        {/* Shipments list */}
+        {filtered.length === 0 ? (
+          <div style={{ background: "#fff", borderRadius: "14px", padding: "3rem", textAlign: "center", border: "1px solid #e4ebe6" }}>
+            <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "0.5rem" }}>No shipments</div>
+            <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>Shipments will appear here when brands mark items as shipped.</div>
+          </div>
+        ) : (
+          filtered.map(shipment => (
+            <div key={shipment.id} style={{ background: "#fff", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "8px", border: "1px solid #e4ebe6", borderLeft: `3px solid ${shipment.received ? "#4a7c59" : shipment.shipped ? "#E8C97A" : "#e4ebe6"}` }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontSize: "0.9rem", color: "#1B3A2D", marginBottom: "2px" }}>{shipment.notes}</div>
+                  {shipment.brand_email && <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginBottom: "2px" }}>Brand: {getBrandName(shipment.brand_email)}</div>}
+                  {shipment.courier && <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>{shipment.courier} {shipment.tracking_number && `· ${shipment.tracking_number}`}</div>}
+                  {shipment.shipped_at && <div style={{ fontSize: "0.68rem", color: "#8b7355", marginTop: "2px" }}>Shipped {new Date(shipment.shipped_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>}
+                </div>
+                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: "20px", background: shipment.received ? "#4a7c5922" : shipment.shipped ? "#E8C97A22" : "#f0f4f1", color: shipment.received ? "#4a7c59" : shipment.shipped ? "#b87333" : "#4a5a52" }}>
+                    {shipment.received ? "✓ Received" : shipment.shipped ? "Shipped" : "Pending"}
+                  </span>
+                  {shipment.shipped && !shipment.received && (
+                    <button onClick={() => markReceived(shipment.id, true)} style={{ fontSize: "0.72rem", padding: "4px 10px", background: "#4a7c59", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer" }}>Mark received</button>
+                  )}
+                  {shipment.received && (
+                    <button onClick={() => markReceived(shipment.id, false)} style={{ fontSize: "0.72rem", padding: "4px 10px", background: "transparent", border: "1px solid #e4ebe6", borderRadius: "6px", cursor: "pointer", color: "#4a5a52" }}>Undo</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+        </LoadingView>
+      </div>
+    </div>
+  );
+}

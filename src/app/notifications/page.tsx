@@ -38,7 +38,7 @@ export default function NotificationsPage() {
   useEffect(() => {
     const fetchAll = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { window.location.href = "/"; return; }
+      if (!user) { window.location.href = "/login"; return; }
       setUserEmail(user.email || "");
 
       const { data } = await supabase
@@ -77,11 +77,11 @@ export default function NotificationsPage() {
   };
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>
+    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center",  color: "#4a5a52" }}>Loading...</div>
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8" }}>
       <div style={{ background: "#1B3A2D", padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem" }}>
         <Link href="/brand/portal" style={{ fontSize: "0.8rem", color: "#d4c87a", textDecoration: "none" }}>← Back</Link>
         <div style={{ fontSize: "1rem", color: "#fff" }}>Notifications</div>

@@ -24,5 +24,9 @@ export async function sendNotification({
     link,
     read: false,
   });
-  if (error) console.error("sendNotification error:", error);
+  if (error) {
+    console.error("sendNotification error:", error);
+    return false;
+  }
+  return true;
 }

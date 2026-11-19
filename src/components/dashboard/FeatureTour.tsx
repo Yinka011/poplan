@@ -183,7 +183,7 @@ export default function FeatureTour({ slug }: { slug: string }) {
 
           <h2
             style={{
-              fontFamily: "Georgia, serif",
+
               fontWeight: "normal",
               fontSize: "1.3rem",
               color: "#1B3A2D",
@@ -219,7 +219,6 @@ export default function FeatureTour({ slug }: { slug: string }) {
               color: "#9aaa9f",
               cursor: "pointer",
               padding: "6px 0",
-              fontFamily: "Georgia, serif",
             }}
           >
             Skip tour
@@ -237,7 +236,6 @@ export default function FeatureTour({ slug }: { slug: string }) {
                   fontSize: "0.82rem",
                   cursor: "pointer",
                   color: "#4a5a52",
-                  fontFamily: "Georgia, serif",
                 }}
               >
                 ← Back
@@ -254,7 +252,6 @@ export default function FeatureTour({ slug }: { slug: string }) {
                 fontSize: "0.82rem",
                 cursor: "pointer",
                 color: "#fff",
-                fontFamily: "Georgia, serif",
               }}
             >
               {isLast ? "Got it →" : "Next →"}

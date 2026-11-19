@@ -1,49 +1,68 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import PageSkeleton from "@/components/shared/PageSkeleton";
 
 function BrandSetupInner() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const savingRef = useRef(false);
   const [email, setEmail] = useState("");
   const [sessionReady, setSessionReady] = useState(false);
   const [sessionChecking, setSessionChecking] = useState(true);
+  const [sessionError, setSessionError] = useState(false);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
+    let active = true;
     const checkSession = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      setSessionChecking(true);
+      setSessionError(false);
+      try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error && error.name !== "AuthSessionMissingError") throw error;
+      if (!active) return;
       if (user) {
         setEmail(user.email || "");
         setSessionReady(true);
       }
-      setSessionChecking(false);
+      } catch (error) {
+        console.error("Could not verify access:", error);
+        if (active) setSessionError(true);
+      } finally {
+        if (active) setSessionChecking(false);
+      }
     };
-    checkSession();
-  }, []);
+    void checkSession();
+    return () => { active = false; };
+  }, [retry]);
 
   const handleSetup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirm) { setError("Passwords do not match"); return; }
-    if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
+    if (savingRef.current) return;
+    if (password !== confirm) { alert("Passwords do not match"); return; }
+    if (password.length < 6) { alert("Password must be at least 6 characters"); return; }
+    savingRef.current = true;
     setLoading(true);
-    setError("");
+    try {
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
+    if (error) throw error;
     window.location.href = next === "onboarding" ? "/onboarding" : "/brand/portal";
+    } catch (error) {
+      console.error("Could not set password:", error);
+      alert("Could not set your password. Please try again.");
+      savingRef.current = false;
+      setLoading(false);
+    }
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", background: "#f8faf8",  display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: "420px", padding: "0 1.5rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
           <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#1B3A2D" }}>NALPOP</div>
@@ -54,7 +73,12 @@ function BrandSetupInner() {
         <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e4ebe6" }}>
 
           {sessionChecking ? (
-            <div style={{ textAlign: "center", color: "#4a5a52", fontSize: "0.9rem" }}>Verifying your access...</div>
+            <PageSkeleton label="Verifying your access" />
+          ) : sessionError ? (
+            <div role="alert" style={{ textAlign: "center", color: "#4a5a52" }}>
+              Could not verify your access. Please try again.
+              <button onClick={() => setRetry(value => value + 1)} style={{ display: "block", margin: "1rem auto", padding: "8px 16px", background: "#1B3A2D", color: "#fff", border: 0, borderRadius: "8px" }}>Retry</button>
+            </div>
           ) : !sessionReady ? (
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>🔗</div>
@@ -63,7 +87,7 @@ function BrandSetupInner() {
                 Invite links expire after 24 hours for security. Please contact the event organiser to request a new invite link.
               </p>
               <div style={{ background: "#f8faf8", borderRadius: "10px", padding: "1rem", border: "1px solid #f0f4f1", fontSize: "0.85rem", color: "#4a5a52" }}>
-                Already have a password? <Link href="/" style={{ color: "#E8C97A", textDecoration: "none" }}>Sign in here →</Link>
+                Already have a password? <Link href="/login" style={{ color: "#E8C97A", textDecoration: "none" }}>Sign in here →</Link>
               </div>
             </div>
           ) : (
@@ -74,25 +98,26 @@ function BrandSetupInner() {
               <form onSubmit={handleSetup}>
                 <input
                   type="password"
+                  disabled={loading}
                   placeholder="Choose a password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
-                  style={{ width: "100%", padding: "0.75rem", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#f8faf8", outline: "none", boxSizing: "border-box" as const, marginBottom: "1rem" }}
+                  style={{ width: "100%", padding: "0.75rem", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.95rem",  background: "#f8faf8", outline: "none", boxSizing: "border-box" as const, marginBottom: "1rem" }}
                 />
                 <input
                   type="password"
+                  disabled={loading}
                   placeholder="Confirm password"
                   value={confirm}
                   onChange={e => setConfirm(e.target.value)}
                   required
-                  style={{ width: "100%", padding: "0.75rem", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", background: "#f8faf8", outline: "none", boxSizing: "border-box" as const, marginBottom: "1rem" }}
+                  style={{ width: "100%", padding: "0.75rem", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.95rem",  background: "#f8faf8", outline: "none", boxSizing: "border-box" as const, marginBottom: "1rem" }}
                 />
-                {error && <p style={{ color: "#c0392b", fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}>{error}</p>}
                 <button
                   type="submit"
                   disabled={loading}
-                  style={{ width: "100%", padding: "0.85rem", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem", fontFamily: "Georgia, serif", cursor: "pointer" }}
+                  style={{ width: "100%", padding: "0.85rem", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "8px", fontSize: "0.95rem",  cursor: "pointer" }}
                 >
                   {loading ? "Setting up..." : "Access my portal"}
                 </button>
@@ -107,7 +132,7 @@ function BrandSetupInner() {
 
 export default function BrandSetup() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", color: "#4a5a52" }}>Loading...</div>}>
+    <Suspense fallback={<PageSkeleton label="Loading brand setup" />}>
       <BrandSetupInner />
     </Suspense>
   );

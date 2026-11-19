@@ -13,6 +13,8 @@
   --color-brown-900: #2c1810;
   --font-display: "Cormorant Garamond", Georgia, serif;
   --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-inter: "Inter", system-ui, sans-serif;
+  --font-space-grotesk: "Space Grotesk", system-ui, sans-serif;
 }
 
 @layer base {
@@ -22,6 +24,12 @@
   }
 
   body {
-    @apply bg-nude-50 text-brown-800 font-sans;
+    @apply bg-nude-50 text-brown-800 font-space-grotesk;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-landing-page]) {
+    scroll-behavior: smooth;
   }
 }
