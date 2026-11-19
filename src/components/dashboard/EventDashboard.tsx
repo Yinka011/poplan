@@ -10,7 +10,7 @@ import BrandActivityOverview from "@/components/dashboard/BrandActivityOverview"
 import MarketingDeadlines from "@/components/dashboard/MarketingDeadlines";
 import AnnouncementManager from "@/components/dashboard/AnnouncementManager";
 import FeatureTour from "@/components/dashboard/FeatureTour";
-import { type EventSummary } from "@/lib/events";
+import { formatEventName, type EventSummary } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 import { Loader2Icon } from "lucide-react";
 
@@ -81,17 +81,17 @@ export function EventDashboard({ event }: EventDashboardProps) {
             supabase
               .from("brands")
               .select("id")
-              .eq("event", event.city)
+              .eq("event", formatEventName(event.slug))
               .eq("organizer_email", orgEmail),
             supabase
               .from("checklist")
               .select("completed")
-              .eq("event", event.city)
+              .eq("event", formatEventName(event.slug))
               .eq("organizer_email", orgEmail),
             supabase
               .from("event_settings")
               .select("spots_to_fill, venue_address")
-              .eq("event", event.city)
+              .eq("event", formatEventName(event.slug))
               .eq("organizer_email", orgEmail)
               .maybeSingle(),
             supabase
@@ -173,7 +173,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
       supabase.removeChannel(brandsChannel);
       supabase.removeChannel(checklistChannel);
     };
-  }, [event.city, event.slug, retry]);
+  }, [event.slug, retry]);
 
   const saveSpots = async () => {
     if (savingSpots) return;
@@ -191,7 +191,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
     try {
       const { error } = await supabase.from("event_settings").upsert(
         {
-          event: event.city,
+          event: formatEventName(event.slug),
           organizer_email: organizerEmail,
           spots_to_fill: spots,
         },
@@ -221,7 +221,7 @@ export function EventDashboard({ event }: EventDashboardProps) {
     try {
       const { error } = await supabase.from("event_settings").upsert(
         {
-          event: event.city,
+          event: formatEventName(event.slug),
           organizer_email: organizerEmail,
           venue_address: newAddress,
         },
@@ -548,7 +548,12 @@ export function EventDashboard({ event }: EventDashboardProps) {
             </div>
             {editingAddress ? (
               <div
-                style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                  alignItems: "center",
+                }}
               >
                 <input
                   type="text"
@@ -636,11 +641,11 @@ export function EventDashboard({ event }: EventDashboardProps) {
       <BrandActivityOverview eventCity={event.city} eventSlug={event.slug} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Checklist event={event.city} />
-        <MarketingDeadlines event={event.city} />
+        <Checklist event={formatEventName(event.slug)} />
+        <MarketingDeadlines event={formatEventName(event.slug)} />
       </div>
 
-      <AnnouncementManager event={event.city} />
+      <AnnouncementManager event={formatEventName(event.slug)} />
     </div>
   );
 }

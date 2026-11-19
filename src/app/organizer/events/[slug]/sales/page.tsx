@@ -14,7 +14,8 @@ import {
 } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { folderSegment, uploadToCloudinary } from "@/lib/cloudinary";
-import { formatCurrency } from "@/lib/events";
+import { formatCurrency, formatEventName } from "@/lib/events";
+import { calculatePayout, DEFAULT_PROCESSING_RATE } from "@/lib/payouts";
 import { useParams } from "next/navigation";
 import { useOrganizer } from "@/context/OrganizerContext";
 import Link from "next/link";
@@ -27,6 +28,7 @@ type BrandPayout = {
   brand_name: string;
   total_revenue: number;
   commission_rate: number;
+  square_processing_rate: number | null;
   commission_amount: number;
   payout_amount: number;
   payout_status: string;
@@ -48,7 +50,7 @@ type BrandSale = {
 export default function SalesPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const event = slug.charAt(0).toUpperCase() + slug.slice(1);
+  // const event = slug.charAt(0).toUpperCase() + slug.slice(1);
 
   const { organizerEmail, loading: organizerLoading } = useOrganizer();
   const [payouts, setPayouts] = useState<BrandPayout[]>([]);
@@ -62,6 +64,10 @@ export default function SalesPage() {
   const [reports, setReports] = useState<any[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [commissionRate, setCommissionRate] = useState(20);
+  const [commissionRates, setCommissionRates] = useState<Record<string, string>>({});
+  const [processingRates, setProcessingRates] = useState<Record<string, string>>({});
+  const [savingPayout, setSavingPayout] = useState<string | null>(null);
+  const savingPayoutRef = useRef(false);
   const [startDate, setStartDate] = useState("2026-09-11");
   const [endDate, setEndDate] = useState("2026-09-14");
 
@@ -74,16 +80,21 @@ export default function SalesPage() {
         if (!organizerEmail)
           throw new Error("Please sign in to view sales and payouts.");
         const [reportsRes, payoutsRes, salesRes] = await Promise.all([
-          supabase.from("brand_payout_reports").select("*").eq("event", event),
+          supabase
+            .from("brand_payout_reports")
+            .select("*")
+            .eq("event", formatEventName(slug)),
           supabase
             .from("event_payouts")
             .select("*")
-            .eq("event", event)
+            .eq("event", formatEventName(slug))
             .order("brand_name"),
           supabase
             .from("brand_sales")
             .select("*")
-            .eq("event", event)
+            .eq("event", formatEventName(slug))
+            .not("square_order_id", "is", null)
+            .neq("square_order_id", "")
             .order("sale_date"),
         ]);
         const error = reportsRes.error || payoutsRes.error || salesRes.error;
@@ -91,6 +102,22 @@ export default function SalesPage() {
         if (currentRequest !== requestId.current) return false;
         setReports(reportsRes.data || []);
         setPayouts(payoutsRes.data || []);
+        setCommissionRates(
+          Object.fromEntries(
+            (payoutsRes.data || []).map((payout) => [
+              payout.brand_email,
+              String(payout.commission_rate),
+            ]),
+          ),
+        );
+        setProcessingRates(
+          Object.fromEntries(
+            (payoutsRes.data || []).map((payout) => [
+              payout.brand_email,
+              String(payout.square_processing_rate ?? DEFAULT_PROCESSING_RATE),
+            ]),
+          ),
+        );
         setSales(salesRes.data || []);
         return true;
       } catch (error) {
@@ -102,7 +129,7 @@ export default function SalesPage() {
         if (currentRequest === requestId.current) setLoading(false);
       }
     },
-    [event, organizerEmail],
+    [organizerEmail, slug],
   );
 
   useEffect(() => {
@@ -120,7 +147,7 @@ export default function SalesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          event,
+          event: formatEventName(slug),
           start_date: startDate,
           end_date: endDate,
         }),
@@ -153,7 +180,7 @@ export default function SalesPage() {
     try {
       const uploaded = await uploadToCloudinary(
         file,
-        `payout-reports/${folderSegment(event)}/${folderSegment(brandEmail)}`,
+        `payout-reports/${folderSegment(formatEventName(slug))}/${folderSegment(brandEmail)}`,
       );
       uploadedUrl = uploaded.url;
     } catch (error) {
@@ -167,12 +194,12 @@ export default function SalesPage() {
     await supabase
       .from("brand_payout_reports")
       .delete()
-      .eq("event", event)
+      .eq("event", formatEventName(slug))
       .eq("brand_email", brandEmail);
     const { error: insertError } = await supabase
       .from("brand_payout_reports")
       .insert({
-        event,
+        event: formatEventName(slug),
         brand_email: brandEmail,
         brand_name: brandName,
         file_url: uploadedUrl,
@@ -195,7 +222,7 @@ export default function SalesPage() {
       return [
         ...prev,
         {
-          event,
+          event: formatEventName(slug),
           brand_email: brandEmail,
           brand_name: brandName,
           file_url: uploadedUrl,
@@ -225,7 +252,7 @@ export default function SalesPage() {
     await supabase
       .from("event_payouts")
       .update({ payout_status: "paid", payout_date: today })
-      .eq("event", event)
+      .eq("event", formatEventName(slug))
       .eq("brand_email", brandEmail);
     setPayouts((prev) =>
       prev.map((p) =>
@@ -236,75 +263,57 @@ export default function SalesPage() {
     );
   };
 
-  // Correct formula matching spreadsheet:
-  // processing_fee = 2.71% × net_sales (tax not available here so we use net sales only)
-  // commission = (net_sales - processing_fee) × rate%
-  // payout = net_sales - processing_fee - commission
-  const updateCommission = async (brandEmail: string, rate: number) => {
+  const saveRates = async (brandEmail: string, commissionRate: number, processingRate: number) => {
+    if (savingPayoutRef.current) return;
     const payout = payouts.find((p) => p.brand_email === brandEmail);
     if (!payout) return;
-    const netSales = Number(payout.total_revenue);
-    const processingFee = netSales * 0.0271;
-    const commission = (netSales - processingFee) * (rate / 100);
-    const payoutAmount = netSales - processingFee - commission;
-    await supabase
-      .from("event_payouts")
-      .update({
-        commission_rate: rate,
-        commission_amount: Math.round(commission * 100) / 100,
-        payout_amount: Math.round(payoutAmount * 100) / 100,
-      })
-      .eq("event", event)
-      .eq("brand_email", brandEmail);
-    setPayouts((prev) =>
-      prev.map((p) =>
-        p.brand_email === brandEmail
-          ? {
-              ...p,
-              commission_rate: rate,
-              commission_amount: Math.round(commission * 100) / 100,
-              payout_amount: Math.round(payoutAmount * 100) / 100,
-            }
-          : p,
-      ),
+    if (![commissionRate, processingRate].every((rate) => Number.isFinite(rate) && rate >= 0 && rate <= 100)) {
+      alert("Enter a rate between 0 and 100%.");
+      return;
+    }
+    const { commissionAmount, payoutAmount } = calculatePayout(
+      Number(payout.total_revenue),
+      commissionRate,
+      processingRate,
     );
-  };
-
-  const [adjustments, setAdjustments] = useState<Record<string, string>>({});
-
-  const applyAdjustment = async (brandEmail: string) => {
-    const payout = payouts.find((p) => p.brand_email === brandEmail);
-    if (!payout) return;
-    const extra = parseFloat(adjustments[brandEmail] || "0") || 0;
-    if (extra === 0) return;
-    const newRevenue =
-      Math.round((Number(payout.total_revenue) + extra) * 100) / 100;
-    const processingFee = newRevenue * 0.0271;
-    const commission =
-      (newRevenue - processingFee) * (Number(payout.commission_rate) / 100);
-    const payoutAmount = newRevenue - processingFee - commission;
-    await supabase
-      .from("event_payouts")
-      .update({
-        total_revenue: newRevenue,
-        commission_amount: Math.round(commission * 100) / 100,
-        payout_amount: Math.round(payoutAmount * 100) / 100,
-      })
-      .eq("event", event)
-      .eq("brand_email", brandEmail);
-    setPayouts((prev) =>
-      prev.map((p) =>
-        p.brand_email === brandEmail
-          ? {
-              ...p,
-              total_revenue: newRevenue,
-              commission_amount: Math.round(commission * 100) / 100,
-              payout_amount: Math.round(payoutAmount * 100) / 100,
-            }
-          : p,
-      ),
-    );
-    setAdjustments((prev) => ({ ...prev, [brandEmail]: "" }));
+    savingPayoutRef.current = true;
+    setSavingPayout(brandEmail);
+    try {
+      const { error } = await supabase
+        .from("event_payouts")
+        .update({
+          commission_rate: commissionRate,
+          square_processing_rate: processingRate,
+          commission_amount: commissionAmount,
+          payout_amount: payoutAmount,
+        })
+        .eq("event", formatEventName(slug))
+        .eq("brand_email", brandEmail)
+        .select("id")
+        .single();
+      if (error) throw error;
+      setPayouts((prev) =>
+        prev.map((p) =>
+          p.brand_email === brandEmail
+            ? {
+                ...p,
+                commission_rate: commissionRate,
+                square_processing_rate: processingRate,
+                commission_amount: commissionAmount,
+                payout_amount: payoutAmount,
+              }
+            : p,
+        ),
+      );
+      setProcessingRates((prev) => ({ ...prev, [brandEmail]: String(processingRate) }));
+      setCommissionRates((prev) => ({ ...prev, [brandEmail]: String(commissionRate) }));
+    } catch (error) {
+      console.error("Failed to save payout rates:", error);
+      alert("Could not save payout rates. Please try again.");
+    } finally {
+      savingPayoutRef.current = false;
+      setSavingPayout(null);
+    }
   };
 
   const totalRevenue = payouts.reduce((s, p) => s + Number(p.total_revenue), 0);
@@ -344,7 +353,7 @@ export default function SalesPage() {
           ← Back to event
         </Link>
         <div style={{ fontSize: "1rem", color: "#fff" }}>
-          Sales & Payouts — {event}
+          Sales & Payouts — {formatEventName(slug)}
         </div>
       </div>
 
@@ -451,6 +460,12 @@ export default function SalesPage() {
           </div>
 
           {/* Summary */}
+          {payouts.length > 0 && (
+            <p className="mb-3 text-sm text-[#4a5a52]">
+              Sales lists show Square-linked sales only. Payout totals are
+              stored separately and may include other sales or adjustments.
+            </p>
+          )}
           {payouts.length > 0 && (
             <div
               className="grid grid-cols-2 gap-6 lg:grid-cols-4"
@@ -764,61 +779,22 @@ export default function SalesPage() {
                             <div style={{ fontSize: "1rem", color: "#1c1714" }}>
                               {formatCurrency(payout.total_revenue)}
                             </div>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                marginTop: "4px",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontSize: "0.65rem",
-                                  color: "#4a5a52",
-                                }}
-                              >
-                                + adjust
-                              </span>
-                              <input
-                                type="number"
-                                placeholder="0.00"
-                                value={adjustments[payout.brand_email] || ""}
-                                onChange={(e) =>
-                                  setAdjustments((prev) => ({
-                                    ...prev,
-                                    [payout.brand_email]: e.target.value,
-                                  }))
-                                }
-                                onKeyDown={(e) =>
-                                  e.key === "Enter" &&
-                                  applyAdjustment(payout.brand_email)
-                                }
-                                style={{
-                                  width: "70px",
-                                  padding: "2px 6px",
-                                  border: "1px solid #e4ebe6",
-                                  borderRadius: "4px",
-                                  fontSize: "0.78rem",
-                                }}
-                              />
-                              <button
-                                onClick={() =>
-                                  applyAdjustment(payout.brand_email)
-                                }
-                                style={{
-                                  padding: "2px 8px",
-                                  background: "#1B3A2D",
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: "4px",
-                                  fontSize: "0.72rem",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                ✓
-                              </button>
-                            </div>
+                          </div>
+                          <div>
+                            <label htmlFor={`processing-${payout.brand_email}`} style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.1em", display: "block" }}>
+                              PROCESSING FEE
+                            </label>
+                            <input
+                              id={`processing-${payout.brand_email}`}
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.01"
+                              value={processingRates[payout.brand_email] ?? String(payout.square_processing_rate ?? DEFAULT_PROCESSING_RATE)}
+                              onChange={(e) => setProcessingRates((prev) => ({ ...prev, [payout.brand_email]: e.target.value }))}
+                              style={{ width: "65px", padding: "2px 6px", border: "1px solid #e4ebe6", borderRadius: "4px", fontSize: "0.82rem" }}
+                            />
+                            <span style={{ fontSize: "0.72rem", color: "#4a5a52" }}> %</span>
                           </div>
                           <div>
                             <div
@@ -839,13 +815,12 @@ export default function SalesPage() {
                             >
                               <input
                                 type="number"
-                                value={payout.commission_rate}
-                                onChange={(e) =>
-                                  updateCommission(
-                                    payout.brand_email,
-                                    Number(e.target.value),
-                                  )
-                                }
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                aria-label={`Commission rate for ${payout.brand_name}`}
+                                value={commissionRates[payout.brand_email] ?? String(payout.commission_rate)}
+                                onChange={(e) => setCommissionRates((prev) => ({ ...prev, [payout.brand_email]: e.target.value }))}
                                 style={{
                                   width: "45px",
                                   padding: "2px 6px",
@@ -864,6 +839,22 @@ export default function SalesPage() {
                               </span>
                             </div>
                           </div>
+                          <button
+                            type="button"
+                            disabled={savingPayout !== null}
+                            onClick={() => {
+                              const commission = commissionRates[payout.brand_email] ?? String(payout.commission_rate);
+                              const processing = processingRates[payout.brand_email] ?? String(payout.square_processing_rate ?? DEFAULT_PROCESSING_RATE);
+                              if (!commission.trim() || !processing.trim()) {
+                                alert("Enter both payout rates.");
+                                return;
+                              }
+                              void saveRates(payout.brand_email, Number(commission), Number(processing));
+                            }}
+                            style={{ alignSelf: "center", padding: "4px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", fontSize: "0.72rem", cursor: "pointer" }}
+                          >
+                            {savingPayout === payout.brand_email ? "Saving..." : "Save rates"}
+                          </button>
                           <div>
                             <div
                               style={{

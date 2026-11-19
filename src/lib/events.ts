@@ -68,7 +68,10 @@ export function formatDate(date: Date): string {
   }).format(date);
 }
 
-export function getDaysToEvent(startDate: Date, from: Date = new Date()): number {
+export function getDaysToEvent(
+  startDate: Date,
+  from: Date = new Date(),
+): number {
   const start = new Date(from.getFullYear(), from.getMonth(), from.getDate());
   const end = new Date(
     startDate.getFullYear(),
@@ -91,4 +94,9 @@ export function formatEventDateRange(event: EventSummary): string {
   const endDay = event.endDate.getDate();
   const year = event.endDate.getFullYear();
   return `${month} ${startDay}–${endDay}, ${year}`;
+}
+
+export function formatEventName(slug: string): string {
+  if (slug === "atlanta") return "Atlanta";
+  return slug;
 }

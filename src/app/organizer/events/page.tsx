@@ -1,13 +1,16 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { formatCurrency } from "@/lib/events";
+import { formatCurrency, formatEventName } from "@/lib/events";
 import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import GettingStarted from "@/components/dashboard/GettingStarted";
 import LoadingView from "@/components/LoadingView";
 import EventsSkeleton from "./EventsSkeleton";
-import { invitePlannerBrand as sendPlannerInvite, removePlannerEvent } from "./plannerActions";
+import {
+  invitePlannerBrand as sendPlannerInvite,
+  removePlannerEvent,
+} from "./plannerActions";
 
 type Event = {
   id: number;
@@ -106,9 +109,13 @@ export default function EventsPage() {
     setLoadError("");
 
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
       if (!user) {
-        if (authError && authError.name !== "AuthSessionMissingError") throw authError;
+        if (authError && authError.name !== "AuthSessionMissingError")
+          throw authError;
         if (currentRequest === requestId.current) {
           redirecting = true;
           window.location.href = "/login";
@@ -116,36 +123,69 @@ export default function EventsPage() {
         return;
       }
       if (authError) throw authError;
-      if (!user.email) throw new Error("The signed-in user has no email address.");
+      if (!user.email)
+        throw new Error("The signed-in user has no email address.");
 
       const [profileRes, eventsRes, plannerRes] = await Promise.all([
-        supabase.from("profiles").select("name").eq("email", user.email).maybeSingle(),
-        supabase.from("events").select("*").eq("organizer_email", user.email)
-          .order("year", { ascending: false }).order("created_at"),
-        supabase.from("event_planners").select("*").eq("planner_email", user.email),
+        supabase
+          .from("profiles")
+          .select("name")
+          .eq("email", user.email)
+          .maybeSingle(),
+        supabase
+          .from("events")
+          .select("*")
+          .eq("organizer_email", user.email)
+          .order("year", { ascending: false })
+          .order("created_at"),
+        supabase
+          .from("event_planners")
+          .select("*")
+          .eq("planner_email", user.email),
       ]);
-      const initialError = profileRes.error || eventsRes.error || plannerRes.error;
+      const initialError =
+        profileRes.error || eventsRes.error || plannerRes.error;
       if (initialError) throw initialError;
 
       const [enriched, enrichedPlanner] = await Promise.all([
-        Promise.all((eventsRes.data || []).map(async (event) => {
-          const [brandsRes, feesRes] = await Promise.all([
-            supabase.from("brands").select("id").eq("event", event.city).eq("organizer_email", user.email),
-            supabase.from("brands").select("amount_paid, balance").eq("event", event.city).eq("organizer_email", user.email),
-          ]);
-          if (brandsRes.error || feesRes.error) throw brandsRes.error || feesRes.error;
-          return {
-            ...event,
-            brandsCount: brandsRes.data?.length || 0,
-            feesCollected: feesRes.data?.reduce((s, b) => s + Number(b.amount_paid), 0) || 0,
-            outstandingBalance: feesRes.data?.reduce((s, b) => s + Number(b.balance), 0) || 0,
-          };
-        })),
-        Promise.all((plannerRes.data || []).map(async (pe) => {
-          const { data, error } = await supabase.from("events").select("*").eq("slug", pe.event_slug).maybeSingle();
-          if (error) throw error;
-          return { ...pe, event: data };
-        })),
+        Promise.all(
+          (eventsRes.data || []).map(async (event) => {
+            const [brandsRes, feesRes] = await Promise.all([
+              supabase
+                .from("brands")
+                .select("id")
+                .eq("event", formatEventName(event.slug))
+                .eq("organizer_email", user.email),
+              supabase
+                .from("brands")
+                .select("amount_paid, balance")
+                .eq("event", formatEventName(event.slug))
+                .eq("organizer_email", user.email),
+            ]);
+            if (brandsRes.error || feesRes.error)
+              throw brandsRes.error || feesRes.error;
+            return {
+              ...event,
+              brandsCount: brandsRes.data?.length || 0,
+              feesCollected:
+                feesRes.data?.reduce((s, b) => s + Number(b.amount_paid), 0) ||
+                0,
+              outstandingBalance:
+                feesRes.data?.reduce((s, b) => s + Number(b.balance), 0) || 0,
+            };
+          }),
+        ),
+        Promise.all(
+          (plannerRes.data || []).map(async (pe) => {
+            const { data, error } = await supabase
+              .from("events")
+              .select("*")
+              .eq("slug", pe.event_slug)
+              .maybeSingle();
+            if (error) throw error;
+            return { ...pe, event: data };
+          }),
+        ),
       ]);
 
       if (currentRequest !== requestId.current) return;
@@ -155,15 +195,19 @@ export default function EventsPage() {
       setPlannerEvents(enrichedPlanner);
     } catch (error) {
       console.error("Failed to load events:", error);
-      if (currentRequest === requestId.current) setLoadError("Could not load events. Please try again.");
+      if (currentRequest === requestId.current)
+        setLoadError("Could not load events. Please try again.");
     } finally {
-      if (!redirecting && currentRequest === requestId.current) setLoading(false);
+      if (!redirecting && currentRequest === requestId.current)
+        setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void fetchAll();
-    return () => { requestId.current += 1; };
+    return () => {
+      requestId.current += 1;
+    };
   }, [fetchAll]);
 
   const addEvent = async () => {
@@ -194,7 +238,7 @@ export default function EventsPage() {
       await supabase
         .from("event_settings")
         .insert({
-          event: newEvent.city,
+          event: slug,
           organizer_email: userEmail,
           spots_to_fill: 0,
           venue_address: "",
@@ -360,7 +404,15 @@ export default function EventsPage() {
 
   return (
     <DashboardShell hideSideNav>
-      <LoadingView loading={loading} error={loadError} onRetry={() => { void fetchAll(); }} customLoader={<EventsSkeleton />} page>
+      <LoadingView
+        loading={loading}
+        error={loadError}
+        onRetry={() => {
+          void fetchAll();
+        }}
+        customLoader={<EventsSkeleton />}
+        page
+      >
         <div className="min-w-0 [overflow-wrap:anywhere]">
           <div
             className="flex flex-col gap-4 lg:flex-row lg:justify-between"
@@ -974,7 +1026,8 @@ export default function EventsPage() {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(min(300px, 100%), 1fr))",
+                  gridTemplateColumns:
+                    "repeat(auto-fill, minmax(min(300px, 100%), 1fr))",
                   gap: "1rem",
                 }}
               >
@@ -1048,7 +1101,8 @@ export default function EventsPage() {
                       <div
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "repeat(auto-fit, minmax(min(70px, 100%), 1fr))",
+                          gridTemplateColumns:
+                            "repeat(auto-fit, minmax(min(70px, 100%), 1fr))",
                           gap: "8px",
                           borderTop: "1px solid #f0f4f1",
                           paddingTop: "1rem",
@@ -1148,7 +1202,20 @@ export default function EventsPage() {
               </div>
             )}
             {filteredEvents.length > 3 && (
-              <Link href="/organizer/my-events" style={{ display: "inline-block", marginTop: "1rem", color: "#1B3A2D", fontSize: "0.85rem", textDecoration: "none", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "8px 14px", background: "#fff" }}>
+              <Link
+                href="/organizer/my-events"
+                style={{
+                  display: "inline-block",
+                  marginTop: "1rem",
+                  color: "#1B3A2D",
+                  fontSize: "0.85rem",
+                  textDecoration: "none",
+                  border: "1px solid #e4ebe6",
+                  borderRadius: "8px",
+                  padding: "8px 14px",
+                  background: "#fff",
+                }}
+              >
                 See all my events →
               </Link>
             )}
@@ -1185,7 +1252,8 @@ export default function EventsPage() {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(min(300px, 100%), 1fr))",
+                  gridTemplateColumns:
+                    "repeat(auto-fill, minmax(min(300px, 100%), 1fr))",
                   gap: "1rem",
                 }}
               >
@@ -1305,7 +1373,20 @@ export default function EventsPage() {
               </div>
             )}
             {plannerEvents.length > 3 && (
-              <Link href="/organizer/planning-events" style={{ display: "inline-block", marginTop: "1rem", color: "#1B3A2D", fontSize: "0.85rem", textDecoration: "none", border: "1px solid #e4ebe6", borderRadius: "8px", padding: "8px 14px", background: "#fff" }}>
+              <Link
+                href="/organizer/planning-events"
+                style={{
+                  display: "inline-block",
+                  marginTop: "1rem",
+                  color: "#1B3A2D",
+                  fontSize: "0.85rem",
+                  textDecoration: "none",
+                  border: "1px solid #e4ebe6",
+                  borderRadius: "8px",
+                  padding: "8px 14px",
+                  background: "#fff",
+                }}
+              >
                 See all planning events →
               </Link>
             )}
