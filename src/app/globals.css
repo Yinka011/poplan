@@ -11,10 +11,10 @@
   --color-brown-700: #4a3728;
   --color-brown-800: #3d2b1f;
   --color-brown-900: #2c1810;
-  --font-display: "Cormorant Garamond", Georgia, serif;
-  --font-sans: "DM Sans", system-ui, sans-serif;
-  --font-inter: "Inter", system-ui, sans-serif;
-  --font-space-grotesk: "Space Grotesk", system-ui, sans-serif;
+  --font-display: "Cormorant Garamond Variable", Georgia, serif;
+  --font-sans: "DM Sans Variable", system-ui, sans-serif;
+  --font-inter: "Inter Variable", system-ui, sans-serif;
+  --font-space-grotesk: "Space Grotesk Variable", system-ui, sans-serif;
 }
 
 @layer base {

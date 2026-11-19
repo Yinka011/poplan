@@ -1,36 +1,10 @@
 import type { Metadata } from "next";
 import { OrganizerProvider } from "@/context/OrganizerContext";
-import {
-  Cormorant_Garamond,
-  DM_Sans,
-  Inter,
-  Space_Grotesk,
-} from "next/font/google";
+import "@fontsource-variable/cormorant-garamond";
+import "@fontsource-variable/dm-sans";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/space-grotesk";
 import "./globals.css";
-
-const display = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-display",
-});
-
-const sans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-sans",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-inter",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-space-grotesk",
-});
 
 export const metadata: Metadata = {
   title: "NALPOP — Pop-up Planning Made Simple",
@@ -45,9 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${display.variable} ${sans.variable} ${inter.variable} ${spaceGrotesk.variable} antialiased`}
-      >
+      <body className="antialiased">
         <OrganizerProvider>{children}</OrganizerProvider>
       </body>
     </html>
