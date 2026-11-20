@@ -2,7 +2,7 @@
 import { notifyOrganizer } from "@/lib/organizerNotify";
 import { sendEmail, emailTemplate } from "@/lib/email";
 import NotificationBell from "@/components/shared/NotificationBell";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { folderSegment, uploadToCloudinary } from "@/lib/cloudinary";
@@ -88,7 +88,7 @@ const FILE_CATEGORIES = [
 
 // FAQs are loaded from DB per organizer
 
-export default function BrandPortal() {
+function BrandPortalInner() {
   const searchParams = useSearchParams();
   const eventParam = searchParams.get("event") || "";
   const [brand, setBrand] = useState<Brand | null>(null);
@@ -2328,5 +2328,13 @@ export default function BrandPortal() {
         </div>
       </fieldset>
     </div>
+  );
+}
+
+export default function BrandPortal() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#f8faf8" }} />}>
+      <BrandPortalInner />
+    </Suspense>
   );
 }
