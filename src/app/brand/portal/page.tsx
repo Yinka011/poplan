@@ -168,6 +168,7 @@ function BrandPortalInner() {
   const [resolvedEvent, setResolvedEvent] = useState("");
   const [eventDates, setEventDates] = useState("");
   const [eventStartDate, setEventStartDate] = useState<string | null>(null);
+  const [collectPayments, setCollectPayments] = useState(true);
   const [organizerName, setOrganizerName] = useState("");
   const [brandOrgEmail, setBrandOrgEmail] = useState("");
 
@@ -312,7 +313,7 @@ function BrandPortalInner() {
             .order("created_at"),
           supabase
             .from("events")
-            .select("name, dates_label, start_date, organizer_email")
+            .select("name, dates_label, start_date, organizer_email, collect_payments")
             .eq("city", resolvedEvent)
             .eq("organizer_email", brandOrgEmail)
             .maybeSingle(),
@@ -351,6 +352,8 @@ function BrandPortalInner() {
             setEventDates(eventRes.data.dates_label);
           if (eventRes.data.start_date)
             setEventStartDate(eventRes.data.start_date);
+          if (eventRes.data.collect_payments === false)
+            setCollectPayments(false);
         }
         if (faqRes.data && faqRes.data.length > 0) {
           setFaqs(faqRes.data.map((f) => ({ q: f.question, a: f.answer })));
@@ -1012,8 +1015,8 @@ function BrandPortalInner() {
                 </p>
               </div>
 
-              {/* Fee tracker */}
-              <div
+              {/* Fee tracker — only shown when event collects payments */}
+              {collectPayments && <div
                 style={{
                   background: "#1B3A2D",
                   borderRadius: "16px",
@@ -1125,7 +1128,7 @@ function BrandPortalInner() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>}
 
               {/* Announcements */}
               <Announcements
