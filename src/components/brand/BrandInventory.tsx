@@ -98,6 +98,7 @@ export default function BrandInventory({
   eventSlug,
   brandEmail,
   brandName,
+  organizerEmail,
 }: Props) {
   return (
     <BrandInventoryContent
@@ -106,6 +107,7 @@ export default function BrandInventory({
       eventSlug={eventSlug}
       brandEmail={brandEmail}
       brandName={brandName}
+      organizerEmail={organizerEmail}
     />
   );
 }
@@ -115,6 +117,7 @@ function BrandInventoryContent({
   eventSlug,
   brandEmail,
   brandName,
+  organizerEmail,
 }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
