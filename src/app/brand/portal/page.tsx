@@ -212,7 +212,7 @@ export default function BrandPortal() {
         const brandRes = await supabase
           .from("brands")
           .select("*")
-          .eq("email", "hello@aralagos.com")
+          .eq("email", resolvedBrandEmail)
           .order("id", { ascending: false });
         if (brandRes.error) throw brandRes.error;
 
@@ -510,14 +510,20 @@ export default function BrandPortal() {
   const uploadShipmentInvoice = async () => {
     if (!newInvoiceFile || !brandEmail) return;
     if (!eventSlug) {
-      alert("The event could not be identified. Contact your organizer before uploading.");
+      alert(
+        "The event could not be identified. Contact your organizer before uploading.",
+      );
       return;
     }
     let folder: string;
     try {
       folder = `${brandUploadFolder(eventSlug, brandEmail)}/shipment-invoices`;
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Could not determine the upload folder.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Could not determine the upload folder.",
+      );
       return;
     }
     const amount = newInvoiceAmount.trim() ? Number(newInvoiceAmount) : 0;
@@ -528,10 +534,7 @@ export default function BrandPortal() {
     await runAction("Upload invoice", async () => {
       setUploadingInvoice(true);
       try {
-        const uploaded = await uploadToCloudinary(
-          newInvoiceFile,
-          folder,
-        );
+        const uploaded = await uploadToCloudinary(newInvoiceFile, folder);
         {
           try {
             const { data, error: insertError } = await supabase
@@ -2004,7 +2007,10 @@ export default function BrandPortal() {
                   eventSlug={eventSlug}
                 />
               ) : (
-                <p role="alert">Files are unavailable until your organizer resolves the event association.</p>
+                <p role="alert">
+                  Files are unavailable until your organizer resolves the event
+                  association.
+                </p>
               )}
             </div>
           )}
