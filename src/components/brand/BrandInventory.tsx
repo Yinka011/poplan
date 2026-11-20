@@ -41,13 +41,14 @@ type Props = {
   event: string;
   brandEmail: string;
   brandName: string;
+  organizerEmail?: string;
 };
 
-export default function BrandInventory({ event, brandEmail, brandName }: Props) {
-  return <BrandInventoryContent key={JSON.stringify([event, brandEmail])} event={event} brandEmail={brandEmail} brandName={brandName} />;
+export default function BrandInventory({ event, brandEmail, brandName, organizerEmail }: Props) {
+  return <BrandInventoryContent key={JSON.stringify([event, brandEmail])} event={event} brandEmail={brandEmail} brandName={brandName} organizerEmail={organizerEmail} />;
 }
 
-function BrandInventoryContent({ event, brandEmail, brandName }: Props) {
+function BrandInventoryContent({ event, brandEmail, brandName, organizerEmail }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -151,6 +152,7 @@ function BrandInventoryContent({ event, brandEmail, brandName }: Props) {
     try {
     const { data, error } = await supabase.from("brand_products").insert({
       event, brand_email: brandEmail, brand_name: brandName,
+      organizer_email: organizerEmail || null,
       name: newProduct.name, category: newProduct.category,
       base_price: price,
       photo_url: photoUrl || null,
