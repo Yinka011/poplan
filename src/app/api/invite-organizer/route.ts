@@ -86,6 +86,16 @@ export async function POST(request: Request) {
   });
 
   if (error) {
+    // Already registered — treat as success, they can log in normally
+    const msg = error.message?.toLowerCase() ?? "";
+    if (
+      msg.includes("already registered") ||
+      msg.includes("already been registered") ||
+      msg.includes("user already registered") ||
+      (error as any).code === "email_exists"
+    ) {
+      return NextResponse.json({ success: true, already_registered: true });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
