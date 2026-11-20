@@ -58,41 +58,39 @@ export default function BrandHome() {
         return;
       }
 
-      // Enrich with event names and dates
-      // Fetch all events for each unique organizer in one pass
-      const uniqueOrganizers = [...new Set(brandRows.map((r) => r.organizer_email).filter(Boolean))];
-      const orgEventsMap: Record<string, { name: string; dates_label: string; slug: string; start_date?: string; end_date?: string }[]> = {};
-      await Promise.all(uniqueOrganizers.map(async (orgEmail) => {
-        const { data } = await supabase
+      // Enrich each brand row with event name + dates by querying events directly per row
+      const enriched = await Promise.all(brandRows.map(async (row) => {
+        // Query event by organizer + slug (case-insensitive via ilike)
+        const { data: eventData } = await supabase
           .from("events")
           .select("name, dates_label, slug, start_date, end_date")
-          .eq("organizer_email", orgEmail);
-        orgEventsMap[orgEmail] = data || [];
-      }));
-
-      const enriched = await Promise.all(brandRows.map(async (row) => {
-        const orgEvents = orgEventsMap[row.organizer_email] || [];
-
-        // Match case-insensitively on slug
-        const eventData = orgEvents.find((e) =>
-          e.slug.toLowerCase() === row.event.toLowerCase()
-        ) || null;
-
-        // Clean display name: strip trailing numbers/hyphens if no event name found
-        const cleanSlug = row.event
-          .replace(/-\d+$/, "")
-          .replace(/-/g, " ")
-          .replace(/\b\w/g, (c: string) => c.toUpperCase());
+          .eq("organizer_email", row.organizer_email)
+          .ilike("slug", row.event.trim())
+          .maybeSingle();
 
         const { data: profileData } = await supabase
           .from("profiles")
           .select("name")
           .eq("email", row.organizer_email)
           .maybeSingle();
+
+        // Format date from start_date if dates_label is empty
+        let dateDisplay = eventData?.dates_label || "";
+        if (!dateDisplay && eventData?.start_date) {
+          const d = new Date(eventData.start_date);
+          dateDisplay = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+        }
+
+        // Clean slug as fallback display name
+        const cleanSlug = row.event
+          .replace(/-\d+$/, "")
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (c: string) => c.toUpperCase());
+
         return {
           ...row,
           event_name: eventData?.name || cleanSlug,
-          dates_label: eventData?.dates_label || (eventData?.start_date ? new Date(eventData.start_date).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : ""),
+          dates_label: dateDisplay,
           organizer_name: profileData?.name || row.organizer_email?.split("@")[0] || "",
         };
       }));
