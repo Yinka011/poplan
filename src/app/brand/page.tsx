@@ -61,11 +61,11 @@ export default function BrandHome() {
       // Enrich with event names and dates
       // Fetch all events for each unique organizer in one pass
       const uniqueOrganizers = [...new Set(brandRows.map((r) => r.organizer_email).filter(Boolean))];
-      const orgEventsMap: Record<string, { name: string; dates_label: string; slug: string }[]> = {};
+      const orgEventsMap: Record<string, { name: string; dates_label: string; slug: string; start_date?: string; end_date?: string }[]> = {};
       await Promise.all(uniqueOrganizers.map(async (orgEmail) => {
         const { data } = await supabase
           .from("events")
-          .select("name, dates_label, slug")
+          .select("name, dates_label, slug, start_date, end_date")
           .eq("organizer_email", orgEmail);
         orgEventsMap[orgEmail] = data || [];
       }));
@@ -73,11 +73,9 @@ export default function BrandHome() {
       const enriched = await Promise.all(brandRows.map(async (row) => {
         const orgEvents = orgEventsMap[row.organizer_email] || [];
 
-        // Match by: exact slug, slug contained in event value, or event value contained in name
+        // Match case-insensitively on slug
         const eventData = orgEvents.find((e) =>
-          e.slug === row.event ||
-          row.event.toLowerCase().startsWith(e.slug.toLowerCase()) ||
-          row.event.toLowerCase().includes(e.name?.toLowerCase().split(" ")[0] || "____")
+          e.slug.toLowerCase() === row.event.toLowerCase()
         ) || null;
 
         // Clean display name: strip trailing numbers/hyphens if no event name found
@@ -94,7 +92,7 @@ export default function BrandHome() {
         return {
           ...row,
           event_name: eventData?.name || cleanSlug,
-          dates_label: eventData?.dates_label || "",
+          dates_label: eventData?.dates_label || (eventData?.start_date ? new Date(eventData.start_date).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : ""),
           organizer_name: profileData?.name || row.organizer_email?.split("@")[0] || "",
         };
       }));
