@@ -10,6 +10,7 @@ type BrandEvent = {
   dates_label?: string;
   organizer_name?: string;
   status: string;
+  collect_payments?: boolean;
 };
 
 export default function BrandHome() {
@@ -63,7 +64,7 @@ export default function BrandHome() {
       const orgDataMap: Record<string, { events: {name:string;slug:string;start_date:string;dates_label:string}[]; orgName: string }> = {};
       await Promise.all(uniqueOrgs.map(async (orgEmail) => {
         const [{ data: evts }, { data: prof }] = await Promise.all([
-          supabase.from("events").select("name, slug, start_date, dates_label").eq("organizer_email", orgEmail).order("start_date", { ascending: true }),
+          supabase.from("events").select("name, slug, start_date, dates_label, collect_payments").eq("organizer_email", orgEmail).order("start_date", { ascending: true }),
           supabase.from("profiles").select("name").eq("email", orgEmail).maybeSingle(),
         ]);
         orgDataMap[orgEmail] = {
@@ -95,6 +96,7 @@ export default function BrandHome() {
           event_name: eventData?.name || cleanSlug,
           dates_label: dateDisplay,
           organizer_name: orgName,
+          collect_payments: eventData ? (eventData as any).collect_payments !== false : true,
         };
       });
 
@@ -162,13 +164,15 @@ export default function BrandHome() {
                 {ev.dates_label || "Date TBD"}
               </div>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <span style={{
-                  fontSize: "0.7rem", padding: "2px 8px", borderRadius: "10px",
-                  background: ev.status === "confirmed" ? "#4a7c5922" : "#E8C97A22",
-                  color: ev.status === "confirmed" ? "#4a7c59" : "#b87333",
-                }}>
-                  {ev.status || "pending"}
-                </span>
+                {ev.collect_payments !== false && (
+                  <span style={{
+                    fontSize: "0.7rem", padding: "2px 8px", borderRadius: "10px",
+                    background: ev.status === "confirmed" ? "#4a7c5922" : "#E8C97A22",
+                    color: ev.status === "confirmed" ? "#4a7c59" : "#b87333",
+                  }}>
+                    {ev.status || "pending"}
+                  </span>
+                )}
                 <span style={{ fontSize: "0.78rem", color: "#E8C97A", marginLeft: "auto" }}>
                   Open portal →
                 </span>
