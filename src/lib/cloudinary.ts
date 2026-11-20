@@ -25,6 +25,16 @@ export const folderSegment = (value: string) =>
 export const safeFileName = (name: string) =>
   name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
+export function brandUploadFolder(eventSlug: string, brandEmail: string): string {
+  if (!eventSlug || !/^[a-zA-Z0-9_-]+$/.test(eventSlug)) {
+    throw new Error("A valid event slug is required for brand uploads.");
+  }
+  if (!brandEmail || !/^[a-zA-Z0-9._@-]+$/.test(brandEmail) || brandEmail.includes("..")) {
+    throw new Error("This brand email contains characters unsupported in Cloudinary folders. Contact your organizer.");
+  }
+  return `${eventSlug}/${brandEmail}`;
+}
+
 async function request<T>(input: string, init: RequestInit = {}): Promise<T> {
   const {
     data: { session },
@@ -113,50 +123,9 @@ export function toBrandFile(file: CloudinaryFile): BrandFile {
   };
 }
 
-// Files uploaded before the Cloudinary migration still live in Supabase storage
-async function listLegacyBrandFiles(brandEmail: string): Promise<BrandFile[]> {
-  const { data, error } = await supabase.storage
-    .from("brand-uploads")
-    .list(`${brandEmail}/`, {
-      sortBy: { column: "created_at", order: "desc" },
-    });
-  if (error) throw error;
-  return (data ?? [])
-    .filter((f) => f.name !== ".emptyFolderPlaceholder" && f.id)
-    .map((f) => {
-      const path = `${brandEmail}/${f.name}`;
-      const parts = f.name.split("__");
-      return {
-        name: parts[1] || f.name,
-        size: f.metadata?.size || 0,
-        url: supabase.storage.from("brand-uploads").getPublicUrl(path).data
-          .publicUrl,
-        category: parts[0]?.replace(/-/g, " ") || "Other",
-        uploaded_at: f.created_at || "",
-        source: "supabase" as const,
-        path,
-      };
-    });
-}
-
-// Lists Cloudinary and legacy Supabase files together; one source failing does not hide the other
-export async function listBrandFiles(brandEmail: string): Promise<BrandFile[]> {
-  const [cloud, legacy] = await Promise.allSettled([
-    listCloudinaryFiles(folderSegment(brandEmail)).then((files) =>
-      files.map(toBrandFile),
-    ),
-    listLegacyBrandFiles(brandEmail),
-  ]);
-
-  if (cloud.status === "rejected")
-    console.error("Could not list Cloudinary files:", cloud.reason);
-  if (legacy.status === "rejected")
-    console.error("Could not list legacy Supabase files:", legacy.reason);
-  const files = [
-    ...(cloud.status === "fulfilled" ? cloud.value : []),
-    ...(legacy.status === "fulfilled" ? legacy.value : []),
-  ];
-  return files.sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at));
+export async function listBrandFiles(eventSlug: string, brandEmail: string): Promise<BrandFile[]> {
+  const files = await listCloudinaryFiles(brandUploadFolder(eventSlug, brandEmail));
+  return files.map(toBrandFile).sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at));
 }
 
 export async function deleteBrandFile(file: BrandFile) {

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { deleteBrandFile, folderSegment, listBrandFiles, safeFileName, uploadToCloudinary, type BrandFile } from "@/lib/cloudinary";
+import { brandUploadFolder, deleteBrandFile, listBrandFiles, safeFileName, uploadToCloudinary, type BrandFile } from "@/lib/cloudinary";
 
 type UploadedFile = BrandFile;
 
@@ -29,7 +29,7 @@ const CATEGORY_TASK_MAP: Record<string, number> = {
 
 const TEMPLATE_URL = "https://framesmhcepkdheoclsl.supabase.co/storage/v1/object/public/Templates/Brand%20Inventory%20Sheet%20-%20Template.xlsx";
 
-export default function FileUpload({ brandName, brandEmail, event }: { brandName: string; brandEmail: string; event: string }) {
+export default function FileUpload({ brandEmail, event, eventSlug }: { brandEmail: string; event: string; eventSlug: string }) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [approvals, setApprovals] = useState<FileApproval[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -44,9 +44,10 @@ export default function FileUpload({ brandName, brandEmail, event }: { brandName
 
   const fetchFiles = async () => {
     try {
-      setFiles(await listBrandFiles(brandEmail));
+      setFiles(await listBrandFiles(eventSlug, brandEmail));
     } catch (err) {
       console.error("Failed to load files:", err);
+      setError(err instanceof Error ? err.message : "Could not load brand files.");
     }
   };
 
@@ -73,26 +74,31 @@ export default function FileUpload({ brandName, brandEmail, event }: { brandName
     const deadlineId = CATEGORY_TASK_MAP[uploadCategory];
     if (!deadlineId) return;
 
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from("brand_tasks")
       .select("*")
       .eq("brand_email", brandEmail)
+      .eq("event", event)
       .eq("deadline_id", deadlineId)
-      .single();
+      .maybeSingle();
+    if (existingError) throw existingError;
 
     if (existing) {
       if (!existing.completed) {
-        await supabase.from("brand_tasks").update({ completed: true }).eq("id", existing.id);
+        const { error } = await supabase.from("brand_tasks").update({ completed: true }).eq("id", existing.id);
+        if (error) throw error;
       }
     } else {
-      const { data: deadline } = await supabase
+      const { data: deadline, error: deadlineError } = await supabase
         .from("event_deadlines")
         .select("task, due_date")
         .eq("id", deadlineId)
-        .single();
+        .eq("event", event)
+        .maybeSingle();
+      if (deadlineError) throw deadlineError;
 
       if (deadline) {
-        await supabase.from("brand_tasks").insert({
+        const { error } = await supabase.from("brand_tasks").insert({
           event: event,
           task: deadline.task,
           due_date: deadline.due_date,
@@ -100,6 +106,7 @@ export default function FileUpload({ brandName, brandEmail, event }: { brandName
           completed: true,
           deadline_id: deadlineId,
         });
+        if (error) throw error;
       }
     }
   };
@@ -113,12 +120,18 @@ export default function FileUpload({ brandName, brandEmail, event }: { brandName
       try {
         await uploadToCloudinary(
           file,
-          folderSegment(brandEmail),
+          brandUploadFolder(eventSlug, brandEmail),
           `${category.replace(/ /g, "-")}__${safeFileName(file.name)}`,
         );
-        await autoCheckTask(category);
       } catch (err) {
         setError(`Failed to upload ${file.name}: ${err instanceof Error ? err.message : "Please try again."}`);
+        continue;
+      }
+      try {
+        await autoCheckTask(category);
+      } catch (err) {
+        console.error("Could not update upload task:", err);
+        setError(`${file.name} was uploaded, but its task could not be updated. Please contact your organizer.`);
       }
     }
 

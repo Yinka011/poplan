@@ -8,9 +8,14 @@ const ROOT_FOLDER = "poplan";
 const RESOURCE_TYPES = ["image", "video", "raw"] as const;
 type ResourceType = (typeof RESOURCE_TYPES)[number];
 
-const FOLDER_PATTERN = /^[a-zA-Z0-9/_-]{1,150}$/;
+const FOLDER_PATTERN = /^[a-zA-Z0-9/._@-]{1,250}$/;
 const FILE_NAME_PATTERN = /^[a-zA-Z0-9._-]{1,150}$/;
-const PUBLIC_ID_PATTERN = /^[a-zA-Z0-9/._-]{1,300}$/;
+const PUBLIC_ID_PATTERN = /^[a-zA-Z0-9/._@-]{1,400}$/;
+
+function validFolder(folder: string) {
+  return FOLDER_PATTERN.test(folder) &&
+    folder.split("/").every((segment) => segment !== "." && segment !== ".." && !segment.includes(".."));
+}
 
 function config() {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
@@ -59,7 +64,7 @@ export async function POST(request: Request) {
 
   const folder = incoming.get("folder");
   const publicId = incoming.get("public_id");
-  if (typeof folder === "string" && folder && !FOLDER_PATTERN.test(folder)) return fail("Invalid folder", 400);
+  if (typeof folder === "string" && folder && (!validFolder(folder) || folder.endsWith("/") || folder.includes("//"))) return fail("Invalid folder", 400);
   if (typeof publicId === "string" && publicId && !FILE_NAME_PATTERN.test(publicId)) return fail("Invalid file name", 400);
 
   const body = new FormData();
@@ -104,7 +109,7 @@ export async function GET(request: Request) {
   if (!cloudinary) return denied;
 
   const prefix = new URL(request.url).searchParams.get("prefix") ?? "";
-  if (!FOLDER_PATTERN.test(prefix)) return fail("Invalid prefix", 400);
+  if (!validFolder(prefix) || prefix.startsWith("/") || prefix.includes("//")) return fail("Invalid prefix", 400);
 
   const results = await Promise.all(
     RESOURCE_TYPES.map(async (type) => {

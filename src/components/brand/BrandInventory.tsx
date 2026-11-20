@@ -3,7 +3,7 @@
 import { notifyOrganizer } from "@/lib/organizerNotify";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { folderSegment, uploadToCloudinary } from "@/lib/cloudinary";
+import { brandUploadFolder, uploadToCloudinary } from "@/lib/cloudinary";
 import { formatCurrency } from "@/lib/events";
 import LoadingView from "@/components/LoadingView";
 import PageSkeleton from "@/components/shared/PageSkeleton";
@@ -39,15 +39,16 @@ const COLOURS = ["Black", "White", "Beige", "Brown", "Camel", "Grey", "Navy", "B
 
 type Props = {
   event: string;
+  eventSlug: string;
   brandEmail: string;
   brandName: string;
 };
 
-export default function BrandInventory({ event, brandEmail, brandName }: Props) {
-  return <BrandInventoryContent key={JSON.stringify([event, brandEmail])} event={event} brandEmail={brandEmail} brandName={brandName} />;
+export default function BrandInventory({ event, eventSlug, brandEmail, brandName }: Props) {
+  return <BrandInventoryContent key={JSON.stringify([event, eventSlug, brandEmail])} event={event} eventSlug={eventSlug} brandEmail={brandEmail} brandName={brandName} />;
 }
 
-function BrandInventoryContent({ event, brandEmail, brandName }: Props) {
+function BrandInventoryContent({ event, eventSlug, brandEmail, brandName }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -132,10 +133,19 @@ function BrandInventoryContent({ event, brandEmail, brandName }: Props) {
     reader.readAsDataURL(file);
   };
 
-  const uploadPhoto = async (file: File): Promise<string> => {
+  const productFolder = () => {
+    try {
+      return `${brandUploadFolder(eventSlug, brandEmail)}/products`;
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Could not determine the upload folder.");
+      return null;
+    }
+  };
+
+  const uploadPhoto = async (file: File, folder: string): Promise<string> => {
     setUploadingPhoto(true);
     try {
-    const uploaded = await uploadToCloudinary(file, `inventory/${folderSegment(event)}/${folderSegment(brandEmail)}`);
+    const uploaded = await uploadToCloudinary(file, folder);
     return uploaded.url;
     } finally { setUploadingPhoto(false); }
   };
@@ -143,10 +153,12 @@ function BrandInventoryContent({ event, brandEmail, brandName }: Props) {
   const addProduct = async () => {
     const price = Number(newProduct.base_price);
     if (!newProduct.name.trim() || !newProduct.base_price.trim() || !Number.isFinite(price) || price < 0) { alert("Enter a product name and valid non-negative price."); return; }
+    const folder = selectedFile ? productFolder() : null;
+    if (selectedFile && !folder) return;
     await runAction("Save product", async () => {
     let photoUrl = newProduct.photo_url;
-    if (selectedFile) {
-      photoUrl = await uploadPhoto(selectedFile);
+    if (selectedFile && folder) {
+      photoUrl = await uploadPhoto(selectedFile, folder);
     }
     try {
     const { data, error } = await supabase.from("brand_products").insert({
@@ -288,8 +300,10 @@ function BrandInventoryContent({ event, brandEmail, brandName }: Props) {
   };
 
   const updateProductPhoto = async (productId: number, file: File) => {
+    const folder = productFolder();
+    if (!folder) return;
     await runAction("Update photo", async () => {
-      const uploaded = await uploadToCloudinary(file, `${folderSegment(brandEmail)}/products`);
+      const uploaded = await uploadToCloudinary(file, folder);
       try {
         const { error } = await supabase.from("brand_products").update({ photo_url: uploaded.url }).eq("id", productId).select("id").single();
         if (error) throw error;
