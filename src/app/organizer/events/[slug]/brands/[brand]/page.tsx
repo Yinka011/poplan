@@ -297,7 +297,7 @@ function BrandPage({ slug, brandSlug }: { slug: string; brandSlug: string }) {
           approvalRes.error ||
           messagesRes.error;
         if (queryError) throw queryError;
-        const filesWithUrls = await listBrandFiles(brandData.email);
+        const filesWithUrls = await listBrandFiles(slug, brandData.email);
         if (!active) return;
         setUserEmail(orgEmail);
         setEventCity(resolvedCity);

@@ -2,10 +2,9 @@
 import { notifyOrganizer } from "@/lib/organizerNotify";
 import { sendEmail, emailTemplate } from "@/lib/email";
 import NotificationBell from "@/components/shared/NotificationBell";
-import { useEffect, useRef, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { folderSegment, uploadToCloudinary } from "@/lib/cloudinary";
+import { brandUploadFolder, uploadToCloudinary } from "@/lib/cloudinary";
 import Announcements from "@/components/brand/Announcements";
 import FileUpload from "@/components/brand/FileUpload";
 import BrandInventory from "@/components/brand/BrandInventory";
@@ -88,10 +87,11 @@ const FILE_CATEGORIES = [
 
 // FAQs are loaded from DB per organizer
 
-function BrandPortalInner() {
-  const searchParams = useSearchParams();
-  const eventParam = searchParams.get("event") || "";
+export default function BrandPortal() {
   const [brand, setBrand] = useState<Brand | null>(null);
+  const [availableBrands, setAvailableBrands] = useState<Brand[]>([]);
+  const [selectedBrandId, setSelectedBrandId] = useState("");
+  const [eventWarning, setEventWarning] = useState("");
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [tasks, setTasks] = useState<BrandTask[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -165,10 +165,10 @@ function BrandPortalInner() {
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [eventName, setEventName] = useState("");
+  const [eventSlug, setEventSlug] = useState("");
   const [resolvedEvent, setResolvedEvent] = useState("");
   const [eventDates, setEventDates] = useState("");
   const [eventStartDate, setEventStartDate] = useState<string | null>(null);
-  const [collectPayments, setCollectPayments] = useState(true);
   const [organizerName, setOrganizerName] = useState("");
   const [brandOrgEmail, setBrandOrgEmail] = useState("");
 
@@ -179,6 +179,19 @@ function BrandPortalInner() {
     const fetchAll = async () => {
       setLoading(true);
       setLoadError("");
+      setEventWarning("");
+      setVenueAddress("");
+      setEventName("");
+      setEventSlug("");
+      setEventDates("");
+      setEventStartDate(null);
+      setOrganizerName("");
+      setFaqs([]);
+      setDeadlines([]);
+      setTasks([]);
+      setMessages([]);
+      setBrandShipments([]);
+      setShipmentInvoices([]);
       try {
         const {
           data: { user },
@@ -190,93 +203,79 @@ function BrandPortalInner() {
           window.location.href = "/login";
           return;
         }
+        if (!active) return;
         setUserEmail(user.email || "");
 
         let resolvedBrandEmail = user.email || "";
         let resolvedEvent = "";
 
-        // If no event param, check how many events this brand has
-        if (!eventParam) {
-          const { data: allBrandRows } = await supabase
-            .from("brands")
-            .select("id, event")
-            .eq("email", user.email)
-            .order("id", { ascending: false });
-          if (allBrandRows && allBrandRows.length > 1) {
-            window.location.href = "/brand";
-            return;
-          }
-        }
-
-        // Use event from URL param if present, otherwise fall back to most recent
-        const brandQuery = supabase
+        const brandRes = await supabase
           .from("brands")
           .select("*")
-          .eq("email", user.email);
-        if (eventParam) {
-          brandQuery.eq("event", eventParam);
-        } else {
-          brandQuery.order("id", { ascending: false }).limit(1);
-        }
-        const brandRes = await brandQuery.maybeSingle();
+          .eq("email", resolvedBrandEmail)
+          .order("id", { ascending: false });
         if (brandRes.error) throw brandRes.error;
 
-        // If no brand found for this event, redirect back to events list
-        if (!brandRes.data && eventParam) {
-          window.location.href = "/brand";
-          return;
-        }
-
-        let loadedBrand: Brand | null = brandRes.data;
-        let linkedOrganizerEmail = brandRes.data?.organizer_email || "";
-        if (brandRes.data) {
-          setBrand(brandRes.data);
-          resolvedEvent = brandRes.data.event;
-          setResolvedEvent(brandRes.data.event);
-          setProfileData({
-            instagram: brandRes.data.instagram || "",
-            website: brandRes.data.website || "",
-            bio: brandRes.data.bio || "",
-          });
-        } else {
-          const { data: memberRes, error: memberError } = await supabase
-            .from("brand_members")
-            .select("brand_email, event")
-            .eq("member_email", user.email)
-            .limit(1)
-            .maybeSingle();
-          if (memberError) throw memberError;
-          if (memberRes?.brand_email) {
-            resolvedBrandEmail = memberRes.brand_email;
-            resolvedEvent = memberRes.event || "";
-            const { data: linkedBrand, error: linkedError } = await supabase
+        let brands: Brand[] = brandRes.data ?? [];
+        const { data: memberships, error: memberError } = await supabase
+          .from("brand_members")
+          .select("brand_email, event")
+          .eq("member_email", user.email);
+        if (memberError) throw memberError;
+        const linkedResults = await Promise.all(
+          (memberships ?? []).map((member) =>
+            supabase
               .from("brands")
               .select("*")
-              .eq("email", memberRes.brand_email)
-              .single();
-            if (linkedError) throw linkedError;
-            if (linkedBrand) {
-              loadedBrand = linkedBrand;
-              linkedOrganizerEmail = linkedBrand.organizer_email || "";
-              setBrand(linkedBrand);
-              setProfileData({
-                instagram: linkedBrand.instagram || "",
-                website: linkedBrand.website || "",
-                bio: linkedBrand.bio || "",
-              });
-            }
+              .eq("email", member.brand_email)
+              .eq("event", member.event)
+              .order("id", { ascending: false }),
+          ),
+        );
+        for (const result of linkedResults) {
+          if (result.error) throw result.error;
+          if (
+            new Set((result.data ?? []).map((item) => item.organizer_email))
+              .size > 1
+          ) {
+            throw new Error(
+              "A team membership matches multiple organizers. Contact your organizer to resolve the association.",
+            );
           }
+          brands.push(...(result.data ?? []));
         }
+        brands = [...new Map(brands.map((item) => [item.id, item])).values()];
 
         if (!active) return;
+        setAvailableBrands(brands);
+        setSelectedBrandId(brands[0] ? String(brands[0].id) : "");
+        const requestedId = new URLSearchParams(window.location.search).get(
+          "brand",
+        );
+        const loadedBrand = requestedId
+          ? brands.find((item) => String(item.id) === requestedId)
+          : brands[0];
+        if (requestedId && !loadedBrand) {
+          throw new Error("The selected brand event is unavailable.");
+        }
         if (!loadedBrand) {
           setBrand(null);
           return;
         }
+        setSelectedBrandId(String(loadedBrand.id));
+        setBrand(loadedBrand);
+        resolvedBrandEmail = loadedBrand.email;
+        resolvedEvent = loadedBrand.event;
+        setResolvedEvent(resolvedEvent);
+        setProfileData({
+          instagram: loadedBrand.instagram || "",
+          website: loadedBrand.website || "",
+          bio: loadedBrand.bio || "",
+        });
         setBrandEmail(resolvedBrandEmail);
 
         // Get organizer email from brand record
-        const brandOrgEmail = linkedOrganizerEmail;
+        const brandOrgEmail = loadedBrand.organizer_email || "";
         setBrandOrgEmail(brandOrgEmail);
 
         const [
@@ -304,7 +303,7 @@ function BrandPortalInner() {
             .select("venue_address")
             .eq("event", resolvedEvent)
             .eq("organizer_email", brandOrgEmail)
-            .maybeSingle(),
+            .limit(2),
           supabase
             .from("brand_messages")
             .select("*")
@@ -313,8 +312,8 @@ function BrandPortalInner() {
             .order("created_at"),
           supabase
             .from("events")
-            .select("name, dates_label, start_date, organizer_email, collect_payments")
-            .eq("city", resolvedEvent)
+            .select("slug, name, dates_label, start_date, organizer_email")
+            .eq("slug", resolvedEvent === "Atlanta" ? "atlanta" : resolvedEvent)
             .eq("organizer_email", brandOrgEmail)
             .maybeSingle(),
           supabase
@@ -341,26 +340,53 @@ function BrandPortalInner() {
         ].find((result) => result.error)?.error;
         if (queryError) throw queryError;
         if (!active) return;
+        const warnings: string[] = [];
+        let eventData = eventRes.data;
+        if (!eventData) {
+          const cityRes = await supabase
+            .from("events")
+            .select("slug, name, dates_label, start_date, organizer_email")
+            .eq("city", resolvedEvent)
+            .eq("organizer_email", brandOrgEmail)
+            .limit(2);
+          if (cityRes.error) throw cityRes.error;
+          if (!active) return;
+          if ((cityRes.data?.length ?? 0) > 1) {
+            warnings.push(
+              "Multiple events match this legacy event name. Contact your organizer to resolve the event association.",
+            );
+          } else {
+            eventData = cityRes.data?.[0] ?? null;
+          }
+          if (!eventData && !warnings.length) {
+            warnings.push(
+              "Event details could not be matched. Contact your organizer to check the event association.",
+            );
+          }
+        }
         if (deadlineRes.data) setDeadlines(deadlineRes.data);
         if (taskRes.data) setTasks(taskRes.data);
-        if (settingsRes.data?.venue_address)
-          setVenueAddress(settingsRes.data.venue_address);
+        if ((settingsRes.data?.length ?? 0) > 1) {
+          warnings.push(
+            "Multiple event settings match this event. Contact your organizer to resolve the duplicate settings.",
+          );
+        } else {
+          setVenueAddress(settingsRes.data?.[0]?.venue_address || "");
+        }
+        setEventWarning(warnings.join(" "));
         if (messagesRes.data) setMessages(messagesRes.data);
-        if (eventRes.data) {
-          if (eventRes.data.name) setEventName(eventRes.data.name);
-          if (eventRes.data.dates_label)
-            setEventDates(eventRes.data.dates_label);
-          if (eventRes.data.start_date)
-            setEventStartDate(eventRes.data.start_date);
-          if (eventRes.data.collect_payments === false)
-            setCollectPayments(false);
+        if (eventData) {
+          setEventSlug(eventData.slug);
+          if (eventData.name) setEventName(eventData.name);
+          if (eventData.dates_label) setEventDates(eventData.dates_label);
+          if (eventData.start_date) setEventStartDate(eventData.start_date);
         }
         if (faqRes.data && faqRes.data.length > 0) {
           setFaqs(faqRes.data.map((f) => ({ q: f.question, a: f.answer })));
         }
         if (profileRes.data?.name) setOrganizerName(profileRes.data.name);
-        else if (eventRes.data?.organizer_email)
-          setOrganizerName(eventRes.data.organizer_email.split("@")[0]);
+        else if (eventData?.organizer_email)
+          setOrganizerName(eventData.organizer_email.split("@")[0]);
 
         const invRes = await supabase
           .from("brand_shipment_invoices")
@@ -379,7 +405,7 @@ function BrandPortalInner() {
         if (shipRes.data) setBrandShipments(shipRes.data);
         if (invRes.data) setShipmentInvoices(invRes.data);
         // Notify organizer of brand login
-        const loginKey = `brand_login_notified_${user.email}`;
+        const loginKey = `brand_login_notified_${user.email}_${loadedBrand.id}`;
         if (!localStorage.getItem(loginKey)) {
           await notifyOrganizer({
             event: resolvedEvent,
@@ -398,7 +424,14 @@ function BrandPortalInner() {
       } catch (error) {
         console.error("Could not load brand portal:", error);
         if (active)
-          setLoadError("Could not load your portal. Please try again.");
+          setLoadError(
+            error instanceof Error &&
+              (error.message === "The selected brand event is unavailable." ||
+                error.message ===
+                  "A team membership matches multiple organizers. Contact your organizer to resolve the association.")
+              ? error.message
+              : "Could not load your portal. Please try again.",
+          );
       } finally {
         if (active) setLoading(false);
       }
@@ -476,6 +509,23 @@ function BrandPortalInner() {
 
   const uploadShipmentInvoice = async () => {
     if (!newInvoiceFile || !brandEmail) return;
+    if (!eventSlug) {
+      alert(
+        "The event could not be identified. Contact your organizer before uploading.",
+      );
+      return;
+    }
+    let folder: string;
+    try {
+      folder = `${brandUploadFolder(eventSlug, brandEmail)}/shipment-invoices`;
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Could not determine the upload folder.",
+      );
+      return;
+    }
     const amount = newInvoiceAmount.trim() ? Number(newInvoiceAmount) : 0;
     if (!Number.isFinite(amount) || amount < 0) {
       alert("Enter a valid non-negative amount.");
@@ -484,10 +534,7 @@ function BrandPortalInner() {
     await runAction("Upload invoice", async () => {
       setUploadingInvoice(true);
       try {
-        const uploaded = await uploadToCloudinary(
-          newInvoiceFile,
-          `${folderSegment(brandEmail)}/shipment-invoices`,
-        );
+        const uploaded = await uploadToCloudinary(newInvoiceFile, folder);
         {
           try {
             const { data, error: insertError } = await supabase
@@ -721,15 +768,66 @@ function BrandPortalInner() {
     { key: "faq", label: "FAQ" },
   ];
 
+  const eventSelector = availableBrands.length > 1 && (
+    <label style={{ fontSize: "0.85rem", color: "#4a5a52" }}>
+      Event{" "}
+      <select
+        aria-label="Select event"
+        value={selectedBrandId}
+        disabled={!!action}
+        onChange={(event) => {
+          const id = event.target.value;
+          if (id === selectedBrandId) return;
+          if (
+            !window.confirm(
+              "Switch events? Unsaved changes and uploads in progress may be lost.",
+            )
+          )
+            return;
+          const url = new URL(window.location.href);
+          url.searchParams.set("brand", id);
+          window.location.assign(url.toString());
+        }}
+        style={{
+          padding: "5px 8px",
+          border: "1px solid #e4ebe6",
+          borderRadius: "8px",
+          background: "#fff",
+        }}
+      >
+        {availableBrands.map((item) => (
+          <option key={item.id} value={String(item.id)}>
+            {item.event} — {item.name} (#{item.id})
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+
   if (loading || loadError)
     return (
-      <LoadingView
-        loading={loading}
-        error={loadError}
-        onRetry={() => setRetry((value) => value + 1)}
-        customLoader={<PageSkeleton label="Loading your portal" />}
-        page
-      />
+      <>
+        {loadError && (
+          <div style={{ padding: "1rem" }}>
+            {eventSelector}
+            {availableBrands.length > 0 && (
+              <a
+                href="/brand/portal"
+                style={{ marginLeft: "1rem", color: "#1B3A2D" }}
+              >
+                Open default event
+              </a>
+            )}
+          </div>
+        )}
+        <LoadingView
+          loading={loading}
+          error={loadError}
+          onRetry={() => setRetry((value) => value + 1)}
+          customLoader={<PageSkeleton label="Loading your portal" />}
+          page
+        />
+      </>
     );
 
   if (!brand)
@@ -841,24 +939,11 @@ function BrandPortalInner() {
               gap: "1rem",
             }}
           >
+            {eventSelector}
             <span style={{ fontSize: "0.85rem", color: "#4a5a52" }}>
               {brand.name}
             </span>
             <NotificationBell userEmail={userEmail} />
-            <button
-              onClick={() => { window.location.href = "/brand"; }}
-              style={{
-                fontSize: "0.8rem",
-                padding: "5px 12px",
-                background: "transparent",
-                border: "1px solid #e4ebe6",
-                borderRadius: "8px",
-                cursor: "pointer",
-                color: "#4a5a52",
-              }}
-            >
-              All events
-            </button>
             <button
               onClick={handleLogout}
               style={{
@@ -875,6 +960,19 @@ function BrandPortalInner() {
             </button>
           </div>
         </div>
+
+        {eventWarning && (
+          <div
+            role="alert"
+            style={{
+              padding: "1rem 2rem",
+              color: "#7a4b00",
+              background: "#fff8e6",
+            }}
+          >
+            {eventWarning}
+          </div>
+        )}
 
         {/* Nav tabs */}
         <div
@@ -1015,8 +1113,8 @@ function BrandPortalInner() {
                 </p>
               </div>
 
-              {/* Fee tracker — only shown when event collects payments */}
-              {collectPayments && <div
+              {/* Fee tracker */}
+              <div
                 style={{
                   background: "#1B3A2D",
                   borderRadius: "16px",
@@ -1128,7 +1226,7 @@ function BrandPortalInner() {
                     </div>
                   </div>
                 </div>
-              </div>}
+              </div>
 
               {/* Announcements */}
               <Announcements
@@ -1902,11 +2000,18 @@ function BrandPortalInner() {
                   ))}
                 </div>
               </div>
-              <FileUpload
-                brandName={brand.name}
-                brandEmail={brandEmail}
-                event={brand.event}
-              />
+              {eventSlug ? (
+                <FileUpload
+                  brandEmail={brandEmail}
+                  event={brand.event}
+                  eventSlug={eventSlug}
+                />
+              ) : (
+                <p role="alert">
+                  Files are unavailable until your organizer resolves the event
+                  association.
+                </p>
+              )}
             </div>
           )}
 
@@ -2033,9 +2138,9 @@ function BrandPortalInner() {
           {activeTab === "inventory" && (
             <BrandInventory
               event={brand.event}
+              eventSlug={eventSlug}
               brandEmail={brandEmail}
               brandName={brand.name}
-              organizerEmail={brandOrgEmail}
             />
           )}
 
@@ -2345,13 +2450,5 @@ function BrandPortalInner() {
         </div>
       </fieldset>
     </div>
-  );
-}
-
-export default function BrandPortal() {
-  return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#f8faf8" }} />}>
-      <BrandPortalInner />
-    </Suspense>
   );
 }
