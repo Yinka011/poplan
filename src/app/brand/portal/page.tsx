@@ -3,6 +3,7 @@ import { notifyOrganizer } from "@/lib/organizerNotify";
 import { sendEmail, emailTemplate } from "@/lib/email";
 import NotificationBell from "@/components/shared/NotificationBell";
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { folderSegment, uploadToCloudinary } from "@/lib/cloudinary";
 import Announcements from "@/components/brand/Announcements";
@@ -88,6 +89,8 @@ const FILE_CATEGORIES = [
 // FAQs are loaded from DB per organizer
 
 export default function BrandPortal() {
+  const searchParams = useSearchParams();
+  const eventParam = searchParams.get("event") || "";
   const [brand, setBrand] = useState<Brand | null>(null);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [tasks, setTasks] = useState<BrandTask[]>([]);
@@ -191,14 +194,24 @@ export default function BrandPortal() {
         let resolvedBrandEmail = user.email || "";
         let resolvedEvent = "";
 
-        const brandRes = await supabase
+        // Use event from URL param if present, otherwise fall back to most recent
+        const brandQuery = supabase
           .from("brands")
           .select("*")
-          .eq("email", user.email)
-          .order("id", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          .eq("email", user.email);
+        if (eventParam) {
+          brandQuery.eq("event", eventParam);
+        } else {
+          brandQuery.order("id", { ascending: false }).limit(1);
+        }
+        const brandRes = await brandQuery.maybeSingle();
         if (brandRes.error) throw brandRes.error;
+
+        // If no brand found for this event, redirect back to events list
+        if (!brandRes.data && eventParam) {
+          window.location.href = "/brand";
+          return;
+        }
 
         let loadedBrand: Brand | null = brandRes.data;
         let linkedOrganizerEmail = brandRes.data?.organizer_email || "";
@@ -816,6 +829,20 @@ export default function BrandPortal() {
               {brand.name}
             </span>
             <NotificationBell userEmail={userEmail} />
+            <button
+              onClick={() => { window.location.href = "/brand"; }}
+              style={{
+                fontSize: "0.8rem",
+                padding: "5px 12px",
+                background: "transparent",
+                border: "1px solid #e4ebe6",
+                borderRadius: "8px",
+                cursor: "pointer",
+                color: "#4a5a52",
+              }}
+            >
+              All events
+            </button>
             <button
               onClick={handleLogout}
               style={{
