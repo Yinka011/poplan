@@ -89,7 +89,7 @@ type FAQ = { id?: number; question: string; answer: string };
 export default function SettingsPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const [activeTab, setActiveTab] = useState<"features" | "faqs">("features");
+  const [activeTab, setActiveTab] = useState<"features" | "payments" | "faqs">("features");
   const [features, setFeatures] = useState<Features>(DEFAULT_FEATURES);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -98,6 +98,9 @@ export default function SettingsPage() {
   const [eventName, setEventName] = useState(
     slug.charAt(0).toUpperCase() + slug.slice(1),
   );
+  const [collectPayments, setCollectPayments] = useState(true);
+  const [savingPayments, setSavingPayments] = useState(false);
+  const [savedPayments, setSavedPayments] = useState(false);
 
   // FAQ state
   const [faqs, setFaqs] = useState<FAQ[]>([]);
@@ -119,12 +122,13 @@ export default function SettingsPage() {
     // Resolve event city from slug
     const { data: eventRow } = await supabase
       .from("events")
-      .select("city, name")
+      .select("city, name, collect_payments")
       .eq("slug", slug)
       .maybeSingle();
     const city = eventRow?.city || "";
     setEventCity(city);
     if (eventRow?.name) setEventName(eventRow.name);
+    if (eventRow?.collect_payments === false) setCollectPayments(false);
 
     const [featRes, faqRes] = await Promise.all([
       supabase
@@ -182,6 +186,16 @@ export default function SettingsPage() {
       .upsert(payload, { onConflict: "organizer_email,event_slug" });
     setSaving(false);
     setSaved(true);
+  };
+
+  const savePaymentSettings = async () => {
+    setSavingPayments(true);
+    await supabase
+      .from("events")
+      .update({ collect_payments: collectPayments })
+      .eq("slug", slug);
+    setSavingPayments(false);
+    setSavedPayments(true);
   };
 
   const addFaq = async () => {
@@ -276,6 +290,7 @@ export default function SettingsPage() {
           {(
             [
               ["features", "Dashboard features"],
+              ["payments", "Payment settings"],
               ["faqs", "Brand portal FAQs"],
             ] as const
           ).map(([key, label]) => (
@@ -388,6 +403,82 @@ export default function SettingsPage() {
               }}
             >
               {saving ? "Saving..." : saved ? "✓ Saved" : "Save settings"}
+            </button>
+          </div>
+        )}
+
+        {activeTab === "payments" && (
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "14px",
+              padding: "1.5rem",
+              border: "1px solid #e4ebe6",
+            }}
+          >
+            <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1.5rem", marginTop: 0 }}>
+              Control whether this event collects participation fees from brands. When turned off, payment badges and fee tracking are hidden from your brands.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "14px 0",
+                borderBottom: "1px solid #f0f4f1",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>Collect participation fees</div>
+                <div style={{ fontSize: "0.75rem", color: "#4a5a52" }}>
+                  {collectPayments
+                    ? "Brands will see payment status and fee tracker"
+                    : "Payment badges and fee tracker are hidden from brands"}
+                </div>
+              </div>
+              <div
+                onClick={() => { setCollectPayments((v) => !v); setSavedPayments(false); }}
+                style={{
+                  width: "44px",
+                  height: "24px",
+                  borderRadius: "12px",
+                  background: collectPayments ? "#1B3A2D" : "#e4ebe6",
+                  cursor: "pointer",
+                  position: "relative" as const,
+                  transition: "background 0.2s",
+                  flexShrink: 0,
+                }}
+              >
+                <div
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    background: "#fff",
+                    position: "absolute" as const,
+                    top: "3px",
+                    left: collectPayments ? "23px" : "3px",
+                    transition: "left 0.2s",
+                  }}
+                />
+              </div>
+            </div>
+            <button
+              onClick={savePaymentSettings}
+              disabled={savingPayments}
+              style={{
+                marginTop: "1.5rem",
+                width: "100%",
+                padding: "10px",
+                background: "#1B3A2D",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                fontSize: "0.88rem",
+                cursor: "pointer",
+              }}
+            >
+              {savingPayments ? "Saving..." : savedPayments ? "✓ Saved" : "Save settings"}
             </button>
           </div>
         )}

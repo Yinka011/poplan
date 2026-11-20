@@ -181,7 +181,7 @@ export default function InventoryPage() {
         const { data: productsData, error: productsError } = await supabase
           .from("brand_products")
           .select("*")
-          .eq("event", event)
+          .ilike("event", slug)
           .eq("organizer_email", organizerEmail)
           .order("brand_name");
         if (productsError) throw productsError;

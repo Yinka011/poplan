@@ -18,6 +18,10 @@ export async function POST(request: Request) {
   });
 
   if (error) {
+    // If the user already has an account, treat as success — they can just log in
+    if (error.message?.toLowerCase().includes("already registered") || error.message?.toLowerCase().includes("already been registered") || error.code === "email_exists") {
+      return NextResponse.json({ success: true, already_registered: true });
+    }
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
