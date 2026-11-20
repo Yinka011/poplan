@@ -2035,6 +2035,7 @@ function BrandPortalInner() {
               event={brand.event}
               brandEmail={brandEmail}
               brandName={brand.name}
+              organizerEmail={brandOrgEmail}
             />
           )}
 
