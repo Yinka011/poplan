@@ -337,11 +337,13 @@ export default function BrandPortal() {
           .from("brand_shipment_invoices")
           .select("*")
           .eq("brand_email", resolvedBrandEmail)
+          .eq("event", resolvedEvent)
           .order("created_at", { ascending: false });
         const shipRes = await supabase
           .from("brand_shipments")
           .select("*")
           .eq("brand_email", resolvedBrandEmail)
+          .eq("event", resolvedEvent)
           .order("created_at", { ascending: false });
         if (invRes.error || shipRes.error) throw invRes.error || shipRes.error;
         if (!active) return;
