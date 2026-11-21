@@ -47,6 +47,21 @@ type BrandSale = {
   sale_date: string;
 };
 
+type EventDates = {
+  slug: string;
+  startDate: string;
+  endDate: string;
+  error: string;
+};
+
+function dateInputValue(value: unknown): string {
+  if (value == null || value === "") return "";
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}(?:$|T)/.test(value)) {
+    throw new Error("Event date has an unsupported format.");
+  }
+  return value.slice(0, 10);
+}
+
 export default function SalesPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -64,12 +79,54 @@ export default function SalesPage() {
   const [reports, setReports] = useState<any[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [commissionRate, setCommissionRate] = useState(20);
-  const [commissionRates, setCommissionRates] = useState<Record<string, string>>({});
-  const [processingRates, setProcessingRates] = useState<Record<string, string>>({});
+  const [commissionRates, setCommissionRates] = useState<
+    Record<string, string>
+  >({});
+  const [processingRates, setProcessingRates] = useState<
+    Record<string, string>
+  >({});
   const [savingPayout, setSavingPayout] = useState<string | null>(null);
   const savingPayoutRef = useRef(false);
-  const [startDate, setStartDate] = useState("2026-09-11");
-  const [endDate, setEndDate] = useState("2026-09-14");
+  const [eventDates, setEventDates] = useState<EventDates | null>(null);
+  const [datesRetry, setDatesRetry] = useState(0);
+  const currentDates = eventDates?.slug === slug ? eventDates : null;
+  const startDate = currentDates?.startDate ?? "";
+  const endDate = currentDates?.endDate ?? "";
+
+  useEffect(() => {
+    if (organizerLoading) return;
+    let active = true;
+    setEventDates(null);
+
+    const fetchEventDates = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("events")
+          .select("start_date, end_date")
+          .eq("slug", slug)
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) throw new Error("Event not found.");
+        const startDate = dateInputValue(data.start_date);
+        const endDate = dateInputValue(data.end_date);
+        if (active) setEventDates({ slug, startDate, endDate, error: "" });
+      } catch (error) {
+        console.error("Could not load event dates:", error);
+        if (active)
+          setEventDates({
+            slug,
+            startDate: "",
+            endDate: "",
+            error: "Could not load event dates. Please try again.",
+          });
+      }
+    };
+
+    void fetchEventDates();
+    return () => {
+      active = false;
+    };
+  }, [slug, organizerLoading, datesRetry]);
 
   const fetchData = useCallback(
     async (showLoading = false) => {
@@ -141,6 +198,12 @@ export default function SalesPage() {
   }, [fetchData, organizerLoading]);
 
   const syncSales = async () => {
+    if (!startDate || !endDate || startDate > endDate) {
+      alert(
+        "Select a start date and end date, with the start date no later than the end date.",
+      );
+      return;
+    }
     setSyncing(true);
     try {
       const res = await fetch("/api/square/sync-sales", {
@@ -160,9 +223,12 @@ export default function SalesPage() {
         variation_name?: string;
         reason: string;
       }[];
-      const details = skipped.map((item) =>
-        `Order ${item.order_id}${item.item_name ? `, ${item.item_name}` : ""}${item.variation_name ? ` (${item.variation_name})` : ""}: ${item.reason}`,
-      ).join("\n");
+      const details = skipped
+        .map(
+          (item) =>
+            `Order ${item.order_id}${item.item_name ? `, ${item.item_name}` : ""}${item.variation_name ? ` (${item.variation_name})` : ""}: ${item.reason}`,
+        )
+        .join("\n");
       if (data.success) {
         const refreshed = await fetchData();
         if (refreshed) {
@@ -175,7 +241,9 @@ export default function SalesPage() {
         const failedDetails = failedItem
           ? `\nOrder ${failedItem.order_id}${failedItem.item_name ? `, ${failedItem.item_name}` : ""}${failedItem.variation_name ? ` (${failedItem.variation_name})` : ""}`
           : "";
-        alert(`Error: ${data.error || "Sync failed"}${failedDetails}${details ? `\n\nSkipped before the error:\n${details}` : ""}`);
+        alert(
+          `Error: ${data.error || "Sync failed"}${failedDetails}${details ? `\n\nSkipped before the error:\n${details}` : ""}`,
+        );
         await fetchData();
       }
     } catch (error) {
@@ -279,11 +347,19 @@ export default function SalesPage() {
     );
   };
 
-  const saveRates = async (brandEmail: string, commissionRate: number, processingRate: number) => {
+  const saveRates = async (
+    brandEmail: string,
+    commissionRate: number,
+    processingRate: number,
+  ) => {
     if (savingPayoutRef.current) return;
     const payout = payouts.find((p) => p.brand_email === brandEmail);
     if (!payout) return;
-    if (![commissionRate, processingRate].every((rate) => Number.isFinite(rate) && rate >= 0 && rate <= 100)) {
+    if (
+      ![commissionRate, processingRate].every(
+        (rate) => Number.isFinite(rate) && rate >= 0 && rate <= 100,
+      )
+    ) {
       alert("Enter a rate between 0 and 100%.");
       return;
     }
@@ -321,8 +397,14 @@ export default function SalesPage() {
             : p,
         ),
       );
-      setProcessingRates((prev) => ({ ...prev, [brandEmail]: String(processingRate) }));
-      setCommissionRates((prev) => ({ ...prev, [brandEmail]: String(commissionRate) }));
+      setProcessingRates((prev) => ({
+        ...prev,
+        [brandEmail]: String(processingRate),
+      }));
+      setCommissionRates((prev) => ({
+        ...prev,
+        [brandEmail]: String(commissionRate),
+      }));
     } catch (error) {
       console.error("Failed to save payout rates:", error);
       alert("Could not save payout rates. Please try again.");
@@ -377,10 +459,11 @@ export default function SalesPage() {
         style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem 1.5rem" }}
       >
         <LoadingView
-          loading={loading || organizerLoading}
-          error={loadError}
+          loading={loading || organizerLoading || !currentDates}
+          error={loadError || currentDates?.error}
           onRetry={() => {
             void fetchData(true);
+            if (currentDates?.error) setDatesRetry((value) => value + 1);
           }}
           customLoader={<SalesSkeleton />}
         >
@@ -425,7 +508,16 @@ export default function SalesPage() {
                 <input
                   type="date"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  aria-label="Sync start date"
+                  disabled={true}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEventDates((dates) =>
+                      dates?.slug === slug
+                        ? { ...dates, startDate: value }
+                        : dates,
+                    );
+                  }}
                   style={{
                     padding: "7px 10px",
                     border: "1px solid #e4ebe6",
@@ -447,7 +539,16 @@ export default function SalesPage() {
                 <input
                   type="date"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  aria-label="Sync end date"
+                  disabled={true}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEventDates((dates) =>
+                      dates?.slug === slug
+                        ? { ...dates, endDate: value }
+                        : dates,
+                    );
+                  }}
                   style={{
                     padding: "7px 10px",
                     border: "1px solid #e4ebe6",
@@ -458,7 +559,9 @@ export default function SalesPage() {
               </div>
               <button
                 onClick={syncSales}
-                disabled={syncing}
+                disabled={
+                  syncing || !startDate || !endDate || startDate > endDate
+                }
                 style={{
                   padding: "8px 20px",
                   background: "#1B3A2D",
@@ -473,6 +576,18 @@ export default function SalesPage() {
                 {syncing ? "Syncing..." : "↓ Sync from Square"}
               </button>
             </div>
+            {(!startDate || !endDate || startDate > endDate) && (
+              <p
+                role="status"
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#7a4b00",
+                  marginTop: "0.75rem",
+                }}
+              >
+                Select a valid start and end date before syncing.
+              </p>
+            )}
           </div>
 
           {/* Summary */}
@@ -797,7 +912,15 @@ export default function SalesPage() {
                             </div>
                           </div>
                           <div>
-                            <label htmlFor={`processing-${payout.brand_email}`} style={{ fontSize: "0.62rem", color: "#4a5a52", letterSpacing: "0.1em", display: "block" }}>
+                            <label
+                              htmlFor={`processing-${payout.brand_email}`}
+                              style={{
+                                fontSize: "0.62rem",
+                                color: "#4a5a52",
+                                letterSpacing: "0.1em",
+                                display: "block",
+                              }}
+                            >
                               PROCESSING FEE
                             </label>
                             <input
@@ -806,11 +929,33 @@ export default function SalesPage() {
                               min="0"
                               max="100"
                               step="0.01"
-                              value={processingRates[payout.brand_email] ?? String(payout.square_processing_rate ?? DEFAULT_PROCESSING_RATE)}
-                              onChange={(e) => setProcessingRates((prev) => ({ ...prev, [payout.brand_email]: e.target.value }))}
-                              style={{ width: "65px", padding: "2px 6px", border: "1px solid #e4ebe6", borderRadius: "4px", fontSize: "0.82rem" }}
+                              value={
+                                processingRates[payout.brand_email] ??
+                                String(
+                                  payout.square_processing_rate ??
+                                    DEFAULT_PROCESSING_RATE,
+                                )
+                              }
+                              onChange={(e) =>
+                                setProcessingRates((prev) => ({
+                                  ...prev,
+                                  [payout.brand_email]: e.target.value,
+                                }))
+                              }
+                              style={{
+                                width: "65px",
+                                padding: "2px 6px",
+                                border: "1px solid #e4ebe6",
+                                borderRadius: "4px",
+                                fontSize: "0.82rem",
+                              }}
                             />
-                            <span style={{ fontSize: "0.72rem", color: "#4a5a52" }}> %</span>
+                            <span
+                              style={{ fontSize: "0.72rem", color: "#4a5a52" }}
+                            >
+                              {" "}
+                              %
+                            </span>
                           </div>
                           <div>
                             <div
@@ -835,8 +980,16 @@ export default function SalesPage() {
                                 max="100"
                                 step="0.01"
                                 aria-label={`Commission rate for ${payout.brand_name}`}
-                                value={commissionRates[payout.brand_email] ?? String(payout.commission_rate)}
-                                onChange={(e) => setCommissionRates((prev) => ({ ...prev, [payout.brand_email]: e.target.value }))}
+                                value={
+                                  commissionRates[payout.brand_email] ??
+                                  String(payout.commission_rate)
+                                }
+                                onChange={(e) =>
+                                  setCommissionRates((prev) => ({
+                                    ...prev,
+                                    [payout.brand_email]: e.target.value,
+                                  }))
+                                }
                                 style={{
                                   width: "45px",
                                   padding: "2px 6px",
@@ -859,17 +1012,39 @@ export default function SalesPage() {
                             type="button"
                             disabled={savingPayout !== null}
                             onClick={() => {
-                              const commission = commissionRates[payout.brand_email] ?? String(payout.commission_rate);
-                              const processing = processingRates[payout.brand_email] ?? String(payout.square_processing_rate ?? DEFAULT_PROCESSING_RATE);
+                              const commission =
+                                commissionRates[payout.brand_email] ??
+                                String(payout.commission_rate);
+                              const processing =
+                                processingRates[payout.brand_email] ??
+                                String(
+                                  payout.square_processing_rate ??
+                                    DEFAULT_PROCESSING_RATE,
+                                );
                               if (!commission.trim() || !processing.trim()) {
                                 alert("Enter both payout rates.");
                                 return;
                               }
-                              void saveRates(payout.brand_email, Number(commission), Number(processing));
+                              void saveRates(
+                                payout.brand_email,
+                                Number(commission),
+                                Number(processing),
+                              );
                             }}
-                            style={{ alignSelf: "center", padding: "4px 8px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "4px", fontSize: "0.72rem", cursor: "pointer" }}
+                            style={{
+                              alignSelf: "center",
+                              padding: "4px 8px",
+                              background: "#1B3A2D",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: "4px",
+                              fontSize: "0.72rem",
+                              cursor: "pointer",
+                            }}
                           >
-                            {savingPayout === payout.brand_email ? "Saving..." : "Save rates"}
+                            {savingPayout === payout.brand_email
+                              ? "Saving..."
+                              : "Save rates"}
                           </button>
                           <div>
                             <div
