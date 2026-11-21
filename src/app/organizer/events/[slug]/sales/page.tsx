@@ -68,8 +68,8 @@ export default function SalesPage() {
   const [processingRates, setProcessingRates] = useState<Record<string, string>>({});
   const [savingPayout, setSavingPayout] = useState<string | null>(null);
   const savingPayoutRef = useRef(false);
-  const [startDate, setStartDate] = useState("2026-09-11");
-  const [endDate, setEndDate] = useState("2026-09-14");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const fetchData = useCallback(
     async (showLoading = false) => {
@@ -141,6 +141,10 @@ export default function SalesPage() {
   }, [fetchData, organizerLoading]);
 
   const syncSales = async () => {
+    if (!startDate || !endDate) {
+      alert("Please select a FROM and TO date before syncing.");
+      return;
+    }
     setSyncing(true);
     try {
       const res = await fetch("/api/square/sync-sales", {
@@ -442,7 +446,7 @@ export default function SalesPage() {
               </div>
               <button
                 onClick={syncSales}
-                disabled={syncing}
+                disabled={syncing || !startDate || !endDate}
                 style={{
                   padding: "8px 20px",
                   background: "#1B3A2D",
