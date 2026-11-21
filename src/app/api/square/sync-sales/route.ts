@@ -30,7 +30,10 @@ type SquareOrder = {
   line_items?: SquareLineItem[];
 };
 
-function orderDiagnostics(orders: SquareOrder[]) {
+function orderDiagnostics(
+  orders: SquareOrder[],
+  catalog?: Awaited<ReturnType<typeof fetchSquareCatalog>>,
+) {
   const money = (value?: SquareMoney) =>
     value && { amount: value.amount, currency: value.currency };
   return orders.map((order) => ({
@@ -44,6 +47,9 @@ function orderDiagnostics(orders: SquareOrder[]) {
       name: item.name,
       variation_name: item.variation_name,
       catalog_object_id: item.catalog_object_id,
+      category_names: catalog && item.catalog_object_id
+        ? squareCategoryNames(catalog, item.catalog_object_id)
+        : null,
       quantity: item.quantity,
       base_price_money: money(item.base_price_money),
       gross_sales_money: money(item.gross_sales_money),
@@ -99,7 +105,7 @@ export async function POST(request: Request) {
   }
 
   const orders: SquareOrder[] = ordersData.orders || [];
-  const squareOrders = orderDiagnostics(orders);
+  let squareOrders = orderDiagnostics(orders);
   if (!orders.length) {
     return NextResponse.json({ success: true, message: "No orders found", count: 0, orders_processed: 0, sales_inserted: 0, skipped: [], orders: squareOrders });
   }
@@ -155,6 +161,7 @@ export async function POST(request: Request) {
     console.error("Could not load Square catalog:", error);
     return NextResponse.json({ error: "Could not load the Square catalog. No sales were processed.", orders: squareOrders }, { status: 502 });
   }
+  squareOrders = orderDiagnostics(orders, catalog);
 
   let salesInserted = 0;
   const skipped: SkippedSale[] = [];
