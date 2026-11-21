@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "event is required to match brands" }, { status: 400 });
   }
   if (typeof organizer_email !== "string" || !organizer_email.trim()) {
-    return NextResponse.json({ error: "organizer_email is required to match inventory" }, { status: 400 });
+    return NextResponse.json({ error: "organizer_email is required to match brands" }, { status: 400 });
   }
   const startAt = new Date(start_date).toISOString();
   const endAt = new Date(end_date + "T23:59:59").toISOString();
@@ -128,18 +128,8 @@ export async function POST(request: Request) {
   }
   // Build a set of refunded order IDs for quick lookup
   const refundedOrderIds = new Set<string>(
-    (refundsData.refunds || []).map((r: any) => r.order_id)
+    (refundsData.refunds || []).map((r: { order_id: string }) => r.order_id)
   );
-
-  // Look up inventory across all event slug variants (e.g. "atlanta" and "atlanta-1795088699794")
-  const { data: inventory, error: inventoryError } = await supabase
-    .from("brand_products")
-    .select("*, brand_product_variations(*)")
-    .eq("organizer_email", organizer_email);
-  if (inventoryError) {
-    console.error("Could not load inventory for Square sync:", inventoryError);
-    return NextResponse.json({ error: "Could not load inventory. No sales were processed.", orders: squareOrders }, { status: 500 });
-  }
 
   const { data: eventBrands, error: brandsError } = await supabase
     .from("brands")
@@ -201,132 +191,48 @@ export async function POST(request: Request) {
       const totalRevenue = grossSales || (unitPrice * quantity);
       const itemName = lineItem.name || "";
 
-      let brandEmail = "";
-      let brandName = "";
-      let productName = itemName;
       const variationName = lineItem.variation_name || "";
-
-      if (lineItem.catalog_object_id) {
-        const categoryNames = squareCategoryNames(catalog, lineItem.catalog_object_id);
-        if (categoryNames === null) {
-          skipped.push({ ...skippedItem, reason: "Square catalog item or category details could not be resolved." });
-          continue;
-        }
-        const normalize = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
-        const matchingBrands = (eventBrands ?? []).filter((brand) =>
-          typeof brand.name === "string" &&
-          categoryNames.some((name) => normalize(name) === normalize(brand.name)),
-        );
-        const identities = new Map(matchingBrands.map((brand) => [
-          `${normalize(brand.name)}\u0000${typeof brand.email === "string" ? normalize(brand.email) : ""}`,
-          brand,
-        ]));
-        if (identities.size > 1) {
-          skipped.push({ ...skippedItem, reason: `Square categories match multiple event brands: ${categoryNames.join(", ")}.` });
-          continue;
-        }
-        if (identities.size === 1) {
-          const matched = [...identities.values()][0];
-          if (typeof matched.email !== "string" || !matched.email.trim()) {
-            skipped.push({ ...skippedItem, reason: `Event brand "${matched.name}" has no email.` });
-            continue;
-          }
-          brandName = matched.name;
-          brandEmail = matched.email;
-          const parts = itemName.split(" — ");
-          if (parts.length > 1 && normalize(parts[0]) === normalize(brandName)) {
-            productName = parts.slice(1).join(" — ").trim() || itemName;
-          }
-        }
-      }
-
-      // Build dynamic brand name set from inventory
-      const inventoryBrandNames = [...new Set((inventory || []).map((p: any) => p.brand_name?.trim()).filter(Boolean))];
-
-      // Try "BrandName — Product" format first
-      if (!brandEmail && itemName.includes(" — ")) {
-        const parts = itemName.split(" — ");
-        const candidateBrand = parts[0].trim().replace(/\s+/g, " ");
-        const candidateProduct = parts.slice(1).join(" — ").trim();
-        if (candidateProduct.length > 0 && inventoryBrandNames.some((b: string) => b.toLowerCase() === candidateBrand.toLowerCase())) {
-          brandName = candidateBrand;
-          productName = candidateProduct;
-          const brandProduct = inventory?.find((p: any) => p.brand_name?.trim().toLowerCase() === brandName.toLowerCase());
-          if (brandProduct) brandEmail = brandProduct.brand_email;
-        }
-      }
-
-      // Dynamic product→brand lookup from inventory
-      if (!brandName) {
-        const matched = inventory?.find((p: any) =>
-          p.name?.trim().toLowerCase() === itemName.trim().toLowerCase()
-        );
-        if (matched) {
-          brandName = matched.brand_name;
-          brandEmail = matched.brand_email;
-          productName = matched.name;
-        }
-      }
-
-      // Fallback hardcoded map for products not in Nalpop inventory
-      const manualMap: Record<string, string> = {
-        "cladini top": "Cladini",
-        "athena pant & shirt (black)": "Cladini",
-        "havillah bubu (blue neckline)": "Cladini",
-        "limited bubu": "Cladini",
-        "mari bubu": "Cladini",
-        "slip dress": "Cladini",
-        "tessa top": "Ciscacecil",
-        "tessa - custom": "Ciscacecil",
-        "taselle top": "Ciscacecil",
-        "taselle skirt": "Ciscacecil",
-        "palm top": "Ciscacecil",
-        "saffra midi skirt": "Ciscacecil",
-        "saffra mini skirt": "Ciscacecil",
-        "zaya pant": "Ciscacecil",
-        "zaya top": "Ciscacecil",
-        "amber top": "Ciscacecil",
-        "beaded tank top": "Ciscacecil",
-        "north dress": "Jayda Woman",
-        "low back linen kaftan": "Jayda Woman",
-        "j3- daffodil skirt set": "Jayda Woman",
-        "poppy": "Jayda Woman",
-        "jayda mesh top": "Jayda Woman",
-        "lolu tennis skirt": "Isaleekofromderin",
-        "l4 -  ara beaded summer dress": "Ara Lagos",
-        "l4 - ara beaded summer dress": "Ara Lagos",
-        "l12 - dele black and white short sleeved set": "Ara Lagos",
-        "l15 - elana beaded kaftan green": "Ara Lagos",
-        "l23 - olanna aso oke pants vintage (blue/crem/gold mix)": "Ara Lagos",
-        "l23 - olanna aso oke pants vintage": "Ara Lagos",
-        "l29 - onjawu aso oke trousers (red)": "Ara Lagos",
-        "l45 - tolani cotton brush work purple jumpsuit": "Ara Lagos",
-        "yinkamb yago": "Yinka MB",
-      };
-
-      if (!brandName) {
-        const mapped = manualMap[itemName.toLowerCase().trim()];
-        if (mapped) {
-          brandName = mapped;
-          productName = itemName;
-        }
-      }
-
-      if (!brandEmail) {
-        const brandProduct = inventory?.find(p => p.brand_name?.trim().toLowerCase() === brandName.toLowerCase());
-        if (brandProduct) brandEmail = brandProduct.brand_email;
-      }
-
-      if (!brandEmail) {
-        console.log("SKIPPED - no brand match:", { itemName, variationName, inventoryBrandNames, inventoryCount: inventory?.length });
-        skipped.push({
-          ...skippedItem,
-          reason: brandName
-            ? `No inventory record with an email matched brand "${brandName}" for this organizer.`
-            : "Item name did not match an inventory product, inventory brand, or manual product mapping.",
-        });
+      if (!lineItem.catalog_object_id) {
+        skipped.push({ ...skippedItem, reason: "Line item has no Square catalog object ID." });
         continue;
       }
+      const categoryNames = squareCategoryNames(catalog, lineItem.catalog_object_id);
+      if (categoryNames === null) {
+        skipped.push({ ...skippedItem, reason: "Square catalog item or category details could not be resolved." });
+        continue;
+      }
+      if (categoryNames.length === 0) {
+        skipped.push({ ...skippedItem, reason: "Square catalog item has no categories." });
+        continue;
+      }
+      const normalize = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
+      const categoryBrands = categoryNames.map((name) => normalize(name.replace(/^\s*[a-z]\s*-\s*/i, "")));
+      const matchingBrands = (eventBrands ?? []).filter((brand) =>
+        typeof brand.name === "string" && categoryBrands.includes(normalize(brand.name)),
+      );
+      const identities = new Map(matchingBrands.map((brand) => [
+        `${normalize(brand.name)}\u0000${typeof brand.email === "string" ? normalize(brand.email) : ""}`,
+        brand,
+      ]));
+      if (identities.size > 1) {
+        skipped.push({ ...skippedItem, reason: `Square categories match multiple event brands: ${categoryNames.join(", ")}.` });
+        continue;
+      }
+      if (identities.size === 0) {
+        skipped.push({ ...skippedItem, reason: `No event brand matched Square categories: ${categoryNames.join(", ")}.` });
+        continue;
+      }
+      const matched = [...identities.values()][0];
+      if (typeof matched.email !== "string" || !matched.email.trim()) {
+        skipped.push({ ...skippedItem, reason: `Event brand "${matched.name}" has no email.` });
+        continue;
+      }
+      const brandName: string = matched.name;
+      const brandEmail: string = matched.email;
+      const parts = itemName.split(" — ");
+      const productName = parts.length > 1 && normalize(parts[0]) === normalize(brandName)
+        ? parts.slice(1).join(" — ").trim() || itemName
+        : itemName;
 
       if (orderTotalMoney > 0 && orderTotalTax > 0) {
         const lineShare = totalRevenue / orderTotalMoney;
