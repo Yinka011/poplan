@@ -68,8 +68,8 @@ export default function SalesPage() {
   const [processingRates, setProcessingRates] = useState<Record<string, string>>({});
   const [savingPayout, setSavingPayout] = useState<string | null>(null);
   const savingPayoutRef = useRef(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState("2026-09-11");
+  const [endDate, setEndDate] = useState("2026-09-14");
 
   const fetchData = useCallback(
     async (showLoading = false) => {
@@ -141,10 +141,6 @@ export default function SalesPage() {
   }, [fetchData, organizerLoading]);
 
   const syncSales = async () => {
-    if (!startDate || !endDate) {
-      alert("Please select a FROM and TO date before syncing.");
-      return;
-    }
     setSyncing(true);
     try {
       const res = await fetch("/api/square/sync-sales", {
@@ -157,14 +153,25 @@ export default function SalesPage() {
         }),
       });
       const data = await res.json();
+      const skipped = (data.skipped ?? []) as {
+        order_id: string;
+        item_name?: string;
+        variation_name?: string;
+        reason: string;
+      }[];
+      const details = skipped.map((item) =>
+        `Order ${item.order_id}${item.item_name ? `, ${item.item_name}` : ""}${item.variation_name ? ` (${item.variation_name})` : ""}: ${item.reason}`,
+      ).join("\n");
       if (data.success) {
         const refreshed = await fetchData();
-        if (refreshed)
+        if (refreshed) {
           alert(
-            `Synced! ${data.orders_processed} orders processed, ${data.sales_inserted} new sales added.`,
+            `Synced! ${data.orders_processed} orders processed, ${data.sales_inserted} new sales added.${details ? `\n\nSkipped:\n${details}` : ""}`,
           );
+        }
       } else {
-        alert("Error: " + (data.error || "Sync failed"));
+        alert(`Error: ${data.error || "Sync failed"}${details ? `\n\nSkipped before the error:\n${details}` : ""}`);
+        await fetchData();
       }
     } catch (error) {
       console.error("Failed to sync sales:", error);
@@ -446,7 +453,7 @@ export default function SalesPage() {
               </div>
               <button
                 onClick={syncSales}
-                disabled={syncing || !startDate || !endDate}
+                disabled={syncing}
                 style={{
                   padding: "8px 20px",
                   background: "#1B3A2D",
