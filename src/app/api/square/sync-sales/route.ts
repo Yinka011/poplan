@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { fetchSquareCatalog, squareCategoryNames } from "@/lib/square-catalog";
 
 type SkippedSale = {
   order_id: string;
@@ -8,6 +9,48 @@ type SkippedSale = {
   variation_name?: string;
   reason: string;
 };
+
+type SquareMoney = { amount?: number; currency?: string };
+type SquareLineItem = {
+  uid?: string;
+  name?: string;
+  variation_name?: string;
+  catalog_object_id?: string;
+  quantity?: string;
+  base_price_money?: SquareMoney;
+  gross_sales_money?: SquareMoney;
+  total_money?: SquareMoney;
+};
+type SquareOrder = {
+  id: string;
+  created_at?: string;
+  state?: string;
+  total_money?: SquareMoney;
+  total_tax_money?: SquareMoney;
+  line_items?: SquareLineItem[];
+};
+
+function orderDiagnostics(orders: SquareOrder[]) {
+  const money = (value?: SquareMoney) =>
+    value && { amount: value.amount, currency: value.currency };
+  return orders.map((order) => ({
+    id: order.id,
+    created_at: order.created_at,
+    state: order.state,
+    total_money: money(order.total_money),
+    total_tax_money: money(order.total_tax_money),
+    line_items: order.line_items?.map((item) => ({
+      uid: item.uid,
+      name: item.name,
+      variation_name: item.variation_name,
+      catalog_object_id: item.catalog_object_id,
+      quantity: item.quantity,
+      base_price_money: money(item.base_price_money),
+      gross_sales_money: money(item.gross_sales_money),
+      total_money: money(item.total_money),
+    })),
+  }));
+}
 
 export async function POST(request: Request) {
   const { event, start_date, end_date, organizer_email } = await request.json();
@@ -22,6 +65,9 @@ export async function POST(request: Request) {
 
   if (!start_date || !end_date) {
     return NextResponse.json({ error: "start_date and end_date are required" }, { status: 400 });
+  }
+  if (typeof event !== "string" || !event.trim()) {
+    return NextResponse.json({ error: "event is required to match brands" }, { status: 400 });
   }
   if (typeof organizer_email !== "string" || !organizer_email.trim()) {
     return NextResponse.json({ error: "organizer_email is required to match inventory" }, { status: 400 });
@@ -52,9 +98,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: ordersData.errors?.[0]?.detail || "Square error" }, { status: 400 });
   }
 
-  const orders = ordersData.orders || [];
+  const orders: SquareOrder[] = ordersData.orders || [];
+  const squareOrders = orderDiagnostics(orders);
   if (!orders.length) {
-    return NextResponse.json({ success: true, message: "No orders found", count: 0, orders_processed: 0, sales_inserted: 0, skipped: [] });
+    return NextResponse.json({ success: true, message: "No orders found", count: 0, orders_processed: 0, sales_inserted: 0, skipped: [], orders: squareOrders });
   }
 
   // Fetch refunds for the date range so we can skip refunded items
@@ -71,7 +118,7 @@ export async function POST(request: Request) {
   const refundsData = await refundsResponse.json();
   if (!refundsResponse.ok) {
     console.error("Could not fetch Square refunds:", refundsData.errors);
-    return NextResponse.json({ error: "Could not fetch Square refunds. No sales were processed." }, { status: 502 });
+    return NextResponse.json({ error: "Could not fetch Square refunds. No sales were processed.", orders: squareOrders }, { status: 502 });
   }
   // Build a set of refunded order IDs for quick lookup
   const refundedOrderIds = new Set<string>(
@@ -85,7 +132,28 @@ export async function POST(request: Request) {
     .eq("organizer_email", organizer_email);
   if (inventoryError) {
     console.error("Could not load inventory for Square sync:", inventoryError);
-    return NextResponse.json({ error: "Could not load inventory. No sales were processed." }, { status: 500 });
+    return NextResponse.json({ error: "Could not load inventory. No sales were processed.", orders: squareOrders }, { status: 500 });
+  }
+
+  const { data: eventBrands, error: brandsError } = await supabase
+    .from("brands")
+    .select("name, email")
+    .eq("event", event)
+    .eq("organizer_email", organizer_email);
+  if (brandsError) {
+    console.error("Could not load event brands for Square sync:", brandsError);
+    return NextResponse.json({ error: "Could not load event brands. No sales were processed.", orders: squareOrders }, { status: 500 });
+  }
+
+  const catalogIds = orders.flatMap((order) =>
+    (order.line_items ?? []).flatMap((item) => item.catalog_object_id ? [item.catalog_object_id] : []),
+  );
+  let catalog: Awaited<ReturnType<typeof fetchSquareCatalog>>;
+  try {
+    catalog = await fetchSquareCatalog(catalogIds, accessToken);
+  } catch (error) {
+    console.error("Could not load Square catalog:", error);
+    return NextResponse.json({ error: "Could not load the Square catalog. No sales were processed.", orders: squareOrders }, { status: 502 });
   }
 
   let salesInserted = 0;
@@ -117,7 +185,7 @@ export async function POST(request: Request) {
       };
       const quantity = parseInt(lineItem.quantity || "1");
       const unitPrice = Number(lineItem.base_price_money?.amount || 0) / 100;
-      const grossSales = Number((lineItem as any).gross_sales_money?.amount || 0) / 100;
+      const grossSales = Number(lineItem.gross_sales_money?.amount || 0) / 100;
       if (grossSales === 0) {
         skipped.push({ ...skippedItem, reason: "Line item gross sales are missing or zero." });
         continue;
@@ -131,11 +199,45 @@ export async function POST(request: Request) {
       let productName = itemName;
       const variationName = lineItem.variation_name || "";
 
+      if (lineItem.catalog_object_id) {
+        const categoryNames = squareCategoryNames(catalog, lineItem.catalog_object_id);
+        if (categoryNames === null) {
+          skipped.push({ ...skippedItem, reason: "Square catalog item or category details could not be resolved." });
+          continue;
+        }
+        const normalize = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
+        const matchingBrands = (eventBrands ?? []).filter((brand) =>
+          typeof brand.name === "string" &&
+          categoryNames.some((name) => normalize(name) === normalize(brand.name)),
+        );
+        const identities = new Map(matchingBrands.map((brand) => [
+          `${normalize(brand.name)}\u0000${typeof brand.email === "string" ? normalize(brand.email) : ""}`,
+          brand,
+        ]));
+        if (identities.size > 1) {
+          skipped.push({ ...skippedItem, reason: `Square categories match multiple event brands: ${categoryNames.join(", ")}.` });
+          continue;
+        }
+        if (identities.size === 1) {
+          const matched = [...identities.values()][0];
+          if (typeof matched.email !== "string" || !matched.email.trim()) {
+            skipped.push({ ...skippedItem, reason: `Event brand "${matched.name}" has no email.` });
+            continue;
+          }
+          brandName = matched.name;
+          brandEmail = matched.email;
+          const parts = itemName.split(" — ");
+          if (parts.length > 1 && normalize(parts[0]) === normalize(brandName)) {
+            productName = parts.slice(1).join(" — ").trim() || itemName;
+          }
+        }
+      }
+
       // Build dynamic brand name set from inventory
       const inventoryBrandNames = [...new Set((inventory || []).map((p: any) => p.brand_name?.trim()).filter(Boolean))];
 
       // Try "BrandName — Product" format first
-      if (itemName.includes(" — ")) {
+      if (!brandEmail && itemName.includes(" — ")) {
         const parts = itemName.split(" — ");
         const candidateBrand = parts[0].trim().replace(/\s+/g, " ");
         const candidateProduct = parts.slice(1).join(" — ").trim();
@@ -235,7 +337,7 @@ export async function POST(request: Request) {
 
       if (existingError) {
         console.error("Could not check existing Square sale:", existingError);
-        return NextResponse.json({ error: "Could not check for an existing sale. Sync stopped; some sales may already have been inserted.", failed_item: skippedItem, sales_inserted: salesInserted, skipped }, { status: 500 });
+        return NextResponse.json({ error: "Could not check for an existing sale. Sync stopped; some sales may already have been inserted.", failed_item: skippedItem, sales_inserted: salesInserted, skipped, orders: squareOrders }, { status: 500 });
       }
       if (existing) {
         skipped.push({ ...skippedItem, reason: "A sale for this order, brand, and product already exists." });
@@ -258,7 +360,7 @@ export async function POST(request: Request) {
 
       if (insertError) {
         console.error("Could not insert Square sale:", insertError);
-        return NextResponse.json({ error: "Could not insert a sale. Sync stopped; some sales may already have been inserted.", failed_item: skippedItem, sales_inserted: salesInserted, skipped }, { status: 500 });
+        return NextResponse.json({ error: "Could not insert a sale. Sync stopped; some sales may already have been inserted.", failed_item: skippedItem, sales_inserted: salesInserted, skipped, orders: squareOrders }, { status: 500 });
       }
       salesInserted++;
     }
@@ -300,5 +402,5 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ success: true, orders_processed: orders.length, sales_inserted: salesInserted, skipped });
+  return NextResponse.json({ success: true, orders_processed: orders.length, sales_inserted: salesInserted, skipped, orders: squareOrders });
 }
