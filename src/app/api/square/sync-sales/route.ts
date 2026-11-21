@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+type SkippedSale = {
+  order_id: string;
+  line_item_id?: string;
+  item_name?: string;
+  variation_name?: string;
+  reason: string;
+};
+
 export async function POST(request: Request) {
   const { event, start_date, end_date, organizer_email } = await request.json();
 
@@ -14,6 +22,9 @@ export async function POST(request: Request) {
 
   if (!start_date || !end_date) {
     return NextResponse.json({ error: "start_date and end_date are required" }, { status: 400 });
+  }
+  if (typeof organizer_email !== "string" || !organizer_email.trim()) {
+    return NextResponse.json({ error: "organizer_email is required to match inventory" }, { status: 400 });
   }
   const startAt = new Date(start_date).toISOString();
   const endAt = new Date(end_date + "T23:59:59").toISOString();
@@ -43,7 +54,7 @@ export async function POST(request: Request) {
 
   const orders = ordersData.orders || [];
   if (!orders.length) {
-    return NextResponse.json({ success: true, message: "No orders found", count: 0 });
+    return NextResponse.json({ success: true, message: "No orders found", count: 0, orders_processed: 0, sales_inserted: 0, skipped: [] });
   }
 
   // Fetch refunds for the date range so we can skip refunded items
@@ -58,34 +69,59 @@ export async function POST(request: Request) {
     },
   });
   const refundsData = await refundsResponse.json();
+  if (!refundsResponse.ok) {
+    console.error("Could not fetch Square refunds:", refundsData.errors);
+    return NextResponse.json({ error: "Could not fetch Square refunds. No sales were processed." }, { status: 502 });
+  }
   // Build a set of refunded order IDs for quick lookup
   const refundedOrderIds = new Set<string>(
     (refundsData.refunds || []).map((r: any) => r.order_id)
   );
 
   // Look up inventory across all event slug variants (e.g. "atlanta" and "atlanta-1795088699794")
-  const { data: inventory } = await supabase
+  const { data: inventory, error: inventoryError } = await supabase
     .from("brand_products")
     .select("*, brand_product_variations(*)")
     .eq("organizer_email", organizer_email);
+  if (inventoryError) {
+    console.error("Could not load inventory for Square sync:", inventoryError);
+    return NextResponse.json({ error: "Could not load inventory. No sales were processed." }, { status: 500 });
+  }
 
   let salesInserted = 0;
+  const skipped: SkippedSale[] = [];
   const brandTaxMap: Record<string, number> = {};
 
   for (const order of orders) {
     // Skip entire order if it was refunded
-    if (refundedOrderIds.has(order.id)) continue;
+    if (refundedOrderIds.has(order.id)) {
+      skipped.push({ order_id: order.id, reason: "Order has a refund." });
+      continue;
+    }
 
     const orderDate = order.created_at?.split("T")[0] || new Date().toISOString().split("T")[0];
     const lineItems = order.line_items || [];
+    if (!lineItems.length) {
+      skipped.push({ order_id: order.id, reason: "Order has no line items." });
+      continue;
+    }
     const orderTotalTax = Number(order.total_tax_money?.amount || 0) / 100;
     const orderTotalMoney = Number(order.total_money?.amount || 0) / 100;
 
     for (const lineItem of lineItems) {
+      const skippedItem = {
+        order_id: order.id,
+        line_item_id: lineItem.uid,
+        item_name: lineItem.name || "",
+        variation_name: lineItem.variation_name || "",
+      };
       const quantity = parseInt(lineItem.quantity || "1");
       const unitPrice = Number(lineItem.base_price_money?.amount || 0) / 100;
       const grossSales = Number((lineItem as any).gross_sales_money?.amount || 0) / 100;
-      if (grossSales === 0) continue;
+      if (grossSales === 0) {
+        skipped.push({ ...skippedItem, reason: "Line item gross sales are missing or zero." });
+        continue;
+      }
 
       const totalRevenue = grossSales || (unitPrice * quantity);
       const itemName = lineItem.name || "";
@@ -174,6 +210,12 @@ export async function POST(request: Request) {
 
       if (!brandEmail) {
         console.log("SKIPPED - no brand match:", { itemName, variationName, inventoryBrandNames, inventoryCount: inventory?.length });
+        skipped.push({
+          ...skippedItem,
+          reason: brandName
+            ? `No inventory record with an email matched brand "${brandName}" for this organizer.`
+            : "Item name did not match an inventory product, inventory brand, or manual product mapping.",
+        });
         continue;
       }
 
@@ -183,7 +225,7 @@ export async function POST(request: Request) {
       }
 
       const normalizedProduct = productName.trim().toLowerCase();
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from("brand_sales")
         .select("id")
         .eq("square_order_id", order.id)
@@ -191,9 +233,16 @@ export async function POST(request: Request) {
         .ilike("product_name", normalizedProduct)
         .maybeSingle();
 
-      if (existing) continue;
+      if (existingError) {
+        console.error("Could not check existing Square sale:", existingError);
+        return NextResponse.json({ error: "Could not check for an existing sale. Sync stopped; some sales may already have been inserted.", failed_item: skippedItem, sales_inserted: salesInserted, skipped }, { status: 500 });
+      }
+      if (existing) {
+        skipped.push({ ...skippedItem, reason: "A sale for this order, brand, and product already exists." });
+        continue;
+      }
 
-      await supabase.from("brand_sales").insert({
+      const { error: insertError } = await supabase.from("brand_sales").insert({
         event,
         brand_email: brandEmail,
         brand_name: brandName,
@@ -207,6 +256,10 @@ export async function POST(request: Request) {
         organizer_email,
       });
 
+      if (insertError) {
+        console.error("Could not insert Square sale:", insertError);
+        return NextResponse.json({ error: "Could not insert a sale. Sync stopped; some sales may already have been inserted.", failed_item: skippedItem, sales_inserted: salesInserted, skipped }, { status: 500 });
+      }
       salesInserted++;
     }
   }
@@ -247,5 +300,5 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ success: true, orders_processed: orders.length, sales_inserted: salesInserted });
+  return NextResponse.json({ success: true, orders_processed: orders.length, sales_inserted: salesInserted, skipped });
 }

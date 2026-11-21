@@ -150,6 +150,7 @@ export default function SalesPage() {
           event: formatEventName(slug),
           start_date: startDate,
           end_date: endDate,
+          organizer_email: organizerEmail,
         }),
       });
       const data = await res.json();
@@ -170,7 +171,11 @@ export default function SalesPage() {
           );
         }
       } else {
-        alert(`Error: ${data.error || "Sync failed"}${details ? `\n\nSkipped before the error:\n${details}` : ""}`);
+        const failedItem = data.failed_item;
+        const failedDetails = failedItem
+          ? `\nOrder ${failedItem.order_id}${failedItem.item_name ? `, ${failedItem.item_name}` : ""}${failedItem.variation_name ? ` (${failedItem.variation_name})` : ""}`
+          : "";
+        alert(`Error: ${data.error || "Sync failed"}${failedDetails}${details ? `\n\nSkipped before the error:\n${details}` : ""}`);
         await fetchData();
       }
     } catch (error) {
