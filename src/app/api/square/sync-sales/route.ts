@@ -63,10 +63,11 @@ export async function POST(request: Request) {
     (refundsData.refunds || []).map((r: any) => r.order_id)
   );
 
+  // Look up inventory across all event slug variants (e.g. "atlanta" and "atlanta-1795088699794")
   const { data: inventory } = await supabase
     .from("brand_products")
     .select("*, brand_product_variations(*)")
-    .eq("event", event);
+    .eq("organizer_email", organizer_email);
 
   let salesInserted = 0;
   const brandTaxMap: Record<string, number> = {};
@@ -94,50 +95,59 @@ export async function POST(request: Request) {
       let productName = itemName;
       const variationName = lineItem.variation_name || "";
 
-      const knownBrands = [
-        "Cladini", "Ciscacecil", "Jayda Woman", "Moelle Essentials",
-        "Ara Lagos", "FSS", "Isaleekofromderin", "Lola Signatures",
-        "Spice of Lagos", "Temade Studios", "Zoba Martin", "Ayaba Woman",
-        "Ayabawoman", "YinkaMB", "J- JaydaWoman",
-      ];
+      // Build dynamic brand name set from inventory
+      const inventoryBrandNames = [...new Set((inventory || []).map((p: any) => p.brand_name?.trim()).filter(Boolean))];
 
+      // Try "BrandName — Product" format first
       if (itemName.includes(" — ")) {
         const parts = itemName.split(" — ");
         const candidateBrand = parts[0].trim().replace(/\s+/g, " ");
         const candidateProduct = parts.slice(1).join(" — ").trim();
-        if (candidateProduct.length > 0 && knownBrands.some(b => b.toLowerCase() === candidateBrand.toLowerCase())) {
+        if (candidateProduct.length > 0 && inventoryBrandNames.some((b: string) => b.toLowerCase() === candidateBrand.toLowerCase())) {
           brandName = candidateBrand;
           productName = candidateProduct;
-          const brandProduct = inventory?.find(p => p.brand_name?.trim().toLowerCase() === brandName.toLowerCase());
+          const brandProduct = inventory?.find((p: any) => p.brand_name?.trim().toLowerCase() === brandName.toLowerCase());
           if (brandProduct) brandEmail = brandProduct.brand_email;
         }
       }
 
+      // Dynamic product→brand lookup from inventory
+      if (!brandName) {
+        const matched = inventory?.find((p: any) =>
+          p.name?.trim().toLowerCase() === itemName.trim().toLowerCase()
+        );
+        if (matched) {
+          brandName = matched.brand_name;
+          brandEmail = matched.brand_email;
+          productName = matched.name;
+        }
+      }
+
+      // Fallback hardcoded map for products not in Nalpop inventory
       const manualMap: Record<string, string> = {
-        // Cladini
         "cladini top": "Cladini",
         "athena pant & shirt (black)": "Cladini",
         "havillah bubu (blue neckline)": "Cladini",
         "limited bubu": "Cladini",
         "mari bubu": "Cladini",
         "slip dress": "Cladini",
-        // Ciscacecil
         "tessa top": "Ciscacecil",
         "tessa - custom": "Ciscacecil",
+        "taselle top": "Ciscacecil",
+        "taselle skirt": "Ciscacecil",
         "palm top": "Ciscacecil",
         "saffra midi skirt": "Ciscacecil",
         "saffra mini skirt": "Ciscacecil",
         "zaya pant": "Ciscacecil",
         "zaya top": "Ciscacecil",
-        // Jayda Woman
+        "amber top": "Ciscacecil",
+        "beaded tank top": "Ciscacecil",
         "north dress": "Jayda Woman",
         "low back linen kaftan": "Jayda Woman",
         "j3- daffodil skirt set": "Jayda Woman",
         "poppy": "Jayda Woman",
         "jayda mesh top": "Jayda Woman",
-        // Isaleekofromderin
         "lolu tennis skirt": "Isaleekofromderin",
-        // Ara Lagos
         "l4 -  ara beaded summer dress": "Ara Lagos",
         "l4 - ara beaded summer dress": "Ara Lagos",
         "l12 - dele black and white short sleeved set": "Ara Lagos",
@@ -146,7 +156,6 @@ export async function POST(request: Request) {
         "l23 - olanna aso oke pants vintage": "Ara Lagos",
         "l29 - onjawu aso oke trousers (red)": "Ara Lagos",
         "l45 - tolani cotton brush work purple jumpsuit": "Ara Lagos",
-        // Yinka MB
         "yinkamb yago": "Yinka MB",
       };
 
