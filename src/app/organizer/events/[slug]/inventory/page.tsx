@@ -110,52 +110,52 @@ export default function InventoryPage() {
 
   const exportAllCSV = () => {
     try {
-    const rows: string[][] = [
-      [
-        "Brand",
-        "Product",
-        "Category",
-        "Size",
-        "Colour",
-        "Quantity",
-        "Price",
-        "Photo URL",
-      ],
-    ];
-    filtered.forEach((p) => {
-      if (p.variations.length > 0) {
-        p.variations.forEach((v) => {
+      const rows: string[][] = [
+        [
+          "Brand",
+          "Product",
+          "Category",
+          "Size",
+          "Colour",
+          "Quantity",
+          "Price",
+          "Photo URL",
+        ],
+      ];
+      filtered.forEach((p) => {
+        if (p.variations.length > 0) {
+          p.variations.forEach((v) => {
+            rows.push([
+              p.brand_name,
+              p.name,
+              p.category,
+              v.size || "",
+              v.colour || "",
+              String(v.quantity),
+              String(v.price || p.base_price),
+              p.photo_url || "",
+            ]);
+          });
+        } else {
           rows.push([
             p.brand_name,
             p.name,
             p.category,
-            v.size || "",
-            v.colour || "",
-            String(v.quantity),
-            String(v.price || p.base_price),
+            "",
+            "",
+            "",
+            String(p.base_price),
             p.photo_url || "",
           ]);
-        });
-      } else {
-        rows.push([
-          p.brand_name,
-          p.name,
-          p.category,
-          "",
-          "",
-          "",
-          String(p.base_price),
-          p.photo_url || "",
-        ]);
-      }
-    });
-    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${slug}-full-inventory.csv`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 0);
+        }
+      });
+      const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${slug}-full-inventory.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 0);
     } catch (error) {
       console.error("Failed to export inventory:", error);
       alert("Could not export inventory. Please try again.");
@@ -168,7 +168,9 @@ export default function InventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [savingProduct, setSavingProduct] = useState<number | null>(null);
-  const [savingAction, setSavingAction] = useState<"approve" | "reject" | null>(null);
+  const [savingAction, setSavingAction] = useState<"approve" | "reject" | null>(
+    null,
+  );
 
   useEffect(() => {
     if (organizerLoading) return;
@@ -177,12 +179,12 @@ export default function InventoryPage() {
       setLoading(true);
       setLoadError("");
       try {
-        if (!organizerEmail) throw new Error("Please sign in to view inventory.");
+        if (!organizerEmail)
+          throw new Error("Please sign in to view inventory.");
         const { data: productsData, error: productsError } = await supabase
           .from("brand_products")
           .select("*")
-          .ilike("event", slug)
-          .eq("organizer_email", organizerEmail)
+          .eq("event", slug)
           .order("brand_name");
         if (productsError) throw productsError;
         const items = productsData ?? [];
@@ -191,19 +193,29 @@ export default function InventoryPage() {
           const { data, error } = await supabase
             .from("brand_product_variations")
             .select("*")
-            .in("product_id", items.map((p) => p.id));
+            .in(
+              "product_id",
+              items.map((p) => p.id),
+            );
           if (error) throw error;
           variations = data ?? [];
         }
         if (!active) return;
-        setProducts(items.map((p) => ({
-          ...p,
-          variations: variations.filter((v) => v.product_id === p.id),
-        })));
+        setProducts(
+          items.map((p) => ({
+            ...p,
+            variations: variations.filter((v) => v.product_id === p.id),
+          })),
+        );
       } catch (error) {
         if (!active) return;
         console.error("Failed to load inventory:", error);
-        setLoadError(error instanceof Error && error.message === "Please sign in to view inventory." ? error.message : "Could not load inventory. Please try again.");
+        setLoadError(
+          error instanceof Error &&
+            error.message === "Please sign in to view inventory."
+            ? error.message
+            : "Could not load inventory. Please try again.",
+        );
       } finally {
         if (active) {
           setLoadedFor(loadKey);
@@ -212,7 +224,9 @@ export default function InventoryPage() {
       }
     };
     void fetchInventory();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [slug, event, organizerEmail, organizerLoading, loadKey, retry]);
 
   const brands = [...new Set(products.map((p) => p.brand_name))].sort();
@@ -222,7 +236,16 @@ export default function InventoryPage() {
     if (brandFilter !== "all" && p.brand_name !== brandFilter) return false;
     if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
     const query = search.trim().toLocaleLowerCase();
-    if (query && ![p.name, p.brand_name, p.category, ...p.variations.flatMap((v) => [v.size, v.colour])].some((value) => value?.toLocaleLowerCase().includes(query))) return false;
+    if (
+      query &&
+      ![
+        p.name,
+        p.brand_name,
+        p.category,
+        ...p.variations.flatMap((v) => [v.size, v.colour]),
+      ].some((value) => value?.toLocaleLowerCase().includes(query))
+    )
+      return false;
     return true;
   });
 
@@ -241,31 +264,33 @@ export default function InventoryPage() {
   );
   const inSquare = filtered.filter((p) => p.square_catalog_id).length;
 
-  const brandSummary = brands.filter((brand) => filtered.some((p) => p.brand_name === brand)).map((brand) => {
-    const brandProducts = filtered.filter((p) => p.brand_name === brand);
-    const units = brandProducts.reduce(
-      (s, p) => s + p.variations.reduce((vs, v) => vs + v.quantity, 0),
-      0,
-    );
-    const value = brandProducts.reduce(
-      (s, p) =>
-        s +
-        p.variations.reduce(
-          (vs, v) => vs + (v.price || p.base_price) * v.quantity,
-          0,
-        ),
-      0,
-    );
-    const uploaded = brandProducts.filter((p) => p.square_catalog_id).length;
-    return {
-      brand,
-      products: brandProducts.length,
-      units,
-      value,
-      uploaded,
-      total: brandProducts.length,
-    };
-  });
+  const brandSummary = brands
+    .filter((brand) => filtered.some((p) => p.brand_name === brand))
+    .map((brand) => {
+      const brandProducts = filtered.filter((p) => p.brand_name === brand);
+      const units = brandProducts.reduce(
+        (s, p) => s + p.variations.reduce((vs, v) => vs + v.quantity, 0),
+        0,
+      );
+      const value = brandProducts.reduce(
+        (s, p) =>
+          s +
+          p.variations.reduce(
+            (vs, v) => vs + (v.price || p.base_price) * v.quantity,
+            0,
+          ),
+        0,
+      );
+      const uploaded = brandProducts.filter((p) => p.square_catalog_id).length;
+      return {
+        brand,
+        products: brandProducts.length,
+        units,
+        value,
+        uploaded,
+        total: brandProducts.length,
+      };
+    });
 
   const uploadProductToSquare = async (product: Product): Promise<void> => {
     const res = await fetch("/api/square/upload-inventory", {
@@ -274,21 +299,26 @@ export default function InventoryPage() {
       body: JSON.stringify({
         brandName: product.brand_name,
         brandEmail: product.brand_email || "",
-        items: [{
-          name: product.name,
-          base_price: product.base_price,
-          category: product.category,
-          photo_url: product.photo_url || "",
-          variations: product.variations,
-        }],
+        items: [
+          {
+            name: product.name,
+            base_price: product.base_price,
+            category: product.category,
+            photo_url: product.photo_url || "",
+            variations: product.variations,
+          },
+        ],
       }),
     });
     const result = await res.json();
-    if (!res.ok || !result.success) throw new Error(result.error || "Square upload failed.");
+    if (!res.ok || !result.success)
+      throw new Error(result.error || "Square upload failed.");
 
-    setProducts((prev) => prev.map((p) =>
-      p.id === product.id ? { ...p, square_catalog_id: "uploaded" } : p,
-    ));
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === product.id ? { ...p, square_catalog_id: "uploaded" } : p,
+      ),
+    );
     const { error } = await supabase
       .from("brand_products")
       .update({ square_catalog_id: "uploaded" })
@@ -297,7 +327,9 @@ export default function InventoryPage() {
       .single();
     if (error) {
       console.error("Failed to record Square upload:", error);
-      throw new Error("Uploaded to Square, but the upload status could not be saved. Check Square before retrying to avoid duplicates.");
+      throw new Error(
+        "Uploaded to Square, but the upload status could not be saved. Check Square before retrying to avoid duplicates.",
+      );
     }
   };
 
@@ -323,12 +355,16 @@ export default function InventoryPage() {
           uploaded++;
         } catch (error) {
           console.error("Square upload failed for product:", product.id, error);
-          failures.push(`${product.name}: ${error instanceof Error ? error.message : "Upload failed."}`);
+          failures.push(
+            `${product.name}: ${error instanceof Error ? error.message : "Upload failed."}`,
+          );
         }
         setBulkProgress(Math.round(((index + 1) / toUpload.length) * 100));
       }
       if (failures.length) {
-        alert(`${uploaded} of ${toUpload.length} products uploaded and recorded.\n${failures.join("\n")}\nCheck Square before retrying failed uploads to avoid duplicates.`);
+        alert(
+          `${uploaded} of ${toUpload.length} products uploaded and recorded.\n${failures.join("\n")}\nCheck Square before retrying failed uploads to avoid duplicates.`,
+        );
       } else {
         alert(`Done! ${uploaded} products uploaded to Square.`);
       }
@@ -369,7 +405,9 @@ export default function InventoryPage() {
         if (!product.square_catalog_id) await uploadProductToSquare(product);
       } catch (error) {
         console.error("Square upload failed:", error);
-        alert(`Product approved, but the Square upload did not complete: ${error instanceof Error ? error.message : "Upload failed."} Check Square before retrying to avoid duplicates.`);
+        alert(
+          `Product approved, but the Square upload did not complete: ${error instanceof Error ? error.message : "Upload failed."} Check Square before retrying to avoid duplicates.`,
+        );
       }
     } catch (error) {
       console.error("Failed to approve product:", error);
@@ -411,7 +449,10 @@ export default function InventoryPage() {
   };
 
   return (
-    <div className="[overflow-wrap:anywhere]" style={{ minHeight: "100vh", background: "#f8faf8" }}>
+    <div
+      className="[overflow-wrap:anywhere]"
+      style={{ minHeight: "100vh", background: "#f8faf8" }}
+    >
       <div
         style={{
           background: "#1B3A2D",
@@ -440,497 +481,607 @@ export default function InventoryPage() {
       <div
         style={{ maxWidth: "1100px", margin: "0 auto", padding: "2rem 1.5rem" }}
       >
-        <LoadingView loading={organizerLoading || loading || loadedFor !== loadKey} error={loadError} onRetry={() => setRetry((value) => value + 1)} customLoader={<InventorySkeleton />}>
-        {savingAction === "approve" && <div role="status" style={{ marginBottom: "1rem", color: "#4a5a52" }}>Approving product and uploading to Square...</div>}
-        {/* Summary stats */}
-        <div
-          className="grid grid-cols-2 gap-4 lg:grid-cols-4"
-          style={{
-            marginBottom: "1.5rem",
-          }}
+        <LoadingView
+          loading={organizerLoading || loading || loadedFor !== loadKey}
+          error={loadError}
+          onRetry={() => setRetry((value) => value + 1)}
+          customLoader={<InventorySkeleton />}
         >
-          {[
-            { label: "PRODUCTS", value: filtered.length },
-            { label: "TOTAL UNITS", value: totalUnits },
-            { label: "TOTAL VALUE", value: formatCurrency(totalValue) },
-            { label: "IN SQUARE", value: `${inSquare}/${filtered.length}` },
-          ].map((stat) => (
+          {savingAction === "approve" && (
             <div
-              key={stat.label}
-              style={{
-                background: "#fff",
-                borderRadius: "12px",
-                padding: "1rem",
-                border: "1px solid #e4ebe6",
-                textAlign: "center" as const,
-              }}
+              role="status"
+              style={{ marginBottom: "1rem", color: "#4a5a52" }}
             >
-              <div
-                style={{
-                  fontSize: "1.6rem",
-                  color: "#1B3A2D",
-                  fontWeight: "normal",
-                }}
-              >
-                {stat.value}
-              </div>
-              <div
-                style={{
-                  fontSize: "0.65rem",
-                  color: "#4a5a52",
-                  letterSpacing: "0.12em",
-                  marginTop: "4px",
-                }}
-              >
-                {stat.label}
-              </div>
+              Approving product and uploading to Square...
             </div>
-          ))}
-        </div>
-
-        {/* Review tabs */}
-        {filtered.filter((p) => p.review_status === "pending").length > 0 && (
+          )}
+          {/* Summary stats */}
           <div
+            className="grid grid-cols-2 gap-4 lg:grid-cols-4"
             style={{
-              background: "#E8C97A22",
-              borderRadius: "10px",
-              padding: "1rem 1.25rem",
               marginBottom: "1.5rem",
-              border: "1px solid #E8C97A44",
             }}
           >
-            <div
-              style={{
-                fontSize: "0.72rem",
-                color: "#b87333",
-                letterSpacing: "0.1em",
-                marginBottom: "8px",
-              }}
-            >
-              ⏳ PENDING REVIEW (
-              {filtered.filter((p) => p.review_status === "pending").length})
-            </div>
-            {filtered
-              .filter((p) => p.review_status === "pending")
-              .map((product) => (
+            {[
+              { label: "PRODUCTS", value: filtered.length },
+              { label: "TOTAL UNITS", value: totalUnits },
+              { label: "TOTAL VALUE", value: formatCurrency(totalValue) },
+              { label: "IN SQUARE", value: `${inSquare}/${filtered.length}` },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                style={{
+                  background: "#fff",
+                  borderRadius: "12px",
+                  padding: "1rem",
+                  border: "1px solid #e4ebe6",
+                  textAlign: "center" as const,
+                }}
+              >
                 <div
-                  key={product.id}
                   style={{
-                    background: "#fff",
-                    borderRadius: "10px",
-                    padding: "0.75rem 1rem",
-                    marginBottom: "8px",
-                    border: "1px solid #e4ebe6",
+                    fontSize: "1.6rem",
+                    color: "#1B3A2D",
+                    fontWeight: "normal",
                   }}
                 >
+                  {stat.value}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.65rem",
+                    color: "#4a5a52",
+                    letterSpacing: "0.12em",
+                    marginTop: "4px",
+                  }}
+                >
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Review tabs */}
+          {filtered.filter((p) => p.review_status === "pending").length > 0 && (
+            <div
+              style={{
+                background: "#E8C97A22",
+                borderRadius: "10px",
+                padding: "1rem 1.25rem",
+                marginBottom: "1.5rem",
+                border: "1px solid #E8C97A44",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "0.72rem",
+                  color: "#b87333",
+                  letterSpacing: "0.1em",
+                  marginBottom: "8px",
+                }}
+              >
+                ⏳ PENDING REVIEW (
+                {filtered.filter((p) => p.review_status === "pending").length})
+              </div>
+              {filtered
+                .filter((p) => p.review_status === "pending")
+                .map((product) => (
                   <div
+                    key={product.id}
                     style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "8px",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
+                      background: "#fff",
+                      borderRadius: "10px",
+                      padding: "0.75rem 1rem",
+                      marginBottom: "8px",
+                      border: "1px solid #e4ebe6",
                     }}
                   >
-                    <div>
-                      <div style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>
-                        {product.name}
-                      </div>
-                      <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>
-                        {product.brand_name} · {product.category} ·{" "}
-                        {formatCurrency(Number(product.base_price))}
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "8px",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>
+                          {product.name}
+                        </div>
+                        <div style={{ fontSize: "0.72rem", color: "#4a5a52" }}>
+                          {product.brand_name} · {product.category} ·{" "}
+                          {formatCurrency(Number(product.base_price))}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.72rem",
+                            color: "#4a5a52",
+                            marginTop: "2px",
+                          }}
+                        >
+                          {product.variations.length} variation
+                          {product.variations.length !== 1 ? "s" : ""} ·{" "}
+                          {product.variations.reduce(
+                            (s, v) => s + v.quantity,
+                            0,
+                          )}{" "}
+                          units
+                        </div>
                       </div>
                       <div
                         style={{
-                          fontSize: "0.72rem",
-                          color: "#4a5a52",
-                          marginTop: "2px",
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "6px",
                         }}
                       >
-                        {product.variations.length} variation
-                        {product.variations.length !== 1 ? "s" : ""} ·{" "}
-                        {product.variations.reduce((s, v) => s + v.quantity, 0)}{" "}
-                        units
+                        {product.photo_url && (
+                          <img
+                            src={product.photo_url}
+                            alt={product.name}
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              borderRadius: "6px",
+                              objectFit: "cover",
+                            }}
+                          />
+                        )}
+                        <button
+                          onClick={() => approveProduct(product.id)}
+                          disabled={bulkUploading || savingProduct !== null}
+                          style={{
+                            padding: "5px 12px",
+                            background: "#4a7c59",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {savingProduct === product.id &&
+                          savingAction === "approve"
+                            ? "Approving..."
+                            : "✓ Approve"}
+                        </button>
+                        <button
+                          disabled={bulkUploading || savingProduct !== null}
+                          onClick={() =>
+                            setReviewingProduct(
+                              reviewingProduct === product.id
+                                ? null
+                                : product.id,
+                            )
+                          }
+                          style={{
+                            padding: "5px 12px",
+                            background: "#c0392b",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          ✕ Reject
+                        </button>
                       </div>
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                      {product.photo_url && (
-                        <img
-                          src={product.photo_url}
-                          alt={product.name}
+                    {reviewingProduct === product.id && (
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          display: "flex",
+                          gap: "8px",
+                        }}
+                      >
+                        <input
+                          disabled={bulkUploading || savingProduct !== null}
+                          placeholder="Reason for rejection..."
+                          value={reviewNote}
+                          onChange={(e) => setReviewNote(e.target.value)}
                           style={{
-                            width: "40px",
-                            height: "40px",
+                            flex: 1,
+                            minWidth: 0,
+                            padding: "6px 10px",
+                            border: "1px solid #c0392b",
                             borderRadius: "6px",
-                            objectFit: "cover",
+                            fontSize: "0.82rem",
                           }}
+                          autoFocus
                         />
-                      )}
-                      <button
-                        onClick={() => approveProduct(product.id)}
-                        disabled={bulkUploading || savingProduct !== null}
-                        style={{
-                          padding: "5px 12px",
-                          background: "#4a7c59",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: "6px",
-                          fontSize: "0.78rem",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {savingProduct === product.id && savingAction === "approve" ? "Approving..." : "✓ Approve"}
-                      </button>
-                      <button
-                        disabled={bulkUploading || savingProduct !== null}
-                        onClick={() =>
-                          setReviewingProduct(
-                            reviewingProduct === product.id ? null : product.id,
-                          )
-                        }
-                        style={{
-                          padding: "5px 12px",
-                          background: "#c0392b",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: "6px",
-                          fontSize: "0.78rem",
-                          cursor: "pointer",
-                        }}
-                      >
-                        ✕ Reject
-                      </button>
-                    </div>
+                        <button
+                          onClick={() => rejectProduct(product.id)}
+                          disabled={bulkUploading || savingProduct !== null}
+                          style={{
+                            padding: "6px 12px",
+                            background: "#c0392b",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "6px",
+                            fontSize: "0.82rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {savingProduct === product.id &&
+                          savingAction === "reject"
+                            ? "Saving..."
+                            : "Confirm"}
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  {reviewingProduct === product.id && (
-                    <div
-                      style={{ marginTop: "8px", display: "flex", gap: "8px" }}
-                    >
-                      <input
-                        disabled={bulkUploading || savingProduct !== null}
-                        placeholder="Reason for rejection..."
-                        value={reviewNote}
-                        onChange={(e) => setReviewNote(e.target.value)}
-                        style={{
-                          flex: 1,
-                          minWidth: 0,
-                          padding: "6px 10px",
-                          border: "1px solid #c0392b",
-                          borderRadius: "6px",
-                          fontSize: "0.82rem",
-                        }}
-                        autoFocus
-                      />
-                      <button
-                        onClick={() => rejectProduct(product.id)}
-                        disabled={bulkUploading || savingProduct !== null}
-                        style={{
-                          padding: "6px 12px",
-                          background: "#c0392b",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: "6px",
-                          fontSize: "0.82rem",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {savingProduct === product.id && savingAction === "reject" ? "Saving..." : "Confirm"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-          </div>
-        )}
+                ))}
+            </div>
+          )}
 
-        {/* Bulk upload button */}
-        {products.filter(
-          (p) => p.review_status === "approved" && !p.square_catalog_id,
-        ).length > 0 && (
+          {/* Bulk upload button */}
+          {products.filter(
+            (p) => p.review_status === "approved" && !p.square_catalog_id,
+          ).length > 0 && (
+            <div
+              style={{
+                background: "#E8C97A22",
+                borderRadius: "10px",
+                padding: "1rem 1.25rem",
+                marginBottom: "1.5rem",
+                border: "1px solid #E8C97A44",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "8px",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>
+                  {
+                    products.filter(
+                      (p) =>
+                        p.review_status === "approved" && !p.square_catalog_id,
+                    ).length
+                  }{" "}
+                  approved products not yet in Square
+                </div>
+                {bulkUploading && (
+                  <div
+                    style={{
+                      fontSize: "0.72rem",
+                      color: "#4a5a52",
+                      marginTop: "2px",
+                    }}
+                  >
+                    Uploading... {bulkProgress}%
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={uploadAllApprovedToSquare}
+                disabled={bulkUploading || savingProduct !== null}
+                style={{
+                  padding: "8px 16px",
+                  background: "#1B3A2D",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "0.82rem",
+                  cursor: "pointer",
+                }}
+              >
+                {bulkUploading
+                  ? `Uploading ${bulkProgress}%...`
+                  : "↑ Upload all to Square"}
+              </button>
+            </div>
+          )}
+
+          {/* Export all */}
           <div
             style={{
-              background: "#E8C97A22",
-              borderRadius: "10px",
-              padding: "1rem 1.25rem",
-              marginBottom: "1.5rem",
-              border: "1px solid #E8C97A44",
               display: "flex",
-              flexWrap: "wrap",
-              gap: "8px",
-              justifyContent: "space-between",
-              alignItems: "center",
+              justifyContent: "flex-end",
+              marginBottom: "1rem",
             }}
           >
-            <div>
-              <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>
-                {
-                  products.filter(
-                    (p) =>
-                      p.review_status === "approved" && !p.square_catalog_id,
-                  ).length
-                }{" "}
-                approved products not yet in Square
-              </div>
-              {bulkUploading && (
-                <div
-                  style={{
-                    fontSize: "0.72rem",
-                    color: "#4a5a52",
-                    marginTop: "2px",
-                  }}
-                >
-                  Uploading... {bulkProgress}%
-                </div>
-              )}
-            </div>
             <button
-              onClick={uploadAllApprovedToSquare}
-              disabled={bulkUploading || savingProduct !== null}
+              onClick={exportAllCSV}
               style={{
-                padding: "8px 16px",
-                background: "#1B3A2D",
-                color: "#fff",
-                border: "none",
+                padding: "7px 14px",
+                background: "#fff",
+                color: "#1B3A2D",
+                border: "1px solid #e4ebe6",
                 borderRadius: "8px",
                 fontSize: "0.82rem",
                 cursor: "pointer",
               }}
             >
-              {bulkUploading
-                ? `Uploading ${bulkProgress}%...`
-                : "↑ Upload all to Square"}
+              ↓ Export all CSV
             </button>
           </div>
-        )}
 
-        {/* Export all */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            marginBottom: "1rem",
-          }}
-        >
-          <button
-            onClick={exportAllCSV}
+          {/* Filters */}
+          <div
             style={{
-              padding: "7px 14px",
-              background: "#fff",
-              color: "#1B3A2D",
-              border: "1px solid #e4ebe6",
-              borderRadius: "8px",
-              fontSize: "0.82rem",
-              cursor: "pointer",
+              display: "flex",
+              gap: "8px",
+              marginBottom: "1.5rem",
+              flexWrap: "wrap" as const,
             }}
           >
-            ↓ Export all CSV
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            marginBottom: "1.5rem",
-            flexWrap: "wrap" as const,
-          }}
-        >
-          <input
-            type="search"
-            aria-label="Search inventory"
-            placeholder="Search products, brands, categories or variations"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              padding: "7px 12px",
-              border: "1px solid #e4ebe6",
-              borderRadius: "8px",
-              fontSize: "0.85rem",
-              background: "#fff",
-              flex: "1 1 260px",
-              minWidth: 0,
-            }}
-          />
-          <select
-            value={brandFilter}
-            onChange={(e) => setBrandFilter(e.target.value)}
-            style={{
-              padding: "7px 12px",
-              border: "1px solid #e4ebe6",
-              borderRadius: "8px",
-              fontSize: "0.85rem",
-              background: "#fff",
-              maxWidth: "100%",
-            }}
-          >
-            <option value="all">All brands</option>
-            {brands.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{
-              padding: "7px 12px",
-              border: "1px solid #e4ebe6",
-              borderRadius: "8px",
-              fontSize: "0.85rem",
-              background: "#fff",
-              maxWidth: "100%",
-            }}
-          >
-            <option value="all">All categories</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Brand summary cards */}
-        {brandFilter === "all" && (
-          <div style={{ marginBottom: "1.5rem" }}>
-            <div
+            <input
+              type="search"
+              aria-label="Search inventory"
+              placeholder="Search products, brands, categories or variations"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               style={{
-                fontSize: "0.72rem",
-                color: "#4a5a52",
-                letterSpacing: "0.12em",
-                marginBottom: "8px",
+                padding: "7px 12px",
+                border: "1px solid #e4ebe6",
+                borderRadius: "8px",
+                fontSize: "0.85rem",
+                background: "#fff",
+                flex: "1 1 260px",
+                minWidth: 0,
+              }}
+            />
+            <select
+              value={brandFilter}
+              onChange={(e) => setBrandFilter(e.target.value)}
+              style={{
+                padding: "7px 12px",
+                border: "1px solid #e4ebe6",
+                borderRadius: "8px",
+                fontSize: "0.85rem",
+                background: "#fff",
+                maxWidth: "100%",
               }}
             >
-              BRAND SUMMARY
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(min(220px, 100%), 1fr))",
-                gap: "8px",
-              }}
-            >
-              {brandSummary.map((b) => (
-                <div
-                  key={b.brand}
-                  onClick={() => setBrandFilter(b.brand)}
-                  style={{
-                    background: "#fff",
-                    borderRadius: "10px",
-                    padding: "0.75rem 1rem",
-                    border: "1px solid #e4ebe6",
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.borderColor = "#1B3A2D")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.borderColor = "#e4ebe6")
-                  }
-                >
-                  <div
-                    style={{
-                      fontSize: "0.85rem",
-                      color: "#1B3A2D",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    {b.brand}
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "12px",
-                      fontSize: "0.72rem",
-                      color: "#4a5a52",
-                    }}
-                  >
-                    <span>{b.products} products</span>
-                    <span>{b.units} units</span>
-                    <span>{formatCurrency(b.value)}</span>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.68rem",
-                      color: b.uploaded === b.total ? "#4a7c59" : "#b87333",
-                      marginTop: "4px",
-                    }}
-                  >
-                    {b.uploaded === b.total
-                      ? "✓ All in Square"
-                      : `${b.uploaded}/${b.total} in Square`}
-                  </div>
-                </div>
+              <option value="all">All brands</option>
+              {brands.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
               ))}
-            </div>
+            </select>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              style={{
+                padding: "7px 12px",
+                border: "1px solid #e4ebe6",
+                borderRadius: "8px",
+                fontSize: "0.85rem",
+                background: "#fff",
+                maxWidth: "100%",
+              }}
+            >
+              <option value="all">All categories</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
 
-        {/* Full inventory table */}
-        {filtered.length === 0 ? (
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: "14px",
-              padding: "4rem",
-              textAlign: "center",
-              border: "1px solid #e4ebe6",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "1rem",
-                color: "#1B3A2D",
-                marginBottom: "0.5rem",
-              }}
-            >
-              {products.length === 0 ? "No inventory yet" : "No matching inventory"}
-            </div>
-            <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>
-              {products.length === 0 ? "Brands will appear here once they add products to their portal." : "Try a different search or filter."}
-            </div>
-          </div>
-        ) : (
-          <div
-            role="region"
-            aria-label="Inventory"
-            tabIndex={0}
-            style={{
-              background: "#fff",
-              borderRadius: "14px",
-              border: "1px solid #e4ebe6",
-              overflowX: "auto",
-            }}
-          >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "40px minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) repeat(4, minmax(0, 0.8fr))",
-                minWidth: "740px",
-                padding: "10px 16px",
-                background: "#faf8f5",
-                fontSize: "0.65rem",
-                color: "#4a5a52",
-                letterSpacing: "0.08em",
-              }}
-            >
-              <div></div>
-              <div>BRAND</div>
-              <div>PRODUCT</div>
-              <div>CATEGORY</div>
-              <div>SIZE</div>
-              <div>COLOUR</div>
-              <div>QTY</div>
-              <div>PRICE</div>
-            </div>
-            {filtered.flatMap((product) =>
-              product.variations.length > 0 ? (
-                product.variations.map((v, vi) => (
+          {/* Brand summary cards */}
+          {brandFilter === "all" && (
+            <div style={{ marginBottom: "1.5rem" }}>
+              <div
+                style={{
+                  fontSize: "0.72rem",
+                  color: "#4a5a52",
+                  letterSpacing: "0.12em",
+                  marginBottom: "8px",
+                }}
+              >
+                BRAND SUMMARY
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fill, minmax(min(220px, 100%), 1fr))",
+                  gap: "8px",
+                }}
+              >
+                {brandSummary.map((b) => (
                   <div
-                    key={`${product.id}-${v.id}`}
+                    key={b.brand}
+                    onClick={() => setBrandFilter(b.brand)}
+                    style={{
+                      background: "#fff",
+                      borderRadius: "10px",
+                      padding: "0.75rem 1rem",
+                      border: "1px solid #e4ebe6",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.borderColor = "#1B3A2D")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.borderColor = "#e4ebe6")
+                    }
+                  >
+                    <div
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#1B3A2D",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      {b.brand}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "12px",
+                        fontSize: "0.72rem",
+                        color: "#4a5a52",
+                      }}
+                    >
+                      <span>{b.products} products</span>
+                      <span>{b.units} units</span>
+                      <span>{formatCurrency(b.value)}</span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.68rem",
+                        color: b.uploaded === b.total ? "#4a7c59" : "#b87333",
+                        marginTop: "4px",
+                      }}
+                    >
+                      {b.uploaded === b.total
+                        ? "✓ All in Square"
+                        : `${b.uploaded}/${b.total} in Square`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Full inventory table */}
+          {filtered.length === 0 ? (
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: "14px",
+                padding: "4rem",
+                textAlign: "center",
+                border: "1px solid #e4ebe6",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "1rem",
+                  color: "#1B3A2D",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                {products.length === 0
+                  ? "No inventory yet"
+                  : "No matching inventory"}
+              </div>
+              <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>
+                {products.length === 0
+                  ? "Brands will appear here once they add products to their portal."
+                  : "Try a different search or filter."}
+              </div>
+            </div>
+          ) : (
+            <div
+              role="region"
+              aria-label="Inventory"
+              tabIndex={0}
+              style={{
+                background: "#fff",
+                borderRadius: "14px",
+                border: "1px solid #e4ebe6",
+                overflowX: "auto",
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "40px minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) repeat(4, minmax(0, 0.8fr))",
+                  minWidth: "740px",
+                  padding: "10px 16px",
+                  background: "#faf8f5",
+                  fontSize: "0.65rem",
+                  color: "#4a5a52",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                <div></div>
+                <div>BRAND</div>
+                <div>PRODUCT</div>
+                <div>CATEGORY</div>
+                <div>SIZE</div>
+                <div>COLOUR</div>
+                <div>QTY</div>
+                <div>PRICE</div>
+              </div>
+              {filtered.flatMap((product) =>
+                product.variations.length > 0 ? (
+                  product.variations.map((v, vi) => (
+                    <div
+                      key={`${product.id}-${v.id}`}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "40px minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) repeat(4, minmax(0, 0.8fr))",
+                        minWidth: "740px",
+                        padding: "10px 16px",
+                        borderTop: "1px solid #f0ece6",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        {product.photo_url && vi === 0 && (
+                          <img
+                            src={product.photo_url}
+                            alt={product.name}
+                            style={{
+                              width: "30px",
+                              height: "30px",
+                              borderRadius: "4px",
+                              objectFit: "cover",
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.82rem",
+                          color: vi === 0 ? "#1B3A2D" : "#4a5a52",
+                        }}
+                      >
+                        {vi === 0 ? product.brand_name : ""}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>
+                          {vi === 0 ? product.name : ""}
+                        </div>
+                        {vi === 0 && product.square_catalog_id && (
+                          <div
+                            style={{ fontSize: "0.65rem", color: "#4a7c59" }}
+                          >
+                            ✓ In Square
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>
+                        {vi === 0 ? product.category : ""}
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>
+                        {v.size || "—"}
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>
+                        {v.colour || "—"}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.85rem",
+                          color: v.quantity < 3 ? "#c0392b" : "#1c1714",
+                          fontWeight: v.quantity < 3 ? 600 : "normal",
+                        }}
+                      >
+                        {v.quantity}
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>
+                        {v.price == null
+                          ? "—"
+                          : formatCurrency(Number(v.price))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div
+                    key={product.id}
                     style={{
                       display: "grid",
                       gridTemplateColumns:
@@ -942,7 +1093,7 @@ export default function InventoryPage() {
                     }}
                   >
                     <div>
-                      {product.photo_url && vi === 0 && (
+                      {product.photo_url && (
                         <img
                           src={product.photo_url}
                           alt={product.name}
@@ -955,112 +1106,44 @@ export default function InventoryPage() {
                         />
                       )}
                     </div>
-                    <div
-                      style={{
-                        fontSize: "0.82rem",
-                        color: vi === 0 ? "#1B3A2D" : "#4a5a52",
-                      }}
-                    >
-                      {vi === 0 ? product.brand_name : ""}
+                    <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>
+                      {product.brand_name}
                     </div>
-                    <div>
-                      <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>
-                        {vi === 0 ? product.name : ""}
-                      </div>
-                      {vi === 0 && product.square_catalog_id && (
-                        <div style={{ fontSize: "0.65rem", color: "#4a7c59" }}>
-                          ✓ In Square
-                        </div>
-                      )}
+                    <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>
+                      {product.name}
                     </div>
                     <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>
-                      {vi === 0 ? product.category : ""}
+                      {product.category}
                     </div>
-                    <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>
-                      {v.size || "—"}
+                    <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>
+                      No variations added
                     </div>
-                    <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>
-                      {v.colour || "—"}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.85rem",
-                        color: v.quantity < 3 ? "#c0392b" : "#1c1714",
-                        fontWeight: v.quantity < 3 ? 600 : "normal",
-                      }}
-                    >
-                      {v.quantity}
-                    </div>
-                    <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>
-                      {v.price == null ? "—" : formatCurrency(Number(v.price))}
+                    <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>
+                      No variations added
                     </div>
                   </div>
-                ))
-              ) : (
-                <div
-                  key={product.id}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "40px minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) repeat(4, minmax(0, 0.8fr))",
-                    minWidth: "740px",
-                    padding: "10px 16px",
-                    borderTop: "1px solid #f0ece6",
-                    alignItems: "center",
-                  }}
-                >
-                  <div>
-                    {product.photo_url && (
-                      <img
-                        src={product.photo_url}
-                        alt={product.name}
-                        style={{
-                          width: "30px",
-                          height: "30px",
-                          borderRadius: "4px",
-                          objectFit: "cover",
-                        }}
-                      />
-                    )}
-                  </div>
-                  <div style={{ fontSize: "0.82rem", color: "#1B3A2D" }}>
-                    {product.brand_name}
-                  </div>
-                  <div style={{ fontSize: "0.85rem", color: "#1c1714" }}>
-                    {product.name}
-                  </div>
-                  <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>
-                    {product.category}
-                  </div>
-                  <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>
-                    No variations added
-                  </div>
-                  <div style={{ fontSize: "0.82rem", color: "#4a5a52" }}>
-                    No variations added
-                  </div>
-                </div>
-              ),
-            )}
-            <div
-              style={{
-                padding: "12px 16px",
-                borderTop: "1px solid #e4ebe6",
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "8px",
-                justifyContent: "space-between",
-                background: "#faf8f5",
-              }}
-            >
-              <span style={{ fontSize: "0.8rem", color: "#4a5a52" }}>
-                {filtered.length} products · {totalUnits} units
-              </span>
-              <span style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>
-                Total value: {formatCurrency(totalValue)}
-              </span>
+                ),
+              )}
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderTop: "1px solid #e4ebe6",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                  justifyContent: "space-between",
+                  background: "#faf8f5",
+                }}
+              >
+                <span style={{ fontSize: "0.8rem", color: "#4a5a52" }}>
+                  {filtered.length} products · {totalUnits} units
+                </span>
+                <span style={{ fontSize: "0.88rem", color: "#1B3A2D" }}>
+                  Total value: {formatCurrency(totalValue)}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </LoadingView>
       </div>
     </div>
