@@ -71,6 +71,11 @@ export default function GettingStarted({
         if (authError) throw authError;
         if (!user?.email)
           throw new Error("Please sign in to view getting started progress.");
+        const { data: profileRes } = await supabase
+          .from("profiles")
+          .select("getting_started")
+          .eq("email", user.email)
+          .maybeSingle();
 
         const checks: Record<string, boolean> = {
           created_event: myEventsCount > 0,
@@ -111,12 +116,12 @@ export default function GettingStarted({
         }
 
         if (!active) return;
-        // if (profileRes.data?.getting_started?.sent_invite) checks.sent_invite = true;
-        // if (profileRes.data?.getting_started?.dismissed) {
-        //   setDismissed(true);
-        //   onDismissRef.current();
-        //   return;
-        // }
+        if (profileRes?.getting_started?.sent_invite) checks.sent_invite = true;
+        if (profileRes?.getting_started?.dismissed) {
+          setDismissed(true);
+          onDismissRef.current();
+          return;
+        }
         setCompleted(checks);
       } catch (error) {
         console.error("Failed to load getting started progress:", error);
