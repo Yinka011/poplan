@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { formatEventName } from "@/lib/events";
+import LoadingView from "@/components/LoadingView";
+import { DEFAULT_FEATURES, resolveProfileFeatures, type Features } from "@/lib/features";
 
 const FEATURE_LIST = [
   {
@@ -68,22 +70,6 @@ const FEATURE_LIST = [
   },
 ];
 
-type Features = Record<string, boolean>;
-const DEFAULT_FEATURES: Features = {
-  brands: true,
-  payment_tracker: true,
-  inventory: true,
-  shipments: true,
-  messages: true,
-  sales: true,
-  checklist: true,
-  marketing: true,
-  planning: true,
-  brand_organizer_hub: false,
-  attendees: true,
-  notifications: true,
-};
-
 type FAQ = { id?: number; question: string; answer: string };
 
 export default function SettingsPage() {
@@ -91,9 +77,13 @@ export default function SettingsPage() {
   const slug = params.slug as string;
   const [activeTab, setActiveTab] = useState<"features" | "payments" | "faqs">("features");
   const [features, setFeatures] = useState<Features>(DEFAULT_FEATURES);
+  const [profileFeatureValues, setProfileFeatureValues] = useState<Record<string, unknown>>({});
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [retry, setRetry] = useState(0);
+  const [loadedSlug, setLoadedSlug] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [recordId, setRecordId] = useState<number | null>(null);
   const [eventCity, setEventCity] = useState("");
   const [eventName, setEventName] = useState(
     slug.charAt(0).toUpperCase() + slug.slice(1),
@@ -109,83 +99,81 @@ export default function SettingsPage() {
   const [savingFaq, setSavingFaq] = useState(false);
 
   useEffect(() => {
-    fetchAll();
-  }, [slug]);
+    let active = true;
+    const fetchAll = async () => {
+      setLoading(true);
+      setLoadError("");
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        if (!user?.email) throw new Error("Please sign in to view settings.");
 
-  const fetchAll = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const orgEmail = user.email || "";
+        const [eventRes, profileRes, faqRes] = await Promise.all([
+          supabase.from("events").select("city, name, collect_payments").eq("slug", slug).maybeSingle(),
+          supabase.from("profiles").select("default_features").eq("id", user.id).maybeSingle(),
+          supabase.from("event_faqs").select("*").eq("event", formatEventName(slug)).eq("organizer_email", user.email).order("id"),
+        ]);
+        const error = eventRes.error || profileRes.error || faqRes.error;
+        if (error) throw error;
 
-    // Resolve event city from slug
-    const { data: eventRow } = await supabase
-      .from("events")
-      .select("city, name, collect_payments")
-      .eq("slug", slug)
-      .maybeSingle();
-    const city = eventRow?.city || "";
-    setEventCity(city);
-    if (eventRow?.name) setEventName(eventRow.name);
-    if (eventRow?.collect_payments === false) setCollectPayments(false);
+        const profileDefaults: unknown = profileRes.data?.default_features;
+        if (profileDefaults != null && (typeof profileDefaults !== "object" || Array.isArray(profileDefaults))) {
+          throw new Error("Profile default features must be an object.");
+        }
+        const merged = resolveProfileFeatures(profileDefaults);
 
-    const [featRes, faqRes] = await Promise.all([
-      supabase
-        .from("organizer_features")
-        .select("*")
-        .eq("organizer_email", orgEmail)
-        .eq("event_slug", slug)
-        .maybeSingle(),
-      supabase
-        .from("event_faqs")
-        .select("*")
-        .eq("event", formatEventName(slug))
-        .eq("organizer_email", orgEmail)
-        .order("id"),
-    ]);
-
-    if (featRes.data) {
-      const f = featRes.data;
-      const merged: Features = { ...DEFAULT_FEATURES };
-      for (const key of Object.keys(DEFAULT_FEATURES)) {
-        if (f[key] !== undefined) merged[key] = f[key];
-      }
-      setFeatures(merged);
-      setRecordId(f.id);
-    }
-
-    if (faqRes.data) {
-      setFaqs(
-        faqRes.data.map((r: any) => ({
+        if (!active) return;
+        setFeatures(merged);
+        setProfileFeatureValues(profileDefaults ? { ...profileDefaults } : {});
+        setEventCity(eventRes.data?.city || "");
+        setEventName(eventRes.data?.name || slug.charAt(0).toUpperCase() + slug.slice(1));
+        setCollectPayments(eventRes.data?.collect_payments !== false);
+        setFaqs((faqRes.data ?? []).map((r) => ({
           id: r.id,
           question: r.question,
           answer: r.answer,
-        })),
-      );
-    }
-  };
+        })));
+      } catch (error) {
+        console.error("Could not load event settings:", error);
+        if (active) setLoadError("Could not load event settings. Please try again.");
+      } finally {
+        if (active) {
+          setLoadedSlug(slug);
+          setLoading(false);
+        }
+      }
+    };
+    void fetchAll();
+    return () => { active = false; };
+  }, [slug, retry]);
 
   const toggleFeature = (key: keyof Features) => {
+    if (saving) return;
     setFeatures((prev) => ({ ...prev, [key]: !prev[key] }));
     setSaved(false);
   };
 
   const saveFeatures = async () => {
     setSaving(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const payload: any = { organizer_email: user.email, event_slug: slug };
-    for (const key of Object.keys(DEFAULT_FEATURES)) {
-      payload[key] = features[key];
+    setSaved(false);
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) throw new Error("Please sign in to save settings.");
+      const { error } = await supabase
+        .from("profiles")
+        .update({ default_features: { ...profileFeatureValues, ...features } })
+        .eq("id", user.id)
+        .select("id")
+        .single();
+      if (error) throw error;
+      setSaved(true);
+    } catch (error) {
+      console.error("Could not save dashboard features:", error);
+      alert("Could not save dashboard features. Please try again.");
+    } finally {
+      setSaving(false);
     }
-    await supabase
-      .from("organizer_features")
-      .upsert(payload, { onConflict: "organizer_email,event_slug" });
-    setSaving(false);
-    setSaved(true);
   };
 
   const savePaymentSettings = async () => {
@@ -277,6 +265,7 @@ export default function SettingsPage() {
       <div
         style={{ maxWidth: "700px", margin: "0 auto", padding: "2rem 1.5rem" }}
       >
+        <LoadingView loading={loading || loadedSlug !== slug} error={loadError} onRetry={() => setRetry((value) => value + 1)}>
         {/* Tabs */}
         <div
           style={{
@@ -333,8 +322,8 @@ export default function SettingsPage() {
                 marginTop: 0,
               }}
             >
-              Choose which features appear in your event dashboard. You can
-              change this at any time.
+              Choose which features appear in your dashboards. These settings
+              are saved to your profile and apply across your events.
             </p>
             {FEATURE_LIST.map((feature) => (
               <div
@@ -648,6 +637,7 @@ export default function SettingsPage() {
             )}
           </div>
         )}
+        </LoadingView>
       </div>
     </div>
   );

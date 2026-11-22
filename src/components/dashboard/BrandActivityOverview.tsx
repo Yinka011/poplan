@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatEventName } from "@/lib/events";
 import LoadingView from "@/components/LoadingView";
 import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
+import { resolveProfileFeatures } from "@/lib/features";
 
 type BrandActivity = {
   id: number;
@@ -49,16 +50,15 @@ export default function BrandActivityOverview({
         } = await supabase.auth.getUser();
         if (authError) throw authError;
         const orgEmail = user?.email;
-        if (!orgEmail)
+        if (!user || !orgEmail)
           throw new Error("Please sign in to view brand activity.");
 
         const [featuresRes, brandsRes, productsRes, tasksRes] =
           await Promise.all([
             supabase
-              .from("organizer_features")
-              .select("features")
-              .eq("organizer_email", orgEmail)
-              .eq("event_slug", eventSlug)
+              .from("profiles")
+              .select("default_features")
+              .eq("id", user.id)
               .maybeSingle(),
             supabase
               .from("brands")
@@ -84,9 +84,7 @@ export default function BrandActivityOverview({
         if (fetchError) throw fetchError;
         if (!active) return;
 
-        setPaymentEnabled(
-          featuresRes.data?.features?.payment_tracker !== false,
-        );
+        setPaymentEnabled(resolveProfileFeatures(featuresRes.data?.default_features).payment_tracker);
         setBrands(
           (brandsRes.data || []).map((b) => ({
             ...b,

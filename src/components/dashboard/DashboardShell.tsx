@@ -4,6 +4,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useOrganizer } from "@/context/OrganizerContext";
+import { DEFAULT_FEATURES, resolveProfileFeatures } from "@/lib/features";
+import LoadingView from "@/components/LoadingView";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -29,7 +31,10 @@ export function DashboardShell({
   const [authenticated, setAuthenticated] = useState(false);
   const signingOutRef = useRef(false);
 
-  const [features, setFeatures] = useState<Record<string, boolean>>({});
+  const [features, setFeatures] = useState(DEFAULT_FEATURES);
+  const [featuresLoading, setFeaturesLoading] = useState(!hideSideNav);
+  const [featuresError, setFeaturesError] = useState("");
+  const [featuresRetry, setFeaturesRetry] = useState(0);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -57,24 +62,36 @@ export function DashboardShell({
   };
 
   useEffect(() => {
+    if (hideSideNav) return;
+    let active = true;
     const fetchFeatures = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.user?.email) return;
-      const { data } = await supabase
-        .from("organizer_features")
-        .select("features")
-        .eq("organizer_email", session.user.email)
-        .eq("event_slug", slug)
-        .maybeSingle();
-      if (data?.features) setFeatures(data.features);
+      setFeaturesLoading(true);
+      setFeaturesError("");
+      try {
+        const { data: { session }, error: authError } = await supabase.auth.getSession();
+        if (authError) throw authError;
+        if (!session?.user) throw new Error("Please sign in to view dashboard features.");
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("default_features")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (error) throw error;
+        const resolved = resolveProfileFeatures(data?.default_features);
+        if (active) setFeatures(resolved);
+      } catch (error) {
+        console.error("Could not load dashboard features:", error);
+        if (active) setFeaturesError("Could not load dashboard features. Please try again.");
+      } finally {
+        if (active) setFeaturesLoading(false);
+      }
     };
-    fetchFeatures();
-  }, [slug]);
+    void fetchFeatures();
+    return () => { active = false; };
+  }, [slug, hideSideNav, featuresRetry]);
 
   const isEnabled = (key: string) =>
-    Object.keys(features).length === 0 || features[key] !== false;
+    features[key] !== false;
 
   const navItems = [
     { label: "Overview", href: `/organizer/events/${slug}` },
@@ -144,6 +161,17 @@ export function DashboardShell({
       <div role="status" className="flex min-h-screen items-center justify-center bg-[#f8faf8] text-[#4a5a52]">
         Loading...
       </div>
+    );
+  }
+
+  if (!hideSideNav && (featuresLoading || featuresError)) {
+    return (
+      <LoadingView
+        screen
+        loading={featuresLoading}
+        error={featuresError}
+        onRetry={() => setFeaturesRetry((value) => value + 1)}
+      />
     );
   }
 

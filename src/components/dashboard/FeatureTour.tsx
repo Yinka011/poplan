@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { resolveProfileFeatures } from "@/lib/features";
 
 // Each step declares which feature key enables it (undefined = always shown)
 const ALL_STEPS = [
@@ -27,7 +28,7 @@ const ALL_STEPS = [
     body: "Track who has paid, who owes, and who is overdue — all from your Brands tab. Mark payments received, add notes, and stop chasing brands across WhatsApp. Everything is in one place and on record.",
   },
   {
-    featureKey: "tasks",
+    featureKey: "brands",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="9 11 12 14 22 4"/>
@@ -38,7 +39,7 @@ const ALL_STEPS = [
     body: "Create tasks for yourself or assign them to specific brands — things like \"send logo by Friday\" or \"confirm table size\". Brands see their tasks in their portal and can mark them done. You see everything from your Planning tab.",
   },
   {
-    featureKey: "messaging",
+    featureKey: "messages",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -48,7 +49,7 @@ const ALL_STEPS = [
     body: "Message any brand from your Messages tab. They reply from their portal. All conversations are threaded, searchable, and on record — no more scattered DMs across three platforms.",
   },
   {
-    featureKey: "insights",
+    featureKey: "sales",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -66,39 +67,37 @@ export default function FeatureTour({ slug }: { slug: string }) {
   const [steps, setSteps] = useState(ALL_STEPS);
 
   useEffect(() => {
-    init();
+    let active = true;
+    const init = async () => {
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        if (!user) throw new Error("Please sign in to view the feature tour.");
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("feature_tour_seen, default_features")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (profile?.feature_tour_seen) return;
+
+        const features = resolveProfileFeatures(profile?.default_features);
+        const filtered = ALL_STEPS.filter(s =>
+          s.featureKey === undefined || features[s.featureKey] !== false
+        );
+        if (active) {
+          setSteps(filtered);
+          setStep(0);
+          setShow(true);
+        }
+      } catch (error) {
+        console.error("Could not load the feature tour:", error);
+      }
+    };
+    void init();
+    return () => { active = false; };
   }, [slug]);
-
-  const init = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // Check if already seen
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("feature_tour_seen")
-      .eq("email", user.email)
-      .maybeSingle();
-    if (profile?.feature_tour_seen) return;
-
-    // Fetch enabled features for this event
-    const { data: featData } = await supabase
-      .from("organizer_features")
-      .select("features")
-      .eq("organizer_email", user.email)
-      .eq("event_slug", slug)
-      .maybeSingle();
-
-    const features = featData?.features || {};
-
-    // Filter steps: always show if no featureKey, otherwise check the feature is enabled (not false)
-    const filtered = ALL_STEPS.filter(s =>
-      s.featureKey === undefined || features[s.featureKey] !== false
-    );
-
-    setSteps(filtered.length > 0 ? filtered : ALL_STEPS);
-    setShow(true);
-  };
 
   const dismiss = async () => {
     setSaving(true);
