@@ -37,7 +37,9 @@ export function DashboardShell({
   const [featuresRetry, setFeaturesRetry] = useState(0);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthenticated(Boolean(session));
       if (!session && !signingOutRef.current) router.replace("/login");
     });
@@ -68,9 +70,13 @@ export function DashboardShell({
       setFeaturesLoading(true);
       setFeaturesError("");
       try {
-        const { data: { session }, error: authError } = await supabase.auth.getSession();
+        const {
+          data: { session },
+          error: authError,
+        } = await supabase.auth.getSession();
         if (authError) throw authError;
-        if (!session?.user) throw new Error("Please sign in to view dashboard features.");
+        if (!session?.user)
+          throw new Error("Please sign in to view dashboard features.");
         const { data, error } = await supabase
           .from("profiles")
           .select("default_features")
@@ -81,17 +87,21 @@ export function DashboardShell({
         if (active) setFeatures(resolved);
       } catch (error) {
         console.error("Could not load dashboard features:", error);
-        if (active) setFeaturesError("Could not load dashboard features. Please try again.");
+        if (active)
+          setFeaturesError(
+            "Could not load dashboard features. Please try again.",
+          );
       } finally {
         if (active) setFeaturesLoading(false);
       }
     };
     void fetchFeatures();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [slug, hideSideNav, featuresRetry]);
 
-  const isEnabled = (key: string) =>
-    features[key] !== false;
+  const isEnabled = (key: string) => features[key] !== false;
 
   const navItems = [
     { label: "Overview", href: `/organizer/events/${slug}` },
@@ -144,7 +154,14 @@ export function DashboardShell({
           },
         ]
       : []),
-    { label: "Payments", href: `/organizer/events/${slug}/payments` },
+    ...(isEnabled("payment_tracker")
+      ? [
+          {
+            label: "Payments",
+            href: `/organizer/events/${slug}/payments`,
+          },
+        ]
+      : []),
     ...(isEnabled("attendees")
       ? [
           {
@@ -158,7 +175,10 @@ export function DashboardShell({
 
   if (!authenticated) {
     return (
-      <div role="status" className="flex min-h-screen items-center justify-center bg-[#f8faf8] text-[#4a5a52]">
+      <div
+        role="status"
+        className="flex min-h-screen items-center justify-center bg-[#f8faf8] text-[#4a5a52]"
+      >
         Loading...
       </div>
     );
@@ -256,7 +276,13 @@ export function DashboardShell({
         </Link>
         {event && (
           <div
-            style={{ marginLeft: "auto", minWidth: 0, overflowWrap: "anywhere", fontSize: "0.8rem", color: "#d4c87a" }}
+            style={{
+              marginLeft: "auto",
+              minWidth: 0,
+              overflowWrap: "anywhere",
+              fontSize: "0.8rem",
+              color: "#d4c87a",
+            }}
           >
             {event.name}
           </div>
