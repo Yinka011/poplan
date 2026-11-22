@@ -190,34 +190,28 @@ export default function PlanningHub() {
             .from("planning_decor")
             .select("*")
             .eq("event", formatEventName(slug))
-            .eq("organizer_email", organizerEmail)
             .order("category"),
           supabase
             .from("planning_refreshments")
             .select("*")
-            .eq("event", formatEventName(slug))
-            .eq("organizer_email", organizerEmail),
+            .eq("event", formatEventName(slug)),
           supabase
             .from("planning_staff")
             .select("*")
-            .eq("event", formatEventName(slug))
-            .eq("organizer_email", organizerEmail),
+            .eq("event", formatEventName(slug)),
           supabase
             .from("planning_staff_shifts")
             .select("*")
-            .eq("event", formatEventName(slug))
-            .eq("organizer_email", organizerEmail),
+            .eq("event", formatEventName(slug)),
           supabase
             .from("staff_hours")
             .select("*")
             .eq("event", formatEventName(slug))
-            .eq("organizer_email", organizerEmail)
             .order("work_date", { ascending: false }),
           supabase
             .from("event_staff")
             .select("*")
-            .eq("event", formatEventName(slug))
-            .eq("organizer_email", organizerEmail),
+            .eq("event", formatEventName(slug)),
         ]);
         const error =
           d.error || r.error || s.error || sh.error || hours.error || es.error;
@@ -570,8 +564,7 @@ export default function PlanningHub() {
             notes: editData.notes,
           })
           .eq("id", saveId)
-          .eq("event", eventCity)
-          .eq("organizer_email", organizerEmail)
+          .eq("event", formatEventName(slug))
           .select()
           .single();
         if (error) throw error;
@@ -591,8 +584,7 @@ export default function PlanningHub() {
             notes: editData.notes,
           })
           .eq("id", saveId)
-          .eq("event", eventCity)
-          .eq("organizer_email", organizerEmail)
+          .eq("event", formatEventName(slug))
           .select()
           .single();
         if (error) throw error;
@@ -611,8 +603,7 @@ export default function PlanningHub() {
             notes: editData.notes,
           })
           .eq("id", saveId)
-          .eq("event", eventCity)
-          .eq("organizer_email", organizerEmail)
+          .eq("event", formatEventName(slug))
           .select()
           .single();
         if (error) throw error;
