@@ -36,6 +36,9 @@ export default function Onboarding() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [setupError, setSetupError] = useState("");
+  const [checkError, setCheckError] = useState("");
+  const [checkRetry, setCheckRetry] = useState(0);
   const [features, setFeatures] = useState<Record<string, boolean>>({
     brands: true, payment_tracker: true, inventory: true, shipments: true,
     messages: true, sales: false, checklist: true, marketing: false,
@@ -54,31 +57,65 @@ export default function Onboarding() {
   }, []);
 
   useEffect(() => {
+    let active = true;
     const checkRole = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setChecking(false); return; }
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_email", user.email).limit(1);
-      const role = roles?.[0]?.role;
-      if (role === "brand_organizer") { router.push("/brand-organizer"); return; }
-      if (role === "organizer" || role === "planner") { router.push("/organizer/events"); return; }
-      setChecking(false);
+      setChecking(true);
+      setCheckError("");
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError && authError.name !== "AuthSessionMissingError") throw authError;
+        if (!user) return;
+        if (!user.email) throw new Error("The signed-in user has no email address.");
+        const [rolesRes, profileRes] = await Promise.all([
+          supabase.from("user_roles").select("role").eq("user_email", user.email).limit(1),
+          supabase.from("profiles").select("id, name").eq("id", user.id).maybeSingle(),
+        ]);
+        if (rolesRes.error) throw rolesRes.error;
+        if (profileRes.error) throw profileRes.error;
+        if (!active) return;
+        const role = rolesRes.data?.[0]?.role;
+        if (role === "organizer" || role === "brand_organizer" || role === "planner") {
+          if (profileRes.data) {
+            router.push(role === "brand_organizer" ? "/brand-organizer" : "/organizer/events");
+            return;
+          }
+          setSelected(role);
+        }
+        if (profileRes.data?.name) setName(profileRes.data.name);
+      } catch (error) {
+        console.error("Could not check onboarding status:", error);
+        if (active) setCheckError("Could not check your account. Please try again.");
+      } finally {
+        if (active) setChecking(false);
+      }
     };
-    checkRole();
-  }, []);
+    void checkRole();
+    return () => { active = false; };
+  }, [router, checkRetry]);
 
   const handleRoleContinue = async () => {
     if (!selected || !name.trim()) return;
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/login"); return; }
-    await Promise.all([
-      supabase.from("user_roles").upsert({ user_email: user.email, role: selected }),
-      supabase.from("profiles").upsert({ email: user.email, name, organizer_mode: selected }),
-    ]);
-    if (selected === "brand_organizer") { router.push("/brand-organizer"); return; }
-    if (selected === "planner") { router.push("/organizer/events"); return; }
-    setStep("welcome");
-    setLoading(false);
+    setSetupError("");
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) { router.push("/login"); return; }
+      if (!user.email) throw new Error("The signed-in user has no email address.");
+      const { error: profileError } = await supabase.from("profiles")
+        .upsert({ id: user.id, email: user.email, name: name.trim(), organizer_mode: selected }, { onConflict: "id" });
+      if (profileError) throw profileError;
+      const { error: roleError } = await supabase.from("user_roles").upsert({ user_email: user.email, role: selected });
+      if (roleError) throw roleError;
+      if (selected === "brand_organizer") { router.push("/brand-organizer"); return; }
+      if (selected === "planner") { router.push("/organizer/events"); return; }
+      setStep("welcome");
+    } catch (error) {
+      console.error("Could not save onboarding profile and role:", error);
+      setSetupError("Could not save your profile and role. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFeaturesSave = async () => {
@@ -110,6 +147,13 @@ export default function Onboarding() {
 
   if (checking) return (
     <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center",  color: "#4a5a52" }}>Loading...</div>
+  );
+
+  if (checkError) return (
+    <div role="alert" style={{ textAlign: "center", padding: "2rem", color: "#4a5a52" }}>
+      <p>{checkError}</p>
+      <button onClick={() => setCheckRetry((value) => value + 1)}>Retry</button>
+    </div>
   );
 
   // STEP: WELCOME
@@ -236,12 +280,12 @@ export default function Onboarding() {
         <div style={{ fontSize: "0.8rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "1rem", textAlign: "center" as const }}>WHAT BEST DESCRIBES YOU?</div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
-          {[
+          {([
             { key: "organizer", icon: "🏪", title: "I host pop-ups for multiple brands", desc: "You curate and manage events, inviting brands to participate." },
             { key: "brand_organizer", icon: "✈️", title: "I run my own brand across multiple cities", desc: "You take your brand to pop-ups in different locations worldwide." },
             { key: "planner", icon: "📋", title: "I plan pop-ups on behalf of brands", desc: "You are hired by brands to organize and manage their pop-up events." },
-          ].map(role => (
-            <button key={role.key} onClick={() => setSelected(role.key as any)} style={{ padding: "1.5rem", background: selected === role.key ? "#1B3A2D" : "#fff", color: selected === role.key ? "#fff" : "#1B3A2D", border: `2px solid ${selected === role.key ? "#1B3A2D" : "#e4ebe6"}`, borderRadius: "14px", cursor: "pointer", textAlign: "left" as const }}>
+          ] as const).map(role => (
+            <button key={role.key} onClick={() => setSelected(role.key)} style={{ padding: "1.5rem", background: selected === role.key ? "#1B3A2D" : "#fff", color: selected === role.key ? "#fff" : "#1B3A2D", border: `2px solid ${selected === role.key ? "#1B3A2D" : "#e4ebe6"}`, borderRadius: "14px", cursor: "pointer", textAlign: "left" as const }}>
               <div style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{role.icon}</div>
               <div style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>{role.title}</div>
               <div style={{ fontSize: "0.75rem", color: selected === role.key ? "#d4c87a" : "#4a5a52", lineHeight: 1.5 }}>{role.desc}</div>
@@ -249,6 +293,7 @@ export default function Onboarding() {
           ))}
         </div>
 
+        {setupError && <p role="alert" style={{ color: "#c0392b", marginBottom: "1rem" }}>{setupError}</p>}
         <button onClick={handleRoleContinue} disabled={!selected || !name.trim() || loading} style={{ width: "100%", padding: "1rem", background: selected && name.trim() ? "#1B3A2D" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem",  cursor: selected && name.trim() ? "pointer" : "not-allowed" }}>
           {loading ? "Setting up..." : "Continue →"}
         </button>

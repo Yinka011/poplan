@@ -2,6 +2,18 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
+async function organizerDestination(userId: string, userEmail: string | undefined) {
+  if (!userEmail) throw new Error("The signed-in user has no email address.");
+  const [roleRes, profileRes] = await Promise.all([
+    supabase.from("user_roles").select("role").eq("user_email", userEmail).maybeSingle(),
+    supabase.from("profiles").select("id").eq("id", userId).maybeSingle(),
+  ]);
+  if (roleRes.error) throw roleRes.error;
+  if (profileRes.error) throw profileRes.error;
+  if (!roleRes.data || !profileRes.data) return "/onboarding";
+  return roleRes.data.role === "brand_organizer" ? "/brand-organizer" : "/organizer/events";
+}
+
 export default function LoginPage() {
   const [mode, setMode] = useState<
     "home" | "organizer-login" | "brand-login" | "forgot"
@@ -42,22 +54,14 @@ export default function LoginPage() {
       return;
     }
     // Check role and redirect
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_email", user.email)
-        .single();
-      if (!roleData) {
-        window.location.href = "/onboarding";
-      } else if (roleData.role === "brand_organizer") {
-        window.location.href = "/brand-organizer";
-      } else {
-        window.location.href = "/organizer/events";
-      }
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) throw new Error("No signed-in user.");
+      window.location.href = await organizerDestination(user.id, user.email);
+    } catch (error) {
+      console.error("Could not check account setup:", error);
+      setError("Could not check your account. Please try again.");
     }
     setSettingPassword(false);
   };
@@ -66,7 +70,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -75,17 +79,12 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_email", email)
-      .single();
-    if (!roleData) {
-      window.location.href = "/onboarding";
-    } else if (roleData.role === "brand_organizer") {
-      window.location.href = "/brand-organizer";
-    } else {
-      window.location.href = "/organizer/events";
+    try {
+      window.location.href = await organizerDestination(authData.user.id, authData.user.email);
+    } catch (error) {
+      console.error("Could not check account setup:", error);
+      setError("Could not check your account. Please try again.");
+      setLoading(false);
     }
   };
 

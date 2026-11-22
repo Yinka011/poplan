@@ -18,7 +18,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -27,12 +27,29 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    const { data: roleData } = await supabase
+    const { data: roleData, error: roleError } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_email", email)
-      .single();
-    if (!roleData) {
+      .eq("user_email", authData.user.email)
+      .maybeSingle();
+    if (roleError) {
+      console.error("Could not load user role:", roleError);
+      setError("Could not check your account. Please try again.");
+      setLoading(false);
+      return;
+    }
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", authData.user.id)
+      .maybeSingle();
+    if (profileError) {
+      console.error("Could not load user profile:", profileError);
+      setError("Could not check your profile. Please try again.");
+      setLoading(false);
+      return;
+    }
+    if (!roleData || !profile) {
       window.location.href = "/onboarding";
     } else if (roleData.role === "brand_organizer") {
       window.location.href = "/brand-organizer";
