@@ -1,6 +1,6 @@
 "use client";
 import { useOrganizer } from "@/context/OrganizerContext";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -45,29 +45,34 @@ export default function NotificationsPage() {
   const params = useParams();
   const slug = params.slug as string;
   const event = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const [eventDisplayName, setEventDisplayName] = useState(event);
 
   const [notifications, setNotifications] = useState<OrgNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [slug, organizerEmail]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!organizerEmail) return;
-    const { data } = await supabase
-      .from("organizer_notifications")
-      .select("*")
-      .eq("event", event)
-      .eq("organizer_email", organizerEmail)
-      .order("created_at", { ascending: false });
-    if (data) setNotifications(data);
+    const [notificationsRes, eventRes] = await Promise.all([
+      supabase
+        .from("organizer_notifications")
+        .select("*")
+        .eq("event", event)
+        .eq("organizer_email", organizerEmail)
+        .order("created_at", { ascending: false }),
+      supabase.from("events").select("name, city").eq("slug", slug).maybeSingle(),
+    ]);
+    if (notificationsRes.data) setNotifications(notificationsRes.data);
+    setEventDisplayName(eventRes.data?.name || eventRes.data?.city || event);
     setLoading(false);
 
     // Mark all as read
     await supabase.from("organizer_notifications").update({ read: true }).eq("event", event).eq("organizer_email", organizerEmail).eq("read", false);
-  };
+  }, [event, organizerEmail, slug]);
+
+  useEffect(() => {
+    void fetchNotifications();
+  }, [fetchNotifications]);
 
   const formatTime = (ts: string) => {
     const d = new Date(ts);
@@ -92,8 +97,8 @@ export default function NotificationsPage() {
       
       {/* Header */}
       <div style={{ background: "#1B3A2D", padding: "1rem 2rem", display: "flex", alignItems: "center", gap: "1rem" }}>
-        <Link href={`/organizer/events/${slug}`} style={{ fontSize: "0.8rem", color: "#E8C97A", textDecoration: "none" }}>← Back to event</Link>
-        <div style={{ fontSize: "1rem", color: "#fff" }}>Brand Activity — {event}</div>
+        <Link href={`/organizer/events/${slug}`} style={{ fontSize: "0.8rem", color: "#E8C97A", textDecoration: "none" }}>← Back to {eventDisplayName}</Link>
+        <div style={{ fontSize: "1rem", color: "#fff" }}>Brand Activity — {eventDisplayName}</div>
         <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "#ffffff55" }}>{notifications.length} total activities</div>
       </div>
 

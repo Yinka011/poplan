@@ -87,6 +87,9 @@ export default function SalesPage() {
   >({});
   const [savingPayout, setSavingPayout] = useState<string | null>(null);
   const savingPayoutRef = useRef(false);
+  const [eventDisplayName, setEventDisplayName] = useState(
+    formatEventName(slug),
+  );
   const [eventDates, setEventDates] = useState<EventDates | null>(null);
   const [datesRetry, setDatesRetry] = useState(0);
   const currentDates = eventDates?.slug === slug ? eventDates : null;
@@ -102,14 +105,17 @@ export default function SalesPage() {
       try {
         const { data, error } = await supabase
           .from("events")
-          .select("start_date, end_date")
+          .select("name, start_date, end_date")
           .eq("slug", slug)
           .maybeSingle();
         if (error) throw error;
         if (!data) throw new Error("Event not found.");
         const startDate = dateInputValue(data.start_date);
         const endDate = dateInputValue(data.end_date);
-        if (active) setEventDates({ slug, startDate, endDate, error: "" });
+        if (active) {
+          setEventDates({ slug, startDate, endDate, error: "" });
+          setEventDisplayName(data.name || formatEventName(slug));
+        }
       } catch (error) {
         console.error("Could not load event dates:", error);
         if (active)
@@ -217,23 +223,11 @@ export default function SalesPage() {
         }),
       });
       const data = await res.json();
-      const skipped = (data.skipped ?? []) as {
-        order_id: string;
-        item_name?: string;
-        variation_name?: string;
-        reason: string;
-      }[];
-      const details = skipped
-        .map(
-          (item) =>
-            `Order ${item.order_id}${item.item_name ? `, ${item.item_name}` : ""}${item.variation_name ? ` (${item.variation_name})` : ""}: ${item.reason}`,
-        )
-        .join("\n");
       if (data.success) {
         const refreshed = await fetchData();
         if (refreshed) {
           alert(
-            `Synced! ${data.orders_processed} orders processed, ${data.sales_inserted} new sales added.${details ? `\n\nSkipped:\n${details}` : ""}`,
+            `Synced! ${data.orders_processed} orders processed, ${data.sales_inserted} new sales added.`,
           );
         }
       } else {
@@ -241,9 +235,7 @@ export default function SalesPage() {
         const failedDetails = failedItem
           ? `\nOrder ${failedItem.order_id}${failedItem.item_name ? `, ${failedItem.item_name}` : ""}${failedItem.variation_name ? ` (${failedItem.variation_name})` : ""}`
           : "";
-        alert(
-          `Error: ${data.error || "Sync failed"}${failedDetails}${details ? `\n\nSkipped before the error:\n${details}` : ""}`,
-        );
+        alert(`Error: ${data.error || "Sync failed"}${failedDetails}`);
         await fetchData();
       }
     } catch (error) {
@@ -448,10 +440,10 @@ export default function SalesPage() {
             textDecoration: "none",
           }}
         >
-          ← Back to event
+          ← Back to {eventDisplayName}
         </Link>
         <div style={{ fontSize: "1rem", color: "#fff" }}>
-          Sales & Payouts — {formatEventName(slug)}
+          Sales & Payouts — {eventDisplayName}
         </div>
       </div>
 

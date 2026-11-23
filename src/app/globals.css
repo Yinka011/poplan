@@ -24,7 +24,7 @@
   }
 
   body {
-    @apply bg-nude-50 text-brown-800 font-space-grotesk;
+    @apply bg-nude-50 text-brown-800 font-display;
   }
 }
 

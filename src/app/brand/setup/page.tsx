@@ -52,7 +52,7 @@ function BrandSetupInner() {
     try {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) throw error;
-    window.location.href = next === "onboarding" ? "/onboarding" : "/brand/portal";
+    window.location.href = next === "onboarding" ? "/onboarding" : "/brand";
     } catch (error) {
       console.error("Could not set password:", error);
       alert("Could not set your password. Please try again.");

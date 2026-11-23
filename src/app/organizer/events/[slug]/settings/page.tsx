@@ -255,7 +255,7 @@ export default function SettingsPage() {
             textDecoration: "none",
           }}
         >
-          ← Back to event
+          ← Back to {eventName}
         </Link>
         <div style={{ fontSize: "1rem", color: "#fff" }}>
           Settings — {eventName}
