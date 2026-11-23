@@ -241,7 +241,7 @@ export default function MessagesPage() {
             textDecoration: "none",
           }}
         >
-          ← Back
+          ← Back to {eventDisplayName}
         </Link>
         <div style={{ fontSize: "1rem", color: "#fff" }}>
           Messages — {eventDisplayName}

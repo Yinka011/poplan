@@ -33,6 +33,8 @@ type Brand = {
   bio?: string;
   logo_url?: string;
   organizer_email?: string;
+  event_display_name?: string;
+  organizer_display_name?: string;
 };
 
 type Deadline = {
@@ -86,6 +88,11 @@ const FILE_CATEGORIES = [
 ];
 
 // FAQs are loaded from DB per organizer
+const prettifyEventLabel = (value: string) =>
+  value
+    .replace(/-\d+$/, "")
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 
 export default function BrandPortal() {
   const [brand, setBrand] = useState<Brand | null>(null);
@@ -246,16 +253,85 @@ export default function BrandPortal() {
         }
         brands = [...new Map(brands.map((item) => [item.id, item])).values()];
 
+        const uniqueOrganizerEmails = [
+          ...new Set(
+            brands
+              .map((item) => item.organizer_email)
+              .filter((value): value is string => !!value),
+          ),
+        ];
+        const organizerMeta = await Promise.all(
+          uniqueOrganizerEmails.map(async (organizerEmail) => {
+            const [eventOptionsRes, organizerProfileRes] = await Promise.all([
+              supabase
+                .from("events")
+                .select("slug, name, city")
+                .eq("organizer_email", organizerEmail),
+              supabase
+                .from("profiles")
+                .select("name")
+                .eq("email", organizerEmail)
+                .maybeSingle(),
+            ]);
+            if (eventOptionsRes.error) throw eventOptionsRes.error;
+            if (organizerProfileRes.error) throw organizerProfileRes.error;
+            return {
+              organizerEmail,
+              organizerName:
+                organizerProfileRes.data?.name ||
+                organizerEmail.split("@")[0] ||
+                "",
+              events: eventOptionsRes.data ?? [],
+            };
+          }),
+        );
+        const organizerMetaMap = new Map(
+          organizerMeta.map((item) => [item.organizerEmail, item]),
+        );
+        brands = brands.map((item) => {
+          const meta = item.organizer_email
+            ? organizerMetaMap.get(item.organizer_email)
+            : undefined;
+          const normalizedEvent = item.event.trim().toLowerCase();
+          const matchedEvent = meta?.events.find((eventItem) => {
+            const normalizedSlug = eventItem.slug?.trim().toLowerCase() || "";
+            const normalizedCity = eventItem.city?.trim().toLowerCase() || "";
+            return (
+              normalizedSlug === normalizedEvent ||
+              normalizedCity === normalizedEvent
+            );
+          });
+          return {
+            ...item,
+            event_display_name:
+              matchedEvent?.name || prettifyEventLabel(item.event),
+            organizer_display_name:
+              meta?.organizerName ||
+              item.organizer_email?.split("@")[0] ||
+              "Organizer",
+          };
+        });
+
         if (!active) return;
         setAvailableBrands(brands);
         setSelectedBrandId(brands[0] ? String(brands[0].id) : "");
-        const requestedId = new URLSearchParams(window.location.search).get(
-          "brand",
-        );
+        const params = new URLSearchParams(window.location.search);
+        const requestedId = params.get("brand");
+        const requestedEvent = params.get("event");
+        if (!requestedId && !requestedEvent && brands.length > 1) {
+          window.location.href = "/brand";
+          return;
+        }
         const loadedBrand = requestedId
           ? brands.find((item) => String(item.id) === requestedId)
+          : requestedEvent
+            ? brands.find((item) => item.event === requestedEvent) ||
+              brands.find(
+                (item) =>
+                  item.event.toLowerCase() === requestedEvent.toLowerCase(),
+              )
           : brands[0];
-        if (requestedId && !loadedBrand) {
+        if ((requestedId || requestedEvent) && !loadedBrand) {
           throw new Error("The selected brand event is unavailable.");
         }
         if (!loadedBrand) {
@@ -797,7 +873,7 @@ export default function BrandPortal() {
       >
         {availableBrands.map((item) => (
           <option key={item.id} value={String(item.id)}>
-            {item.event} — {item.name} (#{item.id})
+            {item.organizer_display_name} — {item.event_display_name} ({item.name})
           </option>
         ))}
       </select>
@@ -811,12 +887,19 @@ export default function BrandPortal() {
           <div style={{ padding: "1rem" }}>
             {eventSelector}
             {availableBrands.length > 0 && (
-              <a
-                href="/brand/portal"
-                style={{ marginLeft: "1rem", color: "#1B3A2D" }}
-              >
-                Open default event
-              </a>
+              <>
+                <a
+                  href="/brand/portal"
+                  style={{ marginLeft: "1rem", color: "#1B3A2D" }}
+                >
+                  Open default event
+                </a>
+                {availableBrands.length > 1 && (
+                  <a href="/brand" style={{ marginLeft: "1rem", color: "#1B3A2D" }}>
+                    View all events
+                  </a>
+                )}
+              </>
             )}
           </div>
         )}
@@ -940,6 +1023,11 @@ export default function BrandPortal() {
             }}
           >
             {eventSelector}
+            {availableBrands.length > 1 && (
+              <a href="/brand" style={{ fontSize: "0.82rem", color: "#4a5a52" }}>
+                View all events
+              </a>
+            )}
             <span style={{ fontSize: "0.85rem", color: "#4a5a52" }}>
               {brand.name}
             </span>

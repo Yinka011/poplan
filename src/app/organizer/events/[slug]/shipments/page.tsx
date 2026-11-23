@@ -24,6 +24,9 @@ export default function ShipmentsPage() {
   const { organizerEmail, loading: organizerLoading } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
+  const [eventDisplayName, setEventDisplayName] = useState(
+    slug.charAt(0).toUpperCase() + slug.slice(1),
+  );
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [brands, setBrands] = useState<{email: string; name: string; shipped: boolean; shipped_at?: string; courier?: string; tracking_number?: string; shipping_invoice?: string;}[]>([]);
   const [brandInvoices, setBrandInvoices] = useState<{id: number; brand_email: string; file_name: string; file_url: string; amount: number; description: string; created_at: string;}[]>([]);
@@ -44,7 +47,13 @@ export default function ShipmentsPage() {
       setLoadError("");
       try {
         if (!organizerEmail) throw new Error("Please sign in to view shipments.");
-        const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+        const { data: eventData, error: eventError } = await supabase
+          .from("events")
+          .select("name, city")
+          .eq("slug", slug)
+          .maybeSingle();
+        if (eventError) throw eventError;
+        const eventName = eventData?.city || slug.charAt(0).toUpperCase() + slug.slice(1);
         const [shipmentsRes, brandsRes, invoicesRes] = await Promise.all([
           supabase.from("shipments").select("*").eq("event_slug", slug).order("created_at"),
           supabase.from("brands").select("email, name, shipped, shipped_at, courier, tracking_number, shipping_invoice").eq("event", eventName).eq("organizer_email", organizerEmail),
@@ -56,6 +65,7 @@ export default function ShipmentsPage() {
         setShipments(shipmentsRes.data ?? []);
         setBrands(brandsRes.data ?? []);
         setBrandInvoices(invoicesRes.data ?? []);
+        setEventDisplayName(eventData?.name || eventName);
       } catch (error) {
         if (!active) return;
         console.error("Failed to load shipments:", error);
@@ -86,8 +96,8 @@ export default function ShipmentsPage() {
   return (
     <div className="[overflow-wrap:anywhere]" style={{ minHeight: "100vh", background: "#f8faf8" }}>
       <div style={{ background: "#1B3A2D", padding: "1rem 2rem", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
-        <Link href={`/organizer/events/${slug}`} style={{ fontSize: "0.8rem", color: "#E8C97A", textDecoration: "none" }}>← Back to event</Link>
-        <div style={{ fontSize: "1rem", color: "#fff" }}>Shipments — {slug.charAt(0).toUpperCase() + slug.slice(1)}</div>
+        <Link href={`/organizer/events/${slug}`} style={{ fontSize: "0.8rem", color: "#E8C97A", textDecoration: "none" }}>← Back to {eventDisplayName}</Link>
+        <div style={{ fontSize: "1rem", color: "#fff" }}>Shipments — {eventDisplayName}</div>
       </div>
 
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem 1.5rem" }}>

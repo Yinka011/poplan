@@ -117,7 +117,7 @@ export default function LoginPage() {
     ) {
       window.location.href = "/brand-hub";
     } else {
-      window.location.href = "/brand/portal";
+      window.location.href = "/brand";
     }
   };
 

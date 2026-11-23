@@ -23,7 +23,8 @@ export default function AttendeesPage() {
   const { organizerEmail, loading: organizerLoading } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
-  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const fallbackEventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const [eventName, setEventName] = useState(fallbackEventName);
   const [shoppers, setShoppers] = useState<Shopper[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -43,13 +44,20 @@ export default function AttendeesPage() {
       setLoadError("");
       try {
         if (!organizerEmail) throw new Error("Please sign in to view attendees.");
-        const { data, error } = await supabase
-          .from("shopper_registrations")
-          .select("*")
-          .eq("event_slug", slug)
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        if (active) setShoppers(data ?? []);
+        const [shopperRes, eventRes] = await Promise.all([
+          supabase
+            .from("shopper_registrations")
+            .select("*")
+            .eq("event_slug", slug)
+            .order("created_at", { ascending: false }),
+          supabase.from("events").select("name, city").eq("slug", slug).maybeSingle(),
+        ]);
+        if (shopperRes.error) throw shopperRes.error;
+        if (eventRes.error) throw eventRes.error;
+        if (active) {
+          setShoppers(shopperRes.data ?? []);
+          setEventName(eventRes.data?.name || eventRes.data?.city || fallbackEventName);
+        }
       } catch (error) {
         if (!active) return;
         console.error("Failed to load attendees:", error);
@@ -63,7 +71,7 @@ export default function AttendeesPage() {
     };
     void fetchShoppers();
     return () => { active = false; };
-  }, [slug, organizerEmail, organizerLoading, loadKey, retry]);
+  }, [slug, organizerEmail, organizerLoading, loadKey, retry, fallbackEventName]);
 
   const copyRegistrationLink = async () => {
     if (copying) return;
@@ -152,7 +160,7 @@ export default function AttendeesPage() {
               textDecoration: "none",
             }}
           >
-            ← Back
+            ← Back to {eventName}
           </Link>
           <div style={{ fontSize: "1rem", color: "#fff" }}>
             Attendees — {eventName}

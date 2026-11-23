@@ -45,7 +45,24 @@ export default function BrandHome() {
           .limit(1)
           .maybeSingle();
         if (memberRes?.brand_email) {
-          window.location.href = `/brand/portal?event=${encodeURIComponent(memberRes.event)}`;
+          const { data: memberBrand, error: memberBrandError } = await supabase
+            .from("brands")
+            .select("id")
+            .eq("email", memberRes.brand_email)
+            .eq("event", memberRes.event)
+            .order("id", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (memberBrandError) {
+            setError("Could not load your events.");
+            setLoading(false);
+            return;
+          }
+          if (memberBrand?.id) {
+            window.location.href = `/brand/portal?brand=${encodeURIComponent(String(memberBrand.id))}`;
+          } else {
+            window.location.href = `/brand/portal?event=${encodeURIComponent(memberRes.event)}`;
+          }
         } else {
           setError("No brand found for " + user.email + ". Please contact your organizer.");
           setLoading(false);
@@ -55,13 +72,13 @@ export default function BrandHome() {
 
       // If only one event, go straight to portal
       if (brandRows.length === 1) {
-        window.location.href = `/brand/portal?event=${encodeURIComponent(brandRows[0].event)}`;
+        window.location.href = `/brand/portal?brand=${encodeURIComponent(String(brandRows[0].id))}`;
         return;
       }
 
       // Fetch all events + profile per organizer upfront
       const uniqueOrgs = [...new Set(brandRows.map((r) => r.organizer_email).filter(Boolean))];
-      const orgDataMap: Record<string, { events: {name:string;slug:string;start_date:string;dates_label:string}[]; orgName: string }> = {};
+      const orgDataMap: Record<string, { events: {name:string;slug:string;start_date:string;dates_label:string;collect_payments?: boolean}[]; orgName: string }> = {};
       await Promise.all(uniqueOrgs.map(async (orgEmail) => {
         const [{ data: evts }, { data: prof }] = await Promise.all([
           supabase.from("events").select("name, slug, start_date, dates_label, collect_payments").eq("organizer_email", orgEmail).order("start_date", { ascending: true }),
@@ -78,7 +95,7 @@ export default function BrandHome() {
 
         // Try exact slug match (case-insensitive), then partial
         const rowEvent = (row.event || "").trim().toLowerCase();
-        let eventData = orgEvents.find((e) => (e.slug || "").trim().toLowerCase() === rowEvent)
+        const eventData = orgEvents.find((e) => (e.slug || "").trim().toLowerCase() === rowEvent)
           || orgEvents.find((e) => rowEvent.includes((e.slug || "").trim().toLowerCase()) || (e.slug || "").trim().toLowerCase().includes(rowEvent))
           || null;
 
@@ -96,7 +113,7 @@ export default function BrandHome() {
           event_name: eventData?.name || cleanSlug,
           dates_label: dateDisplay,
           organizer_name: orgName,
-          collect_payments: eventData ? (eventData as any).collect_payments !== false : true,
+          collect_payments: eventData ? eventData.collect_payments !== false : true,
         };
       });
 
@@ -149,7 +166,7 @@ export default function BrandHome() {
           {events.map((ev) => (
             <button
               key={ev.id}
-              onClick={() => { window.location.href = `/brand/portal?event=${encodeURIComponent(ev.event)}`; }}
+              onClick={() => { window.location.href = `/brand/portal?brand=${encodeURIComponent(String(ev.id))}`; }}
               style={{ background: "#fff", border: "1px solid #e4ebe6", borderRadius: "16px", padding: "1.5rem 2rem", textAlign: "left", cursor: "pointer", transition: "box-shadow 0.15s", width: "100%" }}
               onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)")}
               onMouseLeave={e => (e.currentTarget.style.boxShadow = "none")}

@@ -116,7 +116,8 @@ export default function PlanningHub() {
   const { organizerEmail, loading: organizerLoading } = useOrganizer();
   const params = useParams();
   const slug = params.slug as string;
-  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const fallbackEventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const [eventName, setEventName] = useState(fallbackEventName);
   const [tab, setTab] = useState<"decor" | "refreshments" | "staff">("decor");
   const [decor, setDecor] = useState<DecorItem[]>([]);
   const [refresh, setRefresh] = useState<RefreshItem[]>([]);
@@ -179,7 +180,7 @@ export default function PlanningHub() {
           throw new Error("Please sign in to view planning.");
         const { data: eventData, error: eventError } = await supabase
           .from("events")
-          .select("city")
+          .select("name, city")
           .eq("slug", slug)
           .maybeSingle();
         if (eventError) throw eventError;
@@ -218,6 +219,7 @@ export default function PlanningHub() {
         if (error) throw error;
         if (!active) return;
         setEventCity(resolvedCity);
+        setEventName(eventData?.name || resolvedCity || fallbackEventName);
         setDecor(d.data ?? []);
         setRefresh(r.data ?? []);
         setStaffHours(hours.data ?? []);
@@ -250,7 +252,7 @@ export default function PlanningHub() {
     return () => {
       active = false;
     };
-  }, [slug, organizerEmail, organizerLoading, loadKey, retry]);
+  }, [slug, organizerEmail, organizerLoading, loadKey, retry, fallbackEventName]);
 
   const addDecor = async () => {
     if (saving) return;

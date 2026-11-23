@@ -177,7 +177,8 @@ export default function OrganizerBrandPage() {
 }
 
 function BrandPage({ slug, brandSlug }: { slug: string; brandSlug: string }) {
-  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const fallbackEventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const [eventName, setEventName] = useState(fallbackEventName);
 
   const [brand, setBrand] = useState<Brand | null>(null);
   const [eventCity, setEventCity] = useState(eventName);
@@ -227,11 +228,13 @@ function BrandPage({ slug, brandSlug }: { slug: string; brandSlug: string }) {
         // Resolve event city from DB (slug may include a timestamp suffix)
         const { data: eventRow, error: eventError } = await supabase
           .from("events")
-          .select("city")
+          .select("name, city")
           .eq("slug", slug)
           .maybeSingle();
         if (eventError) throw eventError;
-        const resolvedCity = eventRow?.city || eventName;
+        const resolvedCity = eventRow?.city || fallbackEventName;
+        const resolvedEventName =
+          eventRow?.name || eventRow?.city || fallbackEventName;
 
         const { data: brandData, error: brandError } = await supabase
           .from("brands")
@@ -301,6 +304,7 @@ function BrandPage({ slug, brandSlug }: { slug: string; brandSlug: string }) {
         if (!active) return;
         setUserEmail(orgEmail);
         setEventCity(resolvedCity);
+        setEventName(resolvedEventName);
         setBrand(brandData);
         setDeadlines(deadlineRes.data ?? []);
         setTasks(taskRes.data ?? []);
@@ -326,7 +330,7 @@ function BrandPage({ slug, brandSlug }: { slug: string; brandSlug: string }) {
     return () => {
       active = false;
     };
-  }, [brandSlug, slug, eventName, retry]);
+  }, [brandSlug, slug, fallbackEventName, retry]);
 
   const runAction = async (
     key: string,

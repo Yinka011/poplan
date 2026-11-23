@@ -37,7 +37,8 @@ const categoryColors: Record<string, string> = {
 export default function ExpensesPage() {
   const { organizerEmail, loading: organizerLoading } = useOrganizer();
   const { slug } = useParams<{ slug: string }>();
-  const eventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const fallbackEventName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const [eventName, setEventName] = useState(fallbackEventName);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [decorTotal, setDecorTotal] = useState(0);
   const [refreshTotal, setRefreshTotal] = useState(0);
@@ -78,7 +79,7 @@ export default function ExpensesPage() {
       try {
         if (!organizerEmail)
           throw new Error("Please sign in to view expenses.");
-        const [expRes, decorRes, refreshRes, staffRes, settingsRes] =
+        const [expRes, decorRes, refreshRes, staffRes, settingsRes, eventRes] =
           await Promise.all([
             supabase
               .from("expenses")
@@ -107,13 +108,19 @@ export default function ExpensesPage() {
               .eq("event", formatEventName(slug))
               .eq("organizer_email", organizerEmail)
               .maybeSingle(),
+            supabase
+              .from("events")
+              .select("name, city")
+              .eq("slug", slug)
+              .maybeSingle(),
           ]);
         const error =
           expRes.error ||
           decorRes.error ||
           refreshRes.error ||
           staffRes.error ||
-          settingsRes.error;
+          settingsRes.error ||
+          eventRes.error;
         if (error) throw error;
         if (!active) return;
         setExpenses(expRes.data ?? []);
@@ -132,6 +139,9 @@ export default function ExpensesPage() {
             : Number(settingsRes.data.budget);
         setBudget(savedBudget);
         setNewBudget(String(savedBudget));
+        setEventName(
+          eventRes.data?.name || eventRes.data?.city || fallbackEventName,
+        );
         setLoadedFor(loadKey);
       } catch (error) {
         if (!active) return;
@@ -151,7 +161,7 @@ export default function ExpensesPage() {
     return () => {
       active = false;
     };
-  }, [slug, loadKey, organizerEmail, organizerLoading, retry]);
+  }, [slug, loadKey, organizerEmail, organizerLoading, retry, fallbackEventName]);
 
   const saveBudget = async () => {
     if (savingBudget) return;

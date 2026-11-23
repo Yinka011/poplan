@@ -37,6 +37,7 @@ export default function InventoryPage() {
   const params = useParams();
   const slug = params.slug as string;
   const event = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const [eventDisplayName, setEventDisplayName] = useState(event);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,9 +169,9 @@ export default function InventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [savingProduct, setSavingProduct] = useState<number | null>(null);
-  const [savingAction, setSavingAction] = useState<"approve" | "reject" | null>(
-    null,
-  );
+  const [savingAction, setSavingAction] = useState<
+    "approve" | "approve_upload" | "reject" | null
+  >(null);
 
   useEffect(() => {
     if (organizerLoading) return;
@@ -181,12 +182,18 @@ export default function InventoryPage() {
       try {
         if (!organizerEmail)
           throw new Error("Please sign in to view inventory.");
-        const { data: productsData, error: productsError } = await supabase
-          .from("brand_products")
-          .select("*")
-          .eq("event", slug)
-          .order("brand_name");
+        const [productsRes, eventRes] = await Promise.all([
+          supabase
+            .from("brand_products")
+            .select("*")
+            .eq("event", slug)
+            .order("brand_name"),
+          supabase.from("events").select("name, city").eq("slug", slug).maybeSingle(),
+        ]);
+        const productsData = productsRes.data;
+        const productsError = productsRes.error;
         if (productsError) throw productsError;
+        if (eventRes.error) throw eventRes.error;
         const items = productsData ?? [];
         let variations: Variation[] = [];
         if (items.length) {
@@ -207,6 +214,7 @@ export default function InventoryPage() {
             variations: variations.filter((v) => v.product_id === p.id),
           })),
         );
+        setEventDisplayName(eventRes.data?.name || eventRes.data?.city || event);
       } catch (error) {
         if (!active) return;
         console.error("Failed to load inventory:", error);
@@ -401,17 +409,49 @@ export default function InventoryPage() {
         setReviewingProduct(null);
         setReviewNote("");
       }
-      try {
-        if (!product.square_catalog_id) await uploadProductToSquare(product);
-      } catch (error) {
-        console.error("Square upload failed:", error);
-        alert(
-          `Product approved, but the Square upload did not complete: ${error instanceof Error ? error.message : "Upload failed."} Check Square before retrying to avoid duplicates.`,
-        );
-      }
     } catch (error) {
       console.error("Failed to approve product:", error);
       alert("Could not approve product. Please try again.");
+    } finally {
+      setSavingProduct(null);
+      setSavingAction(null);
+    }
+  };
+
+  const approveAndUploadProduct = async (productId: number) => {
+    if (bulkUploading || savingProduct !== null) return;
+    const product = products.find((p) => p.id === productId);
+    if (!product) {
+      alert("Could not find this product. Please refresh and try again.");
+      return;
+    }
+    setSavingProduct(productId);
+    setSavingAction("approve_upload");
+    try {
+      const { error } = await supabase
+        .from("brand_products")
+        .update({ review_status: "approved", review_note: "" })
+        .eq("id", productId)
+        .select("id")
+        .single();
+      if (error) throw error;
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId
+            ? { ...p, review_status: "approved", review_note: "" }
+            : p,
+        ),
+      );
+      if (reviewingProduct === productId) {
+        setReviewingProduct(null);
+        setReviewNote("");
+      }
+      if (!product.square_catalog_id) await uploadProductToSquare(product);
+    } catch (error) {
+      console.error("Failed to approve and upload product:", error);
+      alert(
+        `Could not approve and upload product. ${error instanceof Error ? error.message : "Please try again."}`,
+      );
     } finally {
       setSavingProduct(null);
       setSavingAction(null);
@@ -471,10 +511,10 @@ export default function InventoryPage() {
             textDecoration: "none",
           }}
         >
-          ← Back to event
+          ← Back to {eventDisplayName}
         </Link>
         <div style={{ fontSize: "1rem", color: "#fff" }}>
-          Inventory — {event}
+          Inventory — {eventDisplayName}
         </div>
       </div>
 
@@ -645,6 +685,24 @@ export default function InventoryPage() {
                           savingAction === "approve"
                             ? "Approving..."
                             : "✓ Approve"}
+                        </button>
+                        <button
+                          onClick={() => approveAndUploadProduct(product.id)}
+                          disabled={bulkUploading || savingProduct !== null}
+                          style={{
+                            padding: "5px 12px",
+                            background: "#1B3A2D",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {savingProduct === product.id &&
+                          savingAction === "approve_upload"
+                            ? "Approving & uploading..."
+                            : "✓ Approve + Upload to Square"}
                         </button>
                         <button
                           disabled={bulkUploading || savingProduct !== null}

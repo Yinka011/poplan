@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
 export default function LolaRedirect() {
-  useEffect(() => { window.location.href = "/brand/portal"; }, []);
+  useEffect(() => { window.location.href = "/brand"; }, []);
   return <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center",  color: "#4a5a52" }}>Loading...</div>;
 }
