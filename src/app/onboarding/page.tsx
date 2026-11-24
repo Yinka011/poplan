@@ -4,22 +4,79 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 const FEATURES = [
-  { key: "brands", icon: "🏷", title: "Brand Management", desc: "Invite brands, send access links and track their progress all in one place." },
-  { key: "payment_tracker", icon: "💳", title: "Payment Tracker", desc: "Collect and track participation fees from brands. See who has paid, who owes and how much." },
-  { key: "inventory", icon: "📦", title: "Inventory Review", desc: "Brands upload their full product catalogue. You approve before connecting to your POS." },
-  { key: "shipments", icon: "🚚", title: "Shipments", desc: "Track brand deliveries to your venue. Brands add courier and tracking — you mark received." },
-  { key: "messages", icon: "💬", title: "Messaging", desc: "Message brands directly from the platform. No WhatsApp, no email threads." },
-  { key: "sales", icon: "💰", title: "Sales & Payouts", desc: "Sync with Square POS after the event. Automatic payout calculations per brand." },
-  { key: "checklist", icon: "✅", title: "Event Checklist", desc: "60+ planning items across venue, brands, decor, staff, marketing and logistics." },
-  { key: "marketing", icon: "📣", title: "Marketing Plans", desc: "Track marketing deadlines across Instagram, TikTok, Email and more." },
-  { key: "planning", icon: "🏗", title: "Planning Hub", desc: "Decor, refreshments and staffing in one place. Assign costs and track spend." },
-  { key: "brand_organizer_hub", icon: "🌍", title: "Brand Organizer Hub", desc: "For brands running their own pop-ups across multiple cities. Budget, planning and team access per city." },
-  { key: "attendees", icon: "👥", title: "Attendee Registration", desc: "Collect shopper RSVPs and own your audience data." },
+  {
+    key: "brands",
+    icon: "🏷",
+    title: "Brand Management",
+    desc: "Invite brands, send access links and track their progress all in one place.",
+  },
+  {
+    key: "payment_tracker",
+    icon: "💳",
+    title: "Payment Tracker",
+    desc: "Collect and track participation fees from brands. See who has paid, who owes and how much.",
+  },
+  {
+    key: "inventory",
+    icon: "📦",
+    title: "Inventory Review",
+    desc: "Brands upload their full product catalogue. You approve before connecting to your POS.",
+  },
+  {
+    key: "shipments",
+    icon: "🚚",
+    title: "Shipments",
+    desc: "Track brand deliveries to your venue. Brands add courier and tracking — you mark received.",
+  },
+  {
+    key: "messages",
+    icon: "💬",
+    title: "Messaging",
+    desc: "Message brands directly from the platform. No WhatsApp, no email threads.",
+  },
+  {
+    key: "sales",
+    icon: "💰",
+    title: "Sales & Payouts",
+    desc: "Sync with Square POS after the event. Automatic payout calculations per brand.",
+  },
+  {
+    key: "checklist",
+    icon: "✅",
+    title: "Event Checklist",
+    desc: "60+ planning items across venue, brands, decor, staff, marketing and logistics.",
+  },
+  {
+    key: "marketing",
+    icon: "📣",
+    title: "Marketing Plans",
+    desc: "Track marketing deadlines across Instagram, TikTok, Email and more.",
+  },
+  {
+    key: "planning",
+    icon: "🏗",
+    title: "Planning Hub",
+    desc: "Decor, refreshments and staffing in one place. Assign costs and track spend.",
+  },
+  {
+    key: "brand_organizer_hub",
+    icon: "🌍",
+    title: "Brand Organizer Hub",
+    desc: "For brands running their own pop-ups across multiple cities. Budget, planning and team access per city.",
+  },
+  {
+    key: "attendees",
+    icon: "👥",
+    title: "Attendee Registration",
+    desc: "Collect shopper RSVPs and own your audience data.",
+  },
 ];
 
 export default function Onboarding() {
   const router = useRouter();
-  const [step, setStep] = useState<"password" | "role" | "welcome" | "features">("role");
+  const [step, setStep] = useState<
+    "password" | "role" | "welcome" | "features"
+  >("role");
   const [newPassword, setNewPassword] = useState("");
   const [settingPassword, setSettingPassword] = useState(false);
 
@@ -28,11 +85,16 @@ export default function Onboarding() {
     if (newPassword.length < 6) return;
     setSettingPassword(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) { setSettingPassword(false); return; }
+    if (error) {
+      setSettingPassword(false);
+      return;
+    }
     setStep("role");
     setSettingPassword(false);
   };
-  const [selected, setSelected] = useState<"organizer" | "brand_organizer" | "planner" | null>(null);
+  const [selected, setSelected] = useState<
+    "organizer" | "brand_organizer" | "planner" | null
+  >(null);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -40,16 +102,28 @@ export default function Onboarding() {
   const [checkError, setCheckError] = useState("");
   const [checkRetry, setCheckRetry] = useState(0);
   const [features, setFeatures] = useState<Record<string, boolean>>({
-    brands: true, payment_tracker: true, inventory: true, shipments: true,
-    messages: true, sales: false, checklist: true, marketing: false,
-    planning: false, brand_organizer_hub: false, attendees: false,
+    brands: true,
+    payment_tracker: true,
+    inventory: true,
+    shipments: true,
+    messages: true,
+    sales: false,
+    checklist: true,
+    marketing: false,
+    planning: false,
+    brand_organizer_hub: false,
+    attendees: false,
   });
 
   useEffect(() => {
     // Check if this is an invite link
     const hash = window.location.hash;
     const search = window.location.search;
-    if (hash.includes("type=invite") || hash.includes("type=signup") || search.includes("type=invite")) {
+    if (
+      hash.includes("type=invite") ||
+      hash.includes("type=signup") ||
+      search.includes("type=invite")
+    ) {
       setStep("password");
       setChecking(false);
       return;
@@ -62,21 +136,42 @@ export default function Onboarding() {
       setChecking(true);
       setCheckError("");
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError && authError.name !== "AuthSessionMissingError") throw authError;
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+        if (authError && authError.name !== "AuthSessionMissingError")
+          throw authError;
         if (!user) return;
-        if (!user.email) throw new Error("The signed-in user has no email address.");
+        if (!user.email)
+          throw new Error("The signed-in user has no email address.");
         const [rolesRes, profileRes] = await Promise.all([
-          supabase.from("user_roles").select("role").eq("user_email", user.email).limit(1),
-          supabase.from("profiles").select("id, name").eq("id", user.id).maybeSingle(),
+          supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_email", user.email)
+            .limit(1),
+          supabase
+            .from("profiles")
+            .select("id, name")
+            .eq("id", user.id)
+            .maybeSingle(),
         ]);
         if (rolesRes.error) throw rolesRes.error;
         if (profileRes.error) throw profileRes.error;
         if (!active) return;
         const role = rolesRes.data?.[0]?.role;
-        if (role === "organizer" || role === "brand_organizer" || role === "planner") {
+        if (
+          role === "organizer" ||
+          role === "brand_organizer" ||
+          role === "planner"
+        ) {
           if (profileRes.data) {
-            router.push(role === "brand_organizer" ? "/brand-organizer" : "/organizer/events");
+            router.push(
+              role === "brand_organizer"
+                ? "/brand-organizer"
+                : "/organizer/events",
+            );
             return;
           }
           setSelected(role);
@@ -84,13 +179,16 @@ export default function Onboarding() {
         if (profileRes.data?.name) setName(profileRes.data.name);
       } catch (error) {
         console.error("Could not check onboarding status:", error);
-        if (active) setCheckError("Could not check your account. Please try again.");
+        if (active)
+          setCheckError("Could not check your account. Please try again.");
       } finally {
         if (active) setChecking(false);
       }
     };
     void checkRole();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [router, checkRetry]);
 
   const handleRoleContinue = async () => {
@@ -98,17 +196,41 @@ export default function Onboarding() {
     setLoading(true);
     setSetupError("");
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
       if (authError) throw authError;
-      if (!user) { router.push("/login"); return; }
-      if (!user.email) throw new Error("The signed-in user has no email address.");
-      const { error: profileError } = await supabase.from("profiles")
-        .upsert({ id: user.id, email: user.email, name: name.trim(), organizer_mode: selected }, { onConflict: "id" });
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+      if (!user.email)
+        throw new Error("The signed-in user has no email address.");
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: user.id,
+            email: user.email,
+            name: name.trim(),
+            organizer_mode: selected,
+          },
+          { onConflict: "id" },
+        );
       if (profileError) throw profileError;
-      const { error: roleError } = await supabase.from("user_roles").upsert({ user_email: user.email, role: selected });
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .upsert({ user_email: user.email, role: selected });
       if (roleError) throw roleError;
-      if (selected === "brand_organizer") { router.push("/brand-organizer"); return; }
-      if (selected === "planner") { router.push("/organizer/events"); return; }
+      if (selected === "brand_organizer") {
+        router.push("/brand-organizer");
+        return;
+      }
+      if (selected === "planner") {
+        router.push("/organizer/events");
+        return;
+      }
       setStep("welcome");
     } catch (error) {
       console.error("Could not save onboarding profile and role:", error);
@@ -120,181 +242,676 @@ export default function Onboarding() {
 
   const handleFeaturesSave = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/login"); return; }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     // Save features to profile so they persist across devices
-    await supabase.from("profiles").update({ default_features: features }).eq("email", user.email);
+    await supabase
+      .from("profiles")
+      .update({ default_features: features })
+      .eq("email", user.email);
     // Also store in localStorage as backup
-    localStorage.setItem("nalpop_onboarding_features", JSON.stringify(features));
+    localStorage.setItem(
+      "nalpop_onboarding_features",
+      JSON.stringify(features),
+    );
     router.push("/organizer/events");
   };
 
-  if (step === "password") return (
-    <div style={{ minHeight: "100vh", background: "#1B3A2D", display: "flex", alignItems: "center", justifyContent: "center",  padding: "2rem" }}>
-      <div style={{ maxWidth: "420px", width: "100%", background: "#fff", borderRadius: "16px", padding: "2.5rem", border: "1px solid #e4ebe6" }}>
-        <div style={{ fontSize: "1.5rem", letterSpacing: "0.15em", color: "#1B3A2D", marginBottom: "0.5rem", textAlign: "center" as const }}>NALPOP</div>
-        <h2 style={{ fontSize: "1.2rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "0.5rem", textAlign: "center" as const }}>Create your password</h2>
-        <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1.5rem", textAlign: "center" as const }}>Choose a password to secure your Nalpop account.</p>
-        <form onSubmit={handleSetPassword} style={{ display: "flex", flexDirection: "column" as const, gap: "12px" }}>
-          <input type="password" placeholder="Choose a password (min 6 characters)" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ width: "100%", padding: "12px 14px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.95rem",  outline: "none", boxSizing: "border-box" as const }} autoFocus />
-          <button type="submit" disabled={settingPassword || newPassword.length < 6} style={{ width: "100%", padding: "12px", background: newPassword.length >= 6 ? "#1B3A2D" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", cursor: "pointer" }}>
-            {settingPassword ? "Setting up..." : "Create account →"}
-          </button>
-        </form>
+  if (step === "password")
+    return (
+      <div
+        className="px-4 py-8 sm:p-8"
+        style={{
+          minHeight: "100vh",
+          background: "#1B3A2D",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          className="p-5 sm:p-10"
+          style={{
+            maxWidth: "420px",
+            width: "100%",
+            background: "#fff",
+            borderRadius: "16px",
+            border: "1px solid #e4ebe6",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "1.5rem",
+              letterSpacing: "0.15em",
+              color: "#1B3A2D",
+              marginBottom: "0.5rem",
+              textAlign: "center" as const,
+            }}
+          >
+            NALPOP
+          </div>
+          <h2
+            style={{
+              fontSize: "1.2rem",
+              color: "#1B3A2D",
+              fontWeight: "normal",
+              marginBottom: "0.5rem",
+              textAlign: "center" as const,
+            }}
+          >
+            Create your password
+          </h2>
+          <p
+            style={{
+              fontSize: "0.82rem",
+              color: "#4a5a52",
+              marginBottom: "1.5rem",
+              textAlign: "center" as const,
+            }}
+          >
+            Choose a password to secure your Nalpop account.
+          </p>
+          <form
+            onSubmit={handleSetPassword}
+            style={{
+              display: "flex",
+              flexDirection: "column" as const,
+              gap: "12px",
+            }}
+          >
+            <input
+              type="password"
+              placeholder="Choose a password (min 6 characters)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 14px",
+                border: "1px solid #e4ebe6",
+                borderRadius: "10px",
+                fontSize: "1rem",
+                outline: "none",
+                boxSizing: "border-box" as const,
+              }}
+              autoFocus
+            />
+            <button
+              type="submit"
+              disabled={settingPassword || newPassword.length < 6}
+              style={{
+                width: "100%",
+                padding: "12px",
+                background: newPassword.length >= 6 ? "#1B3A2D" : "#d4c5b0",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                fontSize: "0.95rem",
+                cursor: "pointer",
+              }}
+            >
+              {settingPassword ? "Setting up..." : "Create account →"}
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
-  );
+    );
 
-  if (checking) return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8", display: "flex", alignItems: "center", justifyContent: "center",  color: "#4a5a52" }}>Loading...</div>
-  );
+  if (checking)
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#f8faf8",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#4a5a52",
+        }}
+      >
+        Loading...
+      </div>
+    );
 
-  if (checkError) return (
-    <div role="alert" style={{ textAlign: "center", padding: "2rem", color: "#4a5a52" }}>
-      <p>{checkError}</p>
-      <button onClick={() => setCheckRetry((value) => value + 1)}>Retry</button>
-    </div>
-  );
+  if (checkError)
+    return (
+      <div
+        role="alert"
+        style={{ textAlign: "center", padding: "2rem", color: "#4a5a52" }}
+      >
+        <p>{checkError}</p>
+        <button onClick={() => setCheckRetry((value) => value + 1)}>
+          Retry
+        </button>
+      </div>
+    );
 
   // STEP: WELCOME
-  if (step === "welcome") return (
-    <div style={{ minHeight: "100vh", background: "#1B3A2D" }}>
-      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "4rem 2rem" }}>
-        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-          <div style={{ fontSize: "1.2rem", letterSpacing: "0.2em", color: "#E8C97A", marginBottom: "1rem" }}>NALPOP</div>
-          <h1 style={{ fontSize: "clamp(2rem, 4vw, 3rem)", color: "#fff", fontWeight: "normal", lineHeight: 1.2, marginBottom: "1rem" }}>
-            Welcome, {name.split(" ")[0]}. 🌿
-          </h1>
-          <p style={{ fontSize: "1rem", color: "#ffffff88", maxWidth: "560px", margin: "0 auto", lineHeight: 1.8 }}>
-            Nalpop is the platform built for pop-up culture. Here is everything you and your brands get.
-          </p>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginBottom: "3rem" }}>
-          {/* For organizer */}
-          <div style={{ background: "#ffffff11", borderRadius: "16px", padding: "2rem", border: "1px solid #ffffff22" }}>
-            <div style={{ fontSize: "0.72rem", letterSpacing: "0.15em", color: "#E8C97A", marginBottom: "1.25rem" }}>FOR YOU AS THE ORGANIZER</div>
-            {[
-              "Invite brands and send them access links",
-              "Collect and track participation fees",
-              "Review brand inventory before the event",
-              "Track shipments — know what is arriving and when",
-              "Plan decor, refreshments and staffing",
-              "Sync with Square POS and calculate payouts",
-              "Collect shopper RSVPs and own your audience",
-              "Message brands directly — no WhatsApp needed",
-            ].map(item => (
-              <div key={item} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "10px" }}>
-                <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#E8C97A", marginTop: "7px", flexShrink: 0 }} />
-                <div style={{ fontSize: "0.85rem", color: "#ffffffcc", lineHeight: 1.5 }}>{item}</div>
-              </div>
-            ))}
+  if (step === "welcome")
+    return (
+      <div style={{ minHeight: "100vh", background: "#1B3A2D" }}>
+        <div
+          className="px-4 py-10 sm:px-8 sm:py-16"
+          style={{ maxWidth: "900px", margin: "0 auto" }}
+        >
+          <div className="mb-10 sm:mb-16" style={{ textAlign: "center" }}>
+            <div
+              style={{
+                fontSize: "1.2rem",
+                letterSpacing: "0.2em",
+                color: "#E8C97A",
+                marginBottom: "1rem",
+              }}
+            >
+              NALPOP
+            </div>
+            <h1
+              style={{
+                fontSize: "clamp(2rem, 4vw, 3rem)",
+                color: "#fff",
+                fontWeight: "normal",
+                lineHeight: 1.2,
+                marginBottom: "1rem",
+                overflowWrap: "anywhere",
+              }}
+            >
+              Welcome, {name.split(" ")[0]}. 🌿
+            </h1>
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "#ffffff88",
+                maxWidth: "560px",
+                margin: "0 auto",
+                lineHeight: 1.8,
+              }}
+            >
+              Nalpop is the platform built for pop-up culture. Here is
+              everything you and your brands get.
+            </p>
           </div>
 
-          {/* For brands */}
-          <div style={{ background: "#ffffff11", borderRadius: "16px", padding: "2rem", border: "1px solid #ffffff22" }}>
-            <div style={{ fontSize: "0.72rem", letterSpacing: "0.15em", color: "#E8C97A", marginBottom: "1.25rem" }}>WHAT YOUR BRANDS GET</div>
-            {[
-              "Their own branded portal — always free",
-              "Upload their full product catalogue with photos",
-              "Add shipment tracking details",
-              "See tasks and deadlines from you",
-              "Message you directly from their portal",
-              "View their sales and payout after the event",
-              "Upload files — logo, lookbook, marketing assets",
-              "Get email notifications for every update",
-            ].map(item => (
-              <div key={item} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "10px" }}>
-                <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#4a7c59", marginTop: "7px", flexShrink: 0 }} />
-                <div style={{ fontSize: "0.85rem", color: "#ffffffcc", lineHeight: 1.5 }}>{item}</div>
+          <div
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-8"
+            style={{ marginBottom: "3rem" }}
+          >
+            {/* For organizer */}
+            <div
+              className="p-5 sm:p-8"
+              style={{
+                background: "#ffffff11",
+                borderRadius: "16px",
+                border: "1px solid #ffffff22",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "0.72rem",
+                  letterSpacing: "0.15em",
+                  color: "#E8C97A",
+                  marginBottom: "1.25rem",
+                }}
+              >
+                FOR YOU AS THE ORGANIZER
               </div>
-            ))}
-          </div>
-        </div>
+              {[
+                "Invite brands and send them access links",
+                "Collect and track participation fees",
+                "Review brand inventory before the event",
+                "Track shipments — know what is arriving and when",
+                "Plan decor, refreshments and staffing",
+                "Sync with Square POS and calculate payouts",
+                "Collect shopper RSVPs and own your audience",
+                "Message brands directly — no WhatsApp needed",
+              ].map((item) => (
+                <div
+                  key={item}
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    alignItems: "flex-start",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "5px",
+                      height: "5px",
+                      borderRadius: "50%",
+                      background: "#E8C97A",
+                      marginTop: "7px",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#ffffffcc",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {item}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-        <div style={{ textAlign: "center" }}>
-          <button onClick={() => setStep("features")} style={{ padding: "14px 48px", background: "#E8C97A", color: "#1B3A2D", border: "none", borderRadius: "10px", fontSize: "1rem", cursor: "pointer" }}>
-            Choose my features →
-          </button>
-          <div style={{ fontSize: "0.78rem", color: "#ffffff44", marginTop: "1rem" }}>You can change these at any time in Settings</div>
+            {/* For brands */}
+            <div
+              className="p-5 sm:p-8"
+              style={{
+                background: "#ffffff11",
+                borderRadius: "16px",
+                border: "1px solid #ffffff22",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "0.72rem",
+                  letterSpacing: "0.15em",
+                  color: "#E8C97A",
+                  marginBottom: "1.25rem",
+                }}
+              >
+                WHAT YOUR BRANDS GET
+              </div>
+              {[
+                "Their own branded portal — always free",
+                "Upload their full product catalogue with photos",
+                "Add shipment tracking details",
+                "See tasks and deadlines from you",
+                "Message you directly from their portal",
+                "View their sales and payout after the event",
+                "Upload files — logo, lookbook, marketing assets",
+                "Get email notifications for every update",
+              ].map((item) => (
+                <div
+                  key={item}
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    alignItems: "flex-start",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "5px",
+                      height: "5px",
+                      borderRadius: "50%",
+                      background: "#4a7c59",
+                      marginTop: "7px",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#ffffffcc",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {item}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ textAlign: "center" }}>
+            <button
+              className="w-full px-6 sm:w-auto sm:px-12"
+              onClick={() => setStep("features")}
+              style={{
+                paddingTop: "14px",
+                paddingBottom: "14px",
+                background: "#E8C97A",
+                color: "#1B3A2D",
+                border: "none",
+                borderRadius: "10px",
+                fontSize: "1rem",
+                cursor: "pointer",
+              }}
+            >
+              Choose my features →
+            </button>
+            <div
+              style={{
+                fontSize: "0.78rem",
+                color: "#ffffff44",
+                marginTop: "1rem",
+              }}
+            >
+              You can change these at any time in Settings
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
 
   // STEP: FEATURES
-  if (step === "features") return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8" }}>
-      <div style={{ background: "#1B3A2D", padding: "1.5rem 2rem", textAlign: "center" }}>
-        <div style={{ fontSize: "1rem", letterSpacing: "0.2em", color: "#fff" }}>NALPOP</div>
-      </div>
-      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "3rem 2rem" }}>
-        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-          <h1 style={{ fontSize: "1.8rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "0.5rem" }}>Build your dashboard</h1>
-          <p style={{ fontSize: "0.9rem", color: "#4a5a52" }}>Choose what you need. You can always change this later in Settings.</p>
+  if (step === "features")
+    return (
+      <div style={{ minHeight: "100vh", background: "#f8faf8" }}>
+        <div
+          className="px-4 py-6 sm:px-8"
+          style={{ background: "#1B3A2D", textAlign: "center" }}
+        >
+          <div
+            style={{ fontSize: "1rem", letterSpacing: "0.2em", color: "#fff" }}
+          >
+            NALPOP
+          </div>
         </div>
+        <div
+          className="px-4 py-8 sm:px-8 sm:py-12"
+          style={{ maxWidth: "800px", margin: "0 auto" }}
+        >
+          <div className="mb-8 sm:mb-12" style={{ textAlign: "center" }}>
+            <h1
+              style={{
+                fontSize: "1.8rem",
+                color: "#1B3A2D",
+                fontWeight: "normal",
+                marginBottom: "0.5rem",
+              }}
+            >
+              Build your dashboard
+            </h1>
+            <p style={{ fontSize: "0.9rem", color: "#4a5a52" }}>
+              Choose what you need. You can always change this later in
+              Settings.
+            </p>
+          </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2.5rem" }}>
-          {FEATURES.map(feature => (
-            <div key={feature.key} onClick={() => setFeatures(prev => ({ ...prev, [feature.key]: !prev[feature.key] }))} style={{ background: "#fff", borderRadius: "14px", padding: "1.25rem", border: `2px solid ${features[feature.key] ? "#1B3A2D" : "#e4ebe6"}`, cursor: "pointer", transition: "all 0.15s", position: "relative" as const }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{feature.icon}</div>
-                <div style={{ width: "40px", height: "22px", borderRadius: "11px", background: features[feature.key] ? "#1B3A2D" : "#e4ebe6", position: "relative" as const, transition: "background 0.2s", flexShrink: 0 }}>
-                  <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#fff", position: "absolute" as const, top: "3px", left: features[feature.key] ? "21px" : "3px", transition: "left 0.2s" }} />
+          <div
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+            style={{ marginBottom: "2.5rem" }}
+          >
+            {FEATURES.map((feature) => (
+              <div
+                key={feature.key}
+                onClick={() =>
+                  setFeatures((prev) => ({
+                    ...prev,
+                    [feature.key]: !prev[feature.key],
+                  }))
+                }
+                style={{
+                  background: "#fff",
+                  borderRadius: "14px",
+                  padding: "1.25rem",
+                  border: `2px solid ${features[feature.key] ? "#1B3A2D" : "#e4ebe6"}`,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  position: "relative" as const,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>
+                    {feature.icon}
+                  </div>
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "22px",
+                      borderRadius: "11px",
+                      background: features[feature.key] ? "#1B3A2D" : "#e4ebe6",
+                      position: "relative" as const,
+                      transition: "background 0.2s",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        borderRadius: "50%",
+                        background: "#fff",
+                        position: "absolute" as const,
+                        top: "3px",
+                        left: features[feature.key] ? "21px" : "3px",
+                        transition: "left 0.2s",
+                      }}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.92rem",
+                    color: "#1B3A2D",
+                    marginBottom: "4px",
+                  }}
+                >
+                  {feature.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.78rem",
+                    color: "#4a5a52",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {feature.desc}
                 </div>
               </div>
-              <div style={{ fontSize: "0.92rem", color: "#1B3A2D", marginBottom: "4px" }}>{feature.title}</div>
-              <div style={{ fontSize: "0.78rem", color: "#4a5a52", lineHeight: 1.5 }}>{feature.desc}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div style={{ textAlign: "center" }}>
-          <button onClick={handleFeaturesSave} disabled={loading} style={{ padding: "14px 48px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "10px", fontSize: "1rem", cursor: "pointer" }}>
-            {loading ? "Setting up..." : "Build my dashboard →"}
-          </button>
-          <div style={{ fontSize: "0.78rem", color: "#4a5a52", marginTop: "1rem" }}>
-            {Object.values(features).filter(Boolean).length} features selected
+          <div style={{ textAlign: "center" }}>
+            <button
+              className="w-full px-6 sm:w-auto sm:px-12"
+              onClick={handleFeaturesSave}
+              disabled={loading}
+              style={{
+                paddingTop: "14px",
+                paddingBottom: "14px",
+                background: "#1B3A2D",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                fontSize: "1rem",
+                cursor: "pointer",
+              }}
+            >
+              {loading ? "Setting up..." : "Build my dashboard →"}
+            </button>
+            <div
+              style={{
+                fontSize: "0.78rem",
+                color: "#4a5a52",
+                marginTop: "1rem",
+              }}
+            >
+              {Object.values(features).filter(Boolean).length} features selected
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
 
   // STEP: ROLE (default)
   return (
-    <div style={{ minHeight: "100vh", background: "#f8faf8",  display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+    <div
+      className="px-4 py-8 sm:p-6"
+      style={{
+        minHeight: "100vh",
+        background: "#f8faf8",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <div style={{ maxWidth: "620px", width: "100%" }}>
-        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-          <div style={{ fontSize: "2rem", letterSpacing: "0.15em", color: "#1B3A2D" }}>NALPOP</div>
-          <div style={{ width: "2rem", height: "1px", background: "#E8C97A", margin: "0.5rem auto 1rem" }}></div>
-          <h1 style={{ fontSize: "1.5rem", color: "#1B3A2D", fontWeight: "normal", margin: "0 0 0.5rem" }}>Welcome. Let us get you set up.</h1>
-          <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>Tell us how you use Nalpop so we can personalise your experience.</p>
+        <div className="mb-8 sm:mb-12" style={{ textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: "2rem",
+              letterSpacing: "0.15em",
+              color: "#1B3A2D",
+            }}
+          >
+            NALPOP
+          </div>
+          <div
+            style={{
+              width: "2rem",
+              height: "1px",
+              background: "#E8C97A",
+              margin: "0.5rem auto 1rem",
+            }}
+          ></div>
+          <h1
+            style={{
+              fontSize: "1.5rem",
+              color: "#1B3A2D",
+              fontWeight: "normal",
+              margin: "0 0 0.5rem",
+            }}
+          >
+            Welcome. Let us get you set up.
+          </h1>
+          <p style={{ color: "#4a5a52", fontSize: "0.9rem" }}>
+            Tell us how you use Nalpop so we can personalise your experience.
+          </p>
         </div>
 
-        <div style={{ background: "#fff", borderRadius: "16px", padding: "2rem", border: "1px solid #e4ebe6", marginBottom: "1.5rem" }}>
-          <div style={{ fontSize: "0.8rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "1rem" }}>YOUR NAME OR ORGANISATION NAME</div>
-          <input type="text" placeholder="e.g. AO Curates" value={name} onChange={e => setName(e.target.value)} style={{ width: "100%", padding: "0.85rem", border: "1px solid #e4ebe6", borderRadius: "8px", fontSize: "0.95rem",  background: "#f8faf8", outline: "none", boxSizing: "border-box" as const }} />
+        <div
+          className="p-5 sm:p-8"
+          style={{
+            background: "#fff",
+            borderRadius: "16px",
+            border: "1px solid #e4ebe6",
+            marginBottom: "1.5rem",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "0.8rem",
+              color: "#4a5a52",
+              letterSpacing: "0.08em",
+              marginBottom: "1rem",
+            }}
+          >
+            YOUR NAME OR ORGANISATION NAME
+          </div>
+          <input
+            type="text"
+            placeholder="e.g. AO Curates"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "0.85rem",
+              border: "1px solid #e4ebe6",
+              borderRadius: "8px",
+              fontSize: "1rem",
+              background: "#f8faf8",
+              outline: "none",
+              boxSizing: "border-box" as const,
+            }}
+          />
         </div>
 
-        <div style={{ fontSize: "0.8rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "1rem", textAlign: "center" as const }}>WHAT BEST DESCRIBES YOU?</div>
+        <div
+          style={{
+            fontSize: "0.8rem",
+            color: "#4a5a52",
+            letterSpacing: "0.08em",
+            marginBottom: "1rem",
+            textAlign: "center" as const,
+          }}
+        >
+          WHAT BEST DESCRIBES YOU?
+        </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
-          {([
-            { key: "organizer", icon: "🏪", title: "I host pop-ups for multiple brands", desc: "You curate and manage events, inviting brands to participate." },
-            { key: "brand_organizer", icon: "✈️", title: "I run my own brand across multiple cities", desc: "You take your brand to pop-ups in different locations worldwide." },
-            { key: "planner", icon: "📋", title: "I plan pop-ups on behalf of brands", desc: "You are hired by brands to organize and manage their pop-up events." },
-          ] as const).map(role => (
-            <button key={role.key} onClick={() => setSelected(role.key)} style={{ padding: "1.5rem", background: selected === role.key ? "#1B3A2D" : "#fff", color: selected === role.key ? "#fff" : "#1B3A2D", border: `2px solid ${selected === role.key ? "#1B3A2D" : "#e4ebe6"}`, borderRadius: "14px", cursor: "pointer", textAlign: "left" as const }}>
-              <div style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{role.icon}</div>
-              <div style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>{role.title}</div>
-              <div style={{ fontSize: "0.75rem", color: selected === role.key ? "#d4c87a" : "#4a5a52", lineHeight: 1.5 }}>{role.desc}</div>
+        <div
+          className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4"
+          style={{ marginBottom: "2rem" }}
+        >
+          {(
+            [
+              {
+                key: "organizer",
+                icon: "🏪",
+                title: "I host pop-ups for multiple brands",
+                desc: "You curate and manage events, inviting brands to participate.",
+              },
+              {
+                key: "brand_organizer",
+                icon: "✈️",
+                title: "I run my own brand across multiple cities",
+                desc: "You take your brand to pop-ups in different locations worldwide.",
+              },
+              {
+                key: "planner",
+                icon: "📋",
+                title: "I plan pop-ups on behalf of brands",
+                desc: "You are hired by brands to organize and manage their pop-up events.",
+              },
+            ] as const
+          ).map((role) => (
+            <button
+              className="p-5 sm:p-6"
+              key={role.key}
+              onClick={() => setSelected(role.key)}
+              style={{
+                background: selected === role.key ? "#1B3A2D" : "#fff",
+                color: selected === role.key ? "#fff" : "#1B3A2D",
+                border: `2px solid ${selected === role.key ? "#1B3A2D" : "#e4ebe6"}`,
+                borderRadius: "14px",
+                cursor: "pointer",
+                textAlign: "left" as const,
+              }}
+            >
+              <div style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>
+                {role.icon}
+              </div>
+              <div style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>
+                {role.title}
+              </div>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: selected === role.key ? "#d4c87a" : "#4a5a52",
+                  lineHeight: 1.5,
+                }}
+              >
+                {role.desc}
+              </div>
             </button>
           ))}
         </div>
 
-        {setupError && <p role="alert" style={{ color: "#c0392b", marginBottom: "1rem" }}>{setupError}</p>}
-        <button onClick={handleRoleContinue} disabled={!selected || !name.trim() || loading} style={{ width: "100%", padding: "1rem", background: selected && name.trim() ? "#1B3A2D" : "#d4c5b0", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem",  cursor: selected && name.trim() ? "pointer" : "not-allowed" }}>
+        {setupError && (
+          <p role="alert" style={{ color: "#c0392b", marginBottom: "1rem" }}>
+            {setupError}
+          </p>
+        )}
+        <button
+          onClick={handleRoleContinue}
+          disabled={!selected || !name.trim() || loading}
+          style={{
+            width: "100%",
+            padding: "1rem",
+            background: selected && name.trim() ? "#1B3A2D" : "#d4c5b0",
+            color: "#fff",
+            border: "none",
+            borderRadius: "10px",
+            fontSize: "0.95rem",
+            cursor: selected && name.trim() ? "pointer" : "not-allowed",
+          }}
+        >
           {loading ? "Setting up..." : "Continue →"}
         </button>
       </div>
