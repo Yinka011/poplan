@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const FEATURES = [
   {
@@ -79,18 +80,26 @@ export default function Onboarding() {
   >("role");
   const [newPassword, setNewPassword] = useState("");
   const [settingPassword, setSettingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [inviteError, setInviteError] = useState("");
 
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 6) return;
     setSettingPassword(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
+    setPasswordError("");
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setStep("role");
+    } catch (error) {
+      console.error("Could not set invitation password:", error);
+      setPasswordError(
+        "Could not set your password. Your invitation session may have expired. Please try again or request a new invitation.",
+      );
+    } finally {
       setSettingPassword(false);
-      return;
     }
-    setStep("role");
-    setSettingPassword(false);
   };
   const [selected, setSelected] = useState<
     "organizer" | "brand_organizer" | "planner" | null
@@ -136,6 +145,20 @@ export default function Onboarding() {
       setChecking(true);
       setCheckError("");
       try {
+        const hash = new URLSearchParams(window.location.hash.slice(1));
+        const search = new URLSearchParams(window.location.search);
+        const errorCode = hash.get("error_code") || search.get("error_code");
+        const authErrorParam = hash.get("error") || search.get("error");
+        const errorDescription =
+          hash.get("error_description") || search.get("error_description");
+        if (errorCode || authErrorParam || errorDescription) {
+          setInviteError(
+            errorCode === "otp_expired"
+              ? "This invitation link has expired or has already been used. Please ask the person who invited you for a new invitation."
+              : "This invitation link could not be verified. Please ask the person who invited you for a new invitation.",
+          );
+          return;
+        }
         const {
           data: { user },
           error: authError,
@@ -262,6 +285,24 @@ export default function Onboarding() {
     router.push("/organizer/events");
   };
 
+  if (inviteError)
+    return (
+      <div
+        className="px-4 py-8 sm:p-8"
+        style={{ minHeight: "100vh", background: "#1B3A2D", display: "flex", alignItems: "center", justifyContent: "center" }}
+      >
+        <div
+          role="alert"
+          className="p-5 sm:p-10"
+          style={{ maxWidth: "420px", width: "100%", background: "#fff", borderRadius: "16px", border: "1px solid #e4ebe6", textAlign: "center" }}
+        >
+          <h1 style={{ fontSize: "1.2rem", color: "#1B3A2D", marginBottom: "0.75rem" }}>Invitation unavailable</h1>
+          <p style={{ color: "#4a5a52", lineHeight: 1.6, marginBottom: "1.5rem" }}>{inviteError}</p>
+          <Link href="/login" style={{ color: "#1B3A2D", textDecoration: "underline" }}>Go to login</Link>
+        </div>
+      </div>
+    );
+
   if (step === "password")
     return (
       <div
@@ -340,6 +381,11 @@ export default function Onboarding() {
               }}
               autoFocus
             />
+            {passwordError && (
+              <p role="alert" style={{ color: "#c0392b", fontSize: "0.85rem" }}>
+                {passwordError}
+              </p>
+            )}
             <button
               type="submit"
               disabled={settingPassword || newPassword.length < 6}
