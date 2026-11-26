@@ -170,6 +170,10 @@ export function DashboardShell({
           },
         ]
       : []),
+    {
+      label: "Applications",
+      href: `/organizer/events/${slug}/applications`,
+    },
     { label: "⚙ Settings", href: `/organizer/events/${slug}/settings` },
   ];
 
