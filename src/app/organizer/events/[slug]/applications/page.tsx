@@ -149,17 +149,16 @@ export default function ApplicationsPage() {
   const confirmDeposit = async (app: Application) => {
     setActioning(app.id);
     try {
-      // Create brand portal — invite brand to the event brands table
+      // Create brand portal entry using event name (not slug) to match brands table schema
+      const eventNameForBrands = eventInfo.name || slug;
+      const { data: { user } } = await supabase.auth.getUser();
       await supabase.from("brands").upsert({
         email: app.email,
-        brand_name: app.brand_name,
-        event_slug: slug,
-        contact_name: app.contact_name,
-        phone: app.phone,
-        instagram: app.instagram,
-        website: app.website,
-        category: app.category,
-      }, { onConflict: "email,event_slug" });
+        name: app.brand_name,
+        event: eventNameForBrands,
+        organizer_email: user?.email || "",
+        status: "Active",
+      }, { onConflict: "email,event" });
 
       await supabase.from("brand_applications").update({ status: "confirmed", deposit_confirmed: true }).eq("id", app.id);
 
