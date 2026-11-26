@@ -153,14 +153,14 @@ export default function ApplicationsPage() {
 
       await supabase.from("brand_applications").update({ status: "confirmed", deposit_confirmed: true }).eq("id", app.id);
 
-      // Now send the sign-up invite so they can access their portal
+      // Send sign-up invite so they can access their portal
       await fetch("/api/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: app.email }),
       });
 
-      // Notify brand
+      // Send confirmation email
       await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -538,7 +538,10 @@ function confirmedEmail(app: Application, eventName: string) {
         Hi ${app.contact_name}, your deposit has been received and ${app.brand_name} is officially confirmed for <strong>${eventName}</strong>.
       </p>
       <p style="color:#4a5a52;font-size:0.9rem;line-height:1.8;margin:0 0 1.5rem">
-        Your brand portal is now ready — log in at <a href="https://nalpop.com/brand" style="color:#1B3A2D">nalpop.com/brand</a> to access all event details, upload your inventory, and track your progress.
+        You should have also received a separate email from Nalpop — click the link in that email to set up your password and access your brand portal, where you'll find all event details and next steps.
+      </p>
+      <p style="color:#4a5a52;font-size:0.85rem;line-height:1.6;margin:0 0 1.5rem">
+        Can't find it? Check your spam folder or reply to this email and we'll resend it.
       </p>
       <p style="color:#4a5a52;font-size:0.85rem;margin:0">
         Questions? Reply to this email and we'll help you out.
