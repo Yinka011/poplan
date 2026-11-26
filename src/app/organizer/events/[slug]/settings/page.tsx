@@ -135,6 +135,10 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchAll();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") fetchAll();
+    });
+    return () => subscription.unsubscribe();
   }, [slug]);
 
   const fetchAll = async () => {
@@ -262,7 +266,8 @@ export default function SettingsPage() {
       has_participation_fee: eventDetails.has_participation_fee,
       has_commission: eventDetails.has_commission,
     };
-    await supabase.from("events").update(payload).eq("slug", slug);
+    const { error } = await supabase.from("events").update(payload).eq("slug", slug);
+    if (error) { console.error("Save error:", error); }
     setEventName(eventDetails.name.trim());
     setSavingDetails(false);
     setSavedDetails(true);
