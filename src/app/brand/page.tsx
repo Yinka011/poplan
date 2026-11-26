@@ -73,8 +73,16 @@ export default function BrandHome() {
         return;
       }
 
-      // If only one event, go straight to portal
-      if (brandRows.length === 1) {
+      // Check if user is also an organizer before deciding to redirect
+      const { data: orgCheck } = await supabase
+        .from("events")
+        .select("id")
+        .eq("organizer_email", user.email)
+        .limit(1);
+      const alsoOrganizer = !!(orgCheck && orgCheck.length > 0);
+
+      // If only one event AND not also an organizer, go straight to portal
+      if (brandRows.length === 1 && !alsoOrganizer) {
         window.location.href = `/brand/portal?brand=${encodeURIComponent(String(brandRows[0].id))}`;
         return;
       }
@@ -96,9 +104,10 @@ export default function BrandHome() {
       const enriched = brandRows.map((row) => {
         const { events: orgEvents, orgName } = orgDataMap[row.organizer_email] || { events: [], orgName: "" };
 
-        // Try exact slug match (case-insensitive), then partial
+        // Try matching by slug, then by event name
         const rowEvent = (row.event || "").trim().toLowerCase();
         const eventData = orgEvents.find((e) => (e.slug || "").trim().toLowerCase() === rowEvent)
+          || orgEvents.find((e) => (e.name || "").trim().toLowerCase() === rowEvent)
           || orgEvents.find((e) => rowEvent.includes((e.slug || "").trim().toLowerCase()) || (e.slug || "").trim().toLowerCase().includes(rowEvent))
           || null;
 
@@ -120,13 +129,7 @@ export default function BrandHome() {
         };
       });
 
-      // Check if user is also an organizer
-      const { data: orgEvents } = await supabase
-        .from("events")
-        .select("id")
-        .eq("organizer_email", user.email)
-        .limit(1);
-      if (orgEvents && orgEvents.length > 0) setIsAlsoOrganizer(true);
+      if (alsoOrganizer) setIsAlsoOrganizer(true);
 
       setEvents(enriched);
       setLoading(false);
