@@ -1,7 +1,18 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+
+type OpenEvent = {
+  slug: string;
+  name: string;
+  city: string;
+  dates_label: string | null;
+  venue_name: string | null;
+  spots: number | null;
+  has_participation_fee: boolean;
+  has_commission: boolean;
+};
 
 export default function LandingPage() {
   const [email, setEmail] = useState("");
@@ -9,6 +20,15 @@ export default function LandingPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openEvents, setOpenEvents] = useState<OpenEvent[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("events")
+      .select("slug, name, city, dates_label, venue_name, spots, has_participation_fee, has_commission")
+      .eq("applications_open", true)
+      .then(({ data }) => { if (data) setOpenEvents(data); });
+  }, []);
 
   const handleWaitlist = async () => {
     if (!email.trim()) return;
@@ -41,6 +61,9 @@ export default function LandingPage() {
           <a href="#organizers" onClick={() => setMenuOpen(false)} style={{ fontSize: "0.82rem", color: "#4a5a52", textDecoration: "none" }}>Organizers</a>
           <a href="#brands" onClick={() => setMenuOpen(false)} style={{ fontSize: "0.82rem", color: "#4a5a52", textDecoration: "none" }}>Brands</a>
           <a href="#brand-organizers" onClick={() => setMenuOpen(false)} style={{ fontSize: "0.82rem", color: "#4a5a52", textDecoration: "none" }}>Brand Organizers</a>
+          {openEvents.length > 0 && (
+            <a href="#apply" onClick={() => setMenuOpen(false)} style={{ fontSize: "0.82rem", color: "#4a5a52", textDecoration: "none" }}>Apply</a>
+          )}
           <a href="#waitlist" onClick={() => setMenuOpen(false)} style={{ fontSize: "0.82rem", padding: "7px 18px", background: "#1B3A2D", color: "#fff", borderRadius: "8px", textDecoration: "none" }}>Join waitlist</a>
         </div>
         <Link href="/login" className="whitespace-nowrap rounded-lg border border-[#1B3A2D] px-3 py-2 text-[0.82rem] text-[#1B3A2D] no-underline">Sign in</Link>
@@ -291,7 +314,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-
       {/* FEATURES */}
       <section className="px-4 py-16 sm:px-8 sm:py-24" style={{ background: "#f8faf8" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
@@ -348,6 +370,55 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* OPEN EVENTS */}
+      {openEvents.length > 0 && (
+        <section id="apply" className="scroll-mt-[60px] px-4 py-16 sm:px-8 sm:py-24" style={{ background: "#fff" }}>
+          <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+              <div style={{ fontSize: "0.72rem", letterSpacing: "0.2em", color: "#4a7c59", marginBottom: "1rem" }}>NOW ACCEPTING APPLICATIONS</div>
+              <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.8rem)", fontWeight: "normal", color: "#1B3A2D", lineHeight: 1.2 }}>Apply to an upcoming pop-up.</h2>
+              <p style={{ fontSize: "0.95rem", color: "#4a5a52", marginTop: "1rem", lineHeight: 1.8 }}>Browse open events and submit your brand application. Organisers review every application personally.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {openEvents.map(ev => (
+                <div key={ev.slug} style={{ background: "#f8faf8", borderRadius: "16px", border: "1px solid #e4ebe6", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                  <div style={{ background: "#1B3A2D", padding: "1.25rem 1.5rem" }}>
+                    <div style={{ fontSize: "0.7rem", color: "#E8C97A", letterSpacing: "0.1em", marginBottom: "4px" }}>BRAND APPLICATION</div>
+                    <div style={{ fontSize: "1.05rem", color: "#fff", marginBottom: "4px" }}>{ev.name}</div>
+                    <div style={{ fontSize: "0.78rem", color: "#ffffff88" }}>
+                      {ev.city}{ev.dates_label ? ` · ${ev.dates_label}` : ""}
+                      {ev.venue_name ? ` · ${ev.venue_name}` : ""}
+                    </div>
+                  </div>
+                  <div style={{ padding: "1.25rem 1.5rem", flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {ev.has_participation_fee && (
+                        <span style={{ fontSize: "0.7rem", padding: "3px 10px", borderRadius: "20px", background: "#1B3A2D22", color: "#1B3A2D" }}>Participation fee</span>
+                      )}
+                      {ev.has_commission && (
+                        <span style={{ fontSize: "0.7rem", padding: "3px 10px", borderRadius: "20px", background: "#1B3A2D22", color: "#1B3A2D" }}>Commission</span>
+                      )}
+                      {!ev.has_participation_fee && !ev.has_commission && (
+                        <span style={{ fontSize: "0.7rem", padding: "3px 10px", borderRadius: "20px", background: "#4a7c5922", color: "#4a7c59" }}>No fee · No commission</span>
+                      )}
+                      {ev.spots && (
+                        <span style={{ fontSize: "0.7rem", padding: "3px 10px", borderRadius: "20px", background: "#f0f4f1", color: "#4a5a52" }}>{ev.spots} spots</span>
+                      )}
+                    </div>
+                    <Link
+                      href={`/apply/${ev.slug}`}
+                      style={{ display: "block", textAlign: "center", padding: "11px", background: "#1B3A2D", color: "#fff", borderRadius: "10px", textDecoration: "none", fontSize: "0.88rem", marginTop: "auto" }}
+                    >
+                      Apply now →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* WAITLIST */}
       <section id="waitlist" className="scroll-mt-[60px] px-4 py-16 sm:px-8 sm:py-24" style={{ background: "#f8faf8" }}>
         <div style={{ maxWidth: "560px", margin: "0 auto", textAlign: "center" as const }}>
@@ -367,7 +438,7 @@ export default function LandingPage() {
                   <button key={val} onClick={() => setRole(val)} style={{ flex: 1, padding: "8px", background: role === val ? "#1B3A2D" : "transparent", color: role === val ? "#fff" : "#4a5a52", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>{label}</button>
                 ))}
               </div>
-              <input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleWaitlist()} style={{ width: "100%", padding: "12px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.9rem",  boxSizing: "border-box" as const, marginBottom: "10px", outline: "none" }} />
+              <input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleWaitlist()} style={{ width: "100%", padding: "12px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.9rem", boxSizing: "border-box" as const, marginBottom: "10px", outline: "none" }} />
               <button onClick={handleWaitlist} disabled={submitting || !email.trim()} style={{ width: "100%", padding: "12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.9rem", cursor: "pointer" }}>
                 {submitting ? "Joining..." : "Join the waitlist →"}
               </button>
