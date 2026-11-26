@@ -79,8 +79,7 @@ export default function LandingPage() {
         <p style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", color: "#4a5a52", maxWidth: "560px", lineHeight: 1.8, marginBottom: "3rem" }}>
           Nalpop connects organizers, brands and brand managers in one seamless workspace — from the first invite to the final payout.
         </p>
-        <a href="#waitlist" style={{ padding: "14px 36px", background: "#1B3A2D", color: "#fff", borderRadius: "10px", textDecoration: "none", fontSize: "0.95rem", letterSpacing: "0.05em" }}>Join the waitlist</a>
-        <div style={{ marginTop: "1rem", fontSize: "0.75rem", color: "#4a5a52" }}>Free for brands · Built for organizers</div>
+        <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "#4a5a52" }}>Free for brands · Built for organizers</div>
 
         {/* Mock dashboard */}
         <div style={{ marginTop: "5rem", width: "100%", maxWidth: "900px", background: "#1B3A2D", borderRadius: "20px", padding: "2px", boxShadow: "0 40px 80px #1B3A2D33" }}>
@@ -314,6 +313,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+
       {/* FEATURES */}
       <section className="px-4 py-16 sm:px-8 sm:py-24" style={{ background: "#f8faf8" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
@@ -438,7 +438,7 @@ export default function LandingPage() {
                   <button key={val} onClick={() => setRole(val)} style={{ flex: 1, padding: "8px", background: role === val ? "#1B3A2D" : "transparent", color: role === val ? "#fff" : "#4a5a52", border: "none", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer" }}>{label}</button>
                 ))}
               </div>
-              <input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleWaitlist()} style={{ width: "100%", padding: "12px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.9rem", boxSizing: "border-box" as const, marginBottom: "10px", outline: "none" }} />
+              <input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleWaitlist()} style={{ width: "100%", padding: "12px", border: "1px solid #e4ebe6", borderRadius: "10px", fontSize: "0.9rem",  boxSizing: "border-box" as const, marginBottom: "10px", outline: "none" }} />
               <button onClick={handleWaitlist} disabled={submitting || !email.trim()} style={{ width: "100%", padding: "12px", background: "#1B3A2D", color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.9rem", cursor: "pointer" }}>
                 {submitting ? "Joining..." : "Join the waitlist →"}
               </button>
