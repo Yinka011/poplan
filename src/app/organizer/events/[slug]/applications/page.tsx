@@ -538,13 +538,13 @@ function confirmedEmail(app: Application, eventName: string) {
         Hi ${app.contact_name}, your deposit has been received and ${app.brand_name} is officially confirmed for <strong>${eventName}</strong>.
       </p>
       <p style="color:#4a5a52;font-size:0.9rem;line-height:1.8;margin:0 0 1.5rem">
-        You should have also received a separate email from Nalpop — click the link in that email to set up your password and access your brand portal, where you'll find all event details and next steps.
+        Click below to set up your account and access your brand portal, where you'll find all event details and next steps.
       </p>
-      <p style="color:#4a5a52;font-size:0.85rem;line-height:1.6;margin:0 0 1.5rem">
-        Can't find it? Check your spam folder or reply to this email and we'll resend it.
-      </p>
+      <a href="https://nalpop.com/brand/setup" style="display:block;text-align:center;padding:14px;background:#1B3A2D;color:#E8C97A;border-radius:10px;text-decoration:none;font-size:0.95rem;margin-bottom:1.5rem">
+        Set up my account →
+      </a>
       <p style="color:#4a5a52;font-size:0.85rem;margin:0">
-        Questions? Reply to this email and we'll help you out.
+        Already have an account? <a href="https://nalpop.com/login" style="color:#1B3A2D">Sign in here</a>. Questions? Reply to this email and we'll help you out.
       </p>
     </div>
     <div style="padding:1.5rem 2.5rem;background:#f8faf8;font-size:0.75rem;color:#4a5a52">
