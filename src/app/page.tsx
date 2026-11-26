@@ -77,9 +77,8 @@ export default function LandingPage() {
           Everything your pop-up needs. In one place.
         </h1>
         <p style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", color: "#4a5a52", maxWidth: "560px", lineHeight: 1.8, marginBottom: "3rem" }}>
-          Nalpop connects organizers, brands and brand managers in one seamless workspace — from the first invite to the final payout.
+          Nalpop connects organizers, brands and brand managers in one seamless workspace, from the first invite to the final payout.
         </p>
-        <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "#4a5a52" }}>Free for brands · Built for organizers</div>
 
         {/* Mock dashboard */}
         <div style={{ marginTop: "5rem", width: "100%", maxWidth: "900px", background: "#1B3A2D", borderRadius: "20px", padding: "2px", boxShadow: "0 40px 80px #1B3A2D33" }}>
