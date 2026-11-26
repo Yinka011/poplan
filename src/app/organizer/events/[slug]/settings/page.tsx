@@ -96,6 +96,9 @@ type EventDetails = {
   dates_label: string;
   status: string;
   spots: string;
+  applications_open: boolean;
+  has_participation_fee: boolean;
+  has_commission: boolean;
 };
 
 export default function SettingsPage() {
@@ -118,6 +121,7 @@ export default function SettingsPage() {
   const [eventDetails, setEventDetails] = useState<EventDetails>({
     name: "", city: "", venue_name: "", venue_address: "",
     start_date: "", end_date: "", dates_label: "", status: "Planning", spots: "",
+    applications_open: false, has_participation_fee: false, has_commission: false,
   });
   const [eventId, setEventId] = useState<number | null>(null);
   const [savingDetails, setSavingDetails] = useState(false);
@@ -143,7 +147,7 @@ export default function SettingsPage() {
     // Resolve event city from slug
     const { data: eventRow } = await supabase
       .from("events")
-      .select("id, city, name, collect_payments, venue_name, venue_address, start_date, end_date, dates_label, status, spots")
+      .select("id, city, name, collect_payments, venue_name, venue_address, start_date, end_date, dates_label, status, spots, applications_open, has_participation_fee, has_commission")
       .eq("slug", slug)
       .maybeSingle();
     const city = eventRow?.city || "";
@@ -164,6 +168,9 @@ export default function SettingsPage() {
         dates_label: eventRow.dates_label || "",
         status: eventRow.status || "Planning",
         spots: eventRow.spots != null ? String(eventRow.spots) : "",
+        applications_open: eventRow.applications_open ?? false,
+        has_participation_fee: eventRow.has_participation_fee ?? false,
+        has_commission: eventRow.has_commission ?? false,
       });
     }
 
@@ -251,6 +258,9 @@ export default function SettingsPage() {
       dates_label: datesLabel || "TBD",
       status: eventDetails.status,
       spots: eventDetails.spots ? parseInt(eventDetails.spots, 10) : null,
+      applications_open: eventDetails.applications_open,
+      has_participation_fee: eventDetails.has_participation_fee,
+      has_commission: eventDetails.has_commission,
     };
     await supabase.from("events").update(payload).eq("slug", slug);
     setEventName(eventDetails.name.trim());
@@ -480,6 +490,29 @@ export default function SettingsPage() {
                     style={inp()}
                   />
                 </div>
+              </div>
+
+              {/* Application toggles */}
+              <div style={{ borderTop: "1px solid #e4ebe6", paddingTop: "16px" }}>
+                <div style={{ fontSize: "0.7rem", color: "#4a5a52", letterSpacing: "0.08em", marginBottom: "12px" }}>BRAND APPLICATIONS</div>
+                {[
+                  { key: "applications_open" as const, label: "Accept applications", desc: "Show this event on the landing page and let brands apply" },
+                  { key: "has_participation_fee" as const, label: "Participation fee", desc: "Brands pay a fee to participate in this event" },
+                  { key: "has_commission" as const, label: "Commission", desc: "You take a percentage commission on brand sales" },
+                ].map(({ key, label, desc }) => (
+                  <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f0f4f1" }}>
+                    <div>
+                      <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>{label}</div>
+                      <div style={{ fontSize: "0.74rem", color: "#4a5a52" }}>{desc}</div>
+                    </div>
+                    <div
+                      onClick={() => { setEventDetails(d => ({ ...d, [key]: !d[key] })); setSavedDetails(false); }}
+                      style={{ width: "44px", height: "24px", borderRadius: "12px", background: eventDetails[key] ? "#1B3A2D" : "#e4ebe6", cursor: "pointer", position: "relative" as const, transition: "background 0.2s", flexShrink: 0 }}
+                    >
+                      <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#fff", position: "absolute" as const, top: "3px", left: eventDetails[key] ? "23px" : "3px", transition: "left 0.2s" }} />
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div style={{ background: "#f8faf8", borderRadius: "8px", padding: "10px 12px", fontSize: "0.75rem", color: "#4a5a52", lineHeight: 1.6 }}>
