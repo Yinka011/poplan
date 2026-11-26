@@ -21,10 +21,35 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
   }
 
   body {
-    @apply bg-nude-50 text-brown-800 font-display;
+    @apply bg-nude-50 text-brown-800;
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-size: 0.9375rem; /* 15px — readable but not chunky */
+    font-weight: 400;
+    line-height: 1.6;
+    color: #1B3A2D;
+  }
+
+  /* Headings use the display serif */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 400;
+    line-height: 1.25;
+  }
+
+  /* Labels, nav, small UI text — use Inter */
+  button, input, select, textarea, label {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-size: 0.9375rem;
+  }
+
+  /* Bump minimum legible size for small labels */
+  small, .text-xs {
+    font-size: 0.8rem;
+    font-weight: 500;
   }
 }
 
