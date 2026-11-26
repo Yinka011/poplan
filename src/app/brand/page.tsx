@@ -13,10 +13,13 @@ type BrandEvent = {
   collect_payments?: boolean;
 };
 
+type Role = "brand" | "organizer" | "both";
+
 export default function BrandHome() {
   const [events, setEvents] = useState<BrandEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isAlsoOrganizer, setIsAlsoOrganizer] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -117,6 +120,14 @@ export default function BrandHome() {
         };
       });
 
+      // Check if user is also an organizer
+      const { data: orgEvents } = await supabase
+        .from("events")
+        .select("id")
+        .eq("organizer_email", user.email)
+        .limit(1);
+      if (orgEvents && orgEvents.length > 0) setIsAlsoOrganizer(true);
+
       setEvents(enriched);
       setLoading(false);
     };
@@ -155,6 +166,14 @@ export default function BrandHome() {
       </div>
 
       <div style={{ maxWidth: "680px", margin: "0 auto", padding: "2.5rem 1.5rem" }}>
+        {isAlsoOrganizer && (
+          <div style={{ background: "#1B3A2D", borderRadius: "12px", padding: "12px 16px", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+            <div style={{ fontSize: "0.82rem", color: "#E8C97A" }}>You're also an organizer</div>
+            <a href="/organizer" style={{ fontSize: "0.78rem", color: "#fff", textDecoration: "none", background: "#ffffff22", padding: "5px 12px", borderRadius: "8px" }}>
+              Go to organizer dashboard →
+            </a>
+          </div>
+        )}
         <h1 style={{ fontSize: "1.5rem", color: "#1B3A2D", fontWeight: "normal", marginBottom: "0.5rem" }}>
           Your events
         </h1>
