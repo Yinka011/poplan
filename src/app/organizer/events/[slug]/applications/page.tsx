@@ -64,15 +64,6 @@ export default function ApplicationsPage() {
     try {
       const token = generateToken();
 
-      // Send invite email via existing invite API
-      const res = await fetch("/api/invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: app.email }),
-      });
-      const json = await res.json();
-      if (!res.ok && !json.already_registered) throw new Error(json.error || "Invite failed");
-
       // Update application with token and status
       await supabase.from("brand_applications")
         .update({ status: "approved", response_token: token })
@@ -161,6 +152,13 @@ export default function ApplicationsPage() {
       }, { onConflict: "email,event" });
 
       await supabase.from("brand_applications").update({ status: "confirmed", deposit_confirmed: true }).eq("id", app.id);
+
+      // Now send the sign-up invite so they can access their portal
+      await fetch("/api/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: app.email }),
+      });
 
       // Notify brand
       await fetch("/api/send-email", {
