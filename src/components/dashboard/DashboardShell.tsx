@@ -393,6 +393,12 @@ export function DashboardShell({
             >
               All events
             </Link>
+            <Link
+              href="/brand"
+              style={{ fontSize: "0.8rem", color: "#d4c87a66", textDecoration: "none" }}
+            >
+              Brand view
+            </Link>
             <button
               type="button"
               onClick={handleSignOut}
