@@ -104,7 +104,7 @@ type EventDetails = {
 export default function SettingsPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const [activeTab, setActiveTab] = useState<"details" | "features" | "payments" | "faqs">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "features" | "payments" | "faqs" | "brief">("details");
   const [features, setFeatures] = useState<Features>(DEFAULT_FEATURES);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -133,6 +133,10 @@ export default function SettingsPage() {
   const [addingFaq, setAddingFaq] = useState(false);
   const [savingFaq, setSavingFaq] = useState(false);
 
+  // Brief state
+  const [briefUrl, setBriefUrl] = useState<string | null>(null);
+  const [uploadingBrief, setUploadingBrief] = useState(false);
+
   useEffect(() => {
     fetchAll();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -151,7 +155,7 @@ export default function SettingsPage() {
     // Resolve event city from slug
     const { data: eventRow } = await supabase
       .from("events")
-      .select("id, city, name, collect_payments, venue_name, venue_address, start_date, end_date, dates_label, status, spots, applications_open, has_participation_fee, has_commission")
+      .select("id, city, name, collect_payments, venue_name, venue_address, start_date, end_date, dates_label, status, spots, applications_open, has_participation_fee, has_commission, brand_brief_url")
       .eq("slug", slug)
       .maybeSingle();
     const city = eventRow?.city || "";
@@ -160,6 +164,8 @@ export default function SettingsPage() {
     if (eventRow?.collect_payments === false) setCollectPayments(false);
 
     // Populate event details form
+    if (eventRow?.brand_brief_url) setBriefUrl(eventRow.brand_brief_url);
+
     if (eventRow) {
       setEventId(eventRow.id ?? null);
       setEventDetails({
@@ -318,6 +324,21 @@ export default function SettingsPage() {
     setFaqs((prev) => prev.filter((f) => f.id !== id));
   };
 
+  const uploadBrief = async (file: File) => {
+    if (!file) return;
+    setUploadingBrief(true);
+    const ext = file.name.split(".").pop();
+    const path = `${slug}/brand-brief.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("brand-briefs")
+      .upload(path, file, { upsert: true });
+    if (uploadError) { alert("Upload failed: " + uploadError.message); setUploadingBrief(false); return; }
+    const { data: { publicUrl } } = supabase.storage.from("brand-briefs").getPublicUrl(path);
+    await supabase.from("events").update({ brand_brief_url: publicUrl }).eq("slug", slug);
+    setBriefUrl(publicUrl);
+    setUploadingBrief(false);
+  };
+
   const inp = (extra?: any) => ({
     padding: "8px 12px",
     border: "1px solid #e4ebe6",
@@ -375,6 +396,7 @@ export default function SettingsPage() {
           {(
             [
               ["details", "Event details"],
+              ["brief", "Brand brief"],
               ["features", "Dashboard features"],
               ["payments", "Payment settings"],
               ["faqs", "Brand portal FAQs"],
@@ -534,6 +556,40 @@ export default function SettingsPage() {
             >
               {savingDetails ? "Saving..." : savedDetails ? "✓ Saved" : "Save event details"}
             </button>
+          </div>
+        )}
+
+        {activeTab === "brief" && (
+          <div style={{ background: "#fff", borderRadius: "14px", padding: "1.5rem", border: "1px solid #e4ebe6" }}>
+            <p style={{ fontSize: "0.82rem", color: "#4a5a52", marginBottom: "1.5rem", marginTop: 0 }}>
+              Upload your brand brief — a PDF with everything approved brands need to know about the event (setup, timing, fees, what to bring). It will be automatically attached to every approval email.
+            </p>
+            {briefUrl && (
+              <div style={{ background: "#f0f7f2", borderRadius: "10px", padding: "12px 14px", marginBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+                <div>
+                  <div style={{ fontSize: "0.82rem", color: "#1B3A2D", fontWeight: 500 }}>✓ Brief uploaded</div>
+                  <div style={{ fontSize: "0.72rem", color: "#4a5a52", marginTop: "2px" }}>Will be attached to all approval emails</div>
+                </div>
+                <a href={briefUrl} target="_blank" rel="noreferrer" style={{ fontSize: "0.78rem", color: "#1B3A2D", textDecoration: "underline" }}>View</a>
+              </div>
+            )}
+            <label style={{ display: "block", width: "100%", padding: "2rem", border: "2px dashed #e4ebe6", borderRadius: "12px", textAlign: "center" as const, cursor: "pointer", background: "#f8faf8" }}>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                style={{ display: "none" }}
+                onChange={e => { const f = e.target.files?.[0]; if (f) uploadBrief(f); }}
+              />
+              {uploadingBrief ? (
+                <div style={{ color: "#4a5a52", fontSize: "0.85rem" }}>Uploading…</div>
+              ) : (
+                <>
+                  <div style={{ fontSize: "1.5rem", marginBottom: "8px" }}>📄</div>
+                  <div style={{ fontSize: "0.85rem", color: "#1B3A2D" }}>{briefUrl ? "Replace brief" : "Upload brand brief"}</div>
+                  <div style={{ fontSize: "0.75rem", color: "#4a5a52", marginTop: "4px" }}>PDF, DOC or DOCX</div>
+                </>
+              )}
+            </label>
           </div>
         )}
 
