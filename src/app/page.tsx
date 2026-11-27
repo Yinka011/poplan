@@ -81,7 +81,7 @@ export default function LandingPage() {
         </p>
 
         {/* Mock dashboard */}
-        <div style={{ marginTop: "5rem", width: "100%", maxWidth: "900px", background: "#1B3A2D", borderRadius: "20px", padding: "2px", boxShadow: "0 40px 80px #1B3A2D33" }}>
+        <div style={{ marginTop: "2rem", width: "100%", maxWidth: "900px", background: "#1B3A2D", borderRadius: "20px", padding: "2px", boxShadow: "0 40px 80px #1B3A2D33" }}>
           <div style={{ background: "#f8faf8", borderRadius: "18px", overflow: "hidden" }}>
             <div style={{ background: "#e4ebe6", padding: "10px 16px", display: "flex", gap: "6px", alignItems: "center" }}>
               <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#c0392b" }} />
@@ -101,18 +101,24 @@ export default function LandingPage() {
               </div>
               <div style={{ padding: "1.25rem", background: "#f8faf8" }}>
                 <div style={{ fontSize: "0.6rem", color: "#4a5a52", letterSpacing: "0.15em", marginBottom: "1rem" }}>OVERVIEW — LAGOS POP-UP 2027</div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" style={{ marginBottom: "1rem" }}>
-                  {[["24", "BRANDS"], ["312", "PRODUCTS"], ["18", "DAYS TO EVENT"], ["89%", "TASKS DONE"]].map(([val, label]) => (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" style={{ marginBottom: "0.75rem" }}>
+                  {[["5", "BRANDS"], ["312", "PRODUCTS"], ["18", "DAYS TO EVENT"], ["89%", "TASKS DONE"]].map(([val, label]) => (
                     <div key={label} style={{ background: "#fff", borderRadius: "8px", padding: "0.65rem", border: "1px solid #e4ebe6" }}>
                       <div style={{ fontSize: "1.1rem", color: "#1B3A2D" }}>{val}</div>
                       <div style={{ fontSize: "0.55rem", color: "#4a5a52", letterSpacing: "0.08em" }}>{label}</div>
                     </div>
                   ))}
                 </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-4" style={{ marginBottom: "0.75rem" }}>
+                  <div style={{ background: "#fff", borderRadius: "8px", padding: "0.65rem", border: "1px solid #e4ebe6", gridColumn: "span 1" }}>
+                    <div style={{ fontSize: "1.1rem", color: "#1B3A2D" }}>300</div>
+                    <div style={{ fontSize: "0.55rem", color: "#4a5a52", letterSpacing: "0.08em" }}>CONFIRMED ATTENDEES</div>
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <div style={{ background: "#fff", borderRadius: "8px", padding: "0.75rem", border: "1px solid #e4ebe6" }}>
                     <div style={{ fontSize: "0.58rem", color: "#4a5a52", letterSpacing: "0.1em", marginBottom: "6px" }}>BRAND PROGRESS</div>
-                    {[["Zara Lagos", 85], ["Kente Studio", 60], ["House of Aso", 100]].map(([name, pct]) => (
+                    {[["Veldt Studio", 85], ["Kente House", 60], ["Obi Collective", 100], ["Dusk & Thread", 45], ["Maison Noire", 72]].map(([name, pct]) => (
                       <div key={name} style={{ marginBottom: "5px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#4a5a52", marginBottom: "2px" }}><span>{name}</span><span>{pct}%</span></div>
                         <div style={{ height: "3px", background: "#f0f4f1", borderRadius: "2px" }}>
@@ -123,7 +129,7 @@ export default function LandingPage() {
                   </div>
                   <div style={{ background: "#fff", borderRadius: "8px", padding: "0.75rem", border: "1px solid #e4ebe6" }}>
                     <div style={{ fontSize: "0.58rem", color: "#4a5a52", letterSpacing: "0.1em", marginBottom: "6px" }}>CHECKLIST</div>
-                    {([["Venue confirmed", true], ["Contracts sent", true], ["Inventory received", false], ["Staff assigned", false]] as [string, boolean][]).map(([task, done]) => (
+                    {([["Venue confirmed", true], ["Contracts sent", true], ["Brand briefs sent", true], ["Deposits received", true], ["Inventory received", false], ["Floor plan signed off", false], ["Staff assigned", false]] as [string, boolean][]).map(([task, done]) => (
                       <div key={task} style={{ display: "flex", gap: "5px", alignItems: "center", padding: "3px 0" }}>
                         <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: done ? "#4a7c59" : "transparent", border: done ? "none" : "1.5px solid #d4c5b0", flexShrink: 0 }} />
                         <div style={{ fontSize: "0.65rem", color: done ? "#b0a090" : "#1B3A2D", textDecoration: done ? "line-through" : "none" }}>{task}</div>
